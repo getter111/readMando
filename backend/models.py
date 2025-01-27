@@ -1,6 +1,6 @@
 #validation and serialization of data
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 
@@ -23,12 +23,14 @@ class StoryResponse(StoryBase):
 # Users Table
 class UserBase(BaseModel):
     username: str
-    email: str
+    email: Emailstr
+    verification_token: Optional[str] = None
+    is_verified: Optional[bool] = False
     is_active: Optional[bool] = True
 
 #used when creating a user
 class UserCreate(UserBase):
-    password: str
+    pass
 
 #used when sending the response back to client
 class UserResponse(UserBase):
@@ -39,7 +41,8 @@ class UserResponse(UserBase):
 class UserUpdate(BaseModel):
     username: Optional[str] = None 
     email: Optional[str] = None
-    password: Optional[str] = None
+    verification_token: Optional[str] = None
+    is_verified: Optional[bool] = None
     is_active: Optional[bool] = None
 
 # Vocabulary Table
