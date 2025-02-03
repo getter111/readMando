@@ -22,11 +22,11 @@ class UsersCRUD:
         res = self.supabase.table("users").select("*").eq("username", username).execute()
         return res.data[0]
 
-   def get_user_by_email(self, email: str):
+    def get_user_by_email(self, email: str):
         res = self.supabase.table("users").select("*").eq("email", email).execute()
         return res.data[0]
 
- def get_user_by_verification_token(self, token: str):
+    def get_user_by_verification_token(self, token: str):
         res = self.supabase.table("users").select("*").eq("verification_token", token).execute()
         return res.data[0]
 

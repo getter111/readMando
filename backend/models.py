@@ -23,7 +23,7 @@ class StoryResponse(StoryBase):
 # Users Table
 class UserBase(BaseModel):
     username: str
-    email: Emailstr
+    email: EmailStr
     verification_token: Optional[str] = None
     is_verified: Optional[bool] = False
     is_active: Optional[bool] = True
@@ -136,11 +136,11 @@ class StoryVocabularyResponse(StoryVocabularyBase):
     created_at: datetime
 
 #story generation model
-class StoryRequest(BaseModel):
+class StoryGenerationRequest(BaseModel):
     difficulty: Optional[str]
     vocabulary: Optional[List[str]] 
     topic: Optional[str]
 
-class StoryResponse(BaseModel):
+class StoryGenerationResponse(BaseModel):
     title: str
     story: str

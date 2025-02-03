@@ -13,6 +13,7 @@ class StoryCRUD:
              "difficulty": story.difficulty, 
              "content": story.content}
         ).execute()
+        print(res)
         return res
 
     def get_story_by_id(self, story_id: int):

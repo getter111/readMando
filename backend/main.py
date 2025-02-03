@@ -4,6 +4,7 @@
 #build out back end api and front end reactjs
 from typing import Union
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
 from datetime import datetime, timedelta
 from pydantic import ValidationError
@@ -15,11 +16,18 @@ from email_utils import send_verification_email
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.post("/generate_story")
 async def generate_story(
-    request: models.StoryRequest,
-    user_email: str = None,  # Make email optional
-    response_model=models.StoryResponse
+    request: models.StoryGenerationRequest,
+    user_email: str = None,
 ):
     try:
         story = generateStory(
@@ -42,14 +50,14 @@ async def generate_story(
             if user and user["is_verified"]:
                 user_story = models.UserStoryCreate(
                     user_id=user["user_id"],
-                    story_id=created_story.data[0]["story_id"],
-                    read_status="unread"
+                    story_id=created_story.data[0]["story_id"], 
+                    read_status="FALSE"
                 )
                 user_stories_crud.create_user_story(user_story)
         
-        return models.StoryResponse(
+        return models.StoryGenerationResponse( 
             title=story["title"],
-            story=story["story"]
+            content=story["story"],
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating story: {str(e)}")
@@ -100,3 +108,7 @@ async def verify_email(token: str):
         return {"message": "Email verified successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+    # TODO  Generate a list of comprehention questions at the end of the story
+    # TODO  
