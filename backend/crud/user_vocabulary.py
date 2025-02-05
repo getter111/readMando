@@ -15,7 +15,7 @@ class UserVocabularyCRUD:
             "mastery_level": user_vocab.mastery_level
         }
         res = self.supabase.table("user_vocabulary").insert(insert_data).execute()
-        return res
+        return res.data[0]
 
     def get_user_vocabulary(self, user_id: int) -> List[VocabularyResponse]:
         res = self.supabase.table("user_vocabulary").select("*").eq("user_id", user_id).execute() #filter on user_id
@@ -34,8 +34,8 @@ class UserVocabularyCRUD:
     def update_user_vocabulary(self, user_vocab_id: int, updates: UserVocabularyUpdate):
         update_data = updates.model_dump(exclude_unset=True, exclude_defaults=True)
         res = self.supabase.table("user_vocabulary").update(update_data).eq("user_vocab_id", user_vocab_id).execute()
-        return res
+        return res.data[0]
 
     def delete_user_vocabulary(self, user_vocab_id: int):
         res = self.supabase.table("user_vocabulary").delete().eq("user_vocab_id", user_vocab_id).execute()
-        return res
+        return res.data[0]

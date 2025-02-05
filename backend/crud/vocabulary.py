@@ -17,14 +17,20 @@ class VocabularyCRUD:
              "translation": vocabulary.translation, 
              "audio_file": vocabulary.audio_file}
         ).execute()
-        return res
+        if res.data:  
+            return res.data[0]  
+        return None  
 
     def get_vocabulary(self, vocab_id: int):
         res = self.supabase.table("vocabulary").select("*").eq("vocab_id", vocab_id).execute()
-        return res.data[0]
+        if res.data:  
+            return res.data[0]  
+        return None  
     def get_vocabulary_by_word(self, word: str):
         res = self.supabase.table("vocabulary").select("*").eq("word", word).execute()
-        return res.data[0]
+        if res.data:  
+            return res.data[0]  
+        return None  
     def get_vocabulary_by_translation(self, translation: str):
         res = self.supabase.table("vocabulary").select("*").eq("translation", translation).execute()
         return res.data[0]

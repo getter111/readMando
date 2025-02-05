@@ -14,7 +14,7 @@ class StoryCRUD:
              "content": story.content}
         ).execute()
         print(res)
-        return res
+        return res.data[0]
 
     def get_story_by_id(self, story_id: int):
         res = self.supabase.table("stories").select("*").eq("story_id", story_id).execute()
@@ -35,13 +35,13 @@ class StoryCRUD:
     def update_story_by_id(self, story_id: int, updates: StoryUpdate):
         update_data = updates.model_dump(exclude_unset=True, exclude_defaults=True)
         res = self.supabase.table("stories").update(update_data).eq("story_id", story_id).execute()
-        return res
+        return res.data[0]
 
     def update_story_by_title(self, title: str, updates: StoryUpdate):
         update_data = updates.model_dump(exclude_unset=True, exclude_defaults=True)
         res = self.supabase.table("stories").update(update_data).eq("title", title).execute()
-        return res
+        return res.data[0]
 
     def delete_story(self, story_id: int):
         res = self.supabase.table("stories").delete().eq("story_id", story_id).execute()
-        return res
+        return res.data[0]

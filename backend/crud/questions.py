@@ -16,7 +16,7 @@ class QuestionCRUD:
                 "answer_choices": question.answer_choices,
             }
         ).execute()
-        return res
+        return res.data[0]
     
 
     def get_question_by_id(self, question_id: int):
@@ -27,13 +27,13 @@ class QuestionCRUD:
 
     def get_questions_by_story_id(self, story_id: int) -> List[QuestionResponse]:
         res = self.supabase.table("questions").select("*").eq("story_id", story_id).execute()
-        return res.data if res.data else []
+        return res.res.data[0] if res.data else []
 
     def update_question(self, question_id: int, updates: QuestionUpdate):
         update_data = updates.model_dump(exclude_unset=True, exclude_defaults=True)
         res = self.supabase.table("questions").update(update_data).eq("question_id", question_id).execute()
-        return res
+        return res.data[0]
 
     def delete_question(self, question_id: int):
         res = self.supabase.table("questions").delete().eq("question_id", question_id).execute()
-        return res
+        return res.data[0]

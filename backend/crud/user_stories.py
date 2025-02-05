@@ -14,7 +14,7 @@ class UserStoryCRUD:
             "read_status": user_story.read_status,
         }
         res = self.supabase.table("user_stories").insert(insert_data).execute()
-        return res
+        return res.data[0]
 
     def get_user_stories(self, user_id: int) -> List[StoryResponse]:
         res = self.supabase.table("user_stories").select("*").eq("user_id", user_id).execute() #filter on user_id
@@ -33,8 +33,8 @@ class UserStoryCRUD:
     def update_user_story(self, user_story_id: int, updates: UserStoryUpdate):
         update_data = updates.model_dump(exclude_unset=True, exclude_defaults=True)
         res = self.supabase.table("user_stories").update(update_data).eq("user_story_id", user_story_id).execute()
-        return res
+        return res.data[0]
 
     def delete_user_story(self, user_story_id: int):
         res = self.supabase.table("user_stories").delete().eq("user_story_id", user_story_id).execute()
-        return res
+        return res.data[0]

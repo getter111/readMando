@@ -14,7 +14,7 @@ class StoryVocabularyCRUD:
             "vocab_id": user_story.vocab_id,
         }
         res = self.supabase.table("story_vocabulary").insert(insert_data).execute()
-        return res
+        return res.data[0]
 
     def get_story_vocabulary(self, story_id: int) -> List[VocabularyResponse]:
         res = self.supabase.table("story_vocabulary").select("*").eq("story_id", story_id).execute() #filter on story_id
