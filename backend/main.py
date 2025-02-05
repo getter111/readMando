@@ -72,17 +72,16 @@ async def register_user(user: models.UserCreate):
         
         # Generate verification token
         verification_token = str(uuid4())
-        
+
         # Save user with unverified status
-        new_user = models.UserCreate(
-            username=user.username,
-            email=user.email,
-            verification_token=verification_token,
-            is_verified=False
+        created_user = user_crud.create_user(
+            models.UserCreate(
+                username=user.username,
+                email=user.email,
+                verification_token=verification_token
+            )
         )
-        
-        created_user = user_crud.create_user(new_user)
-        
+
         # Send verification email
         await send_verification_email(user.email, verification_token)
         
@@ -93,19 +92,17 @@ async def register_user(user: models.UserCreate):
 @app.get("/verify/{token}")
 async def verify_email(token: str):
     try:
-        # Find user with this verification token
         user = user_crud.get_user_by_verification_token(token)
         if not user:
             raise HTTPException(status_code=400, detail="Invalid verification token")
         
-        # Update user to verified status
         updates = models.UserUpdate(
             is_verified=True,
-            verification_token=None  # Clear the token after use
+            verification_token="NULL"  # Clear the token to prevent duplicates
         )
         user_crud.update_user(user["user_id"], updates)
         
-        return {"message": "Email verified successfully"}
+        return {"message": "Email verified successfully. Your progress, will now be stored and ready for you the next time you log in!"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

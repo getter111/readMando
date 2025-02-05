@@ -36,10 +36,10 @@ story_vocabulary_crud = StoryVocabularyCRUD(supabase) #TBA if used in future
 #listQuestions = models.QuestionBase(story_id=1, question_text= "what the name of goo",correct_answer= "goo", answer_choices=["cum","goo","slime","milk"])
 # storyVocab = models.StoryVocabularyBase(story_id=1, vocab_id=1)
 
-try:
-    story = models.StoryCreate(title="test story")
-    result = story_crud.create_story(story)
-    # print(result)
+# try:
+#     story = models.StoryCreate(title="test story")
+#     result = story_crud.create_story(story)
+#     print(result)
 
-except ValidationError as e: 
-    print(f"KEKWWWW: {e}")
+# except ValidationError as e: 
+#     print(f"KEKWWWW: {e}")
