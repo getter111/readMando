@@ -103,6 +103,7 @@ async def verify_email(token: str):
         user_crud.update_user(user["user_id"], updates)
         
         return {"message": "Email verified successfully. Your progress, will now be stored and ready for you the next time you log in!"}
+        # Now we just need to check if user is verified before saving to the db
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
