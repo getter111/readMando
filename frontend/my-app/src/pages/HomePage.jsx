@@ -1,4 +1,3 @@
-import Header from "../components/Header";
 import IntroCard from "../components/IntroCard";
 import FeatureCard from "../components/FeatureCard"; 
 
@@ -10,8 +9,6 @@ import TypewriterIMG from '../assets/images/Typewriter.jpg';
 export default function HomePage() {
   return (
     <div className="bg-gray-100 min-h-screen">
-      <Header />
-
       <main className="container mx-auto p-6">
         <IntroCard />
 
