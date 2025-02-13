@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import SearchPage from "./pages/SearchPage"
+import StoryPage from './pages/StoryPage'
 
 function App() {
 
@@ -13,6 +14,7 @@ function App() {
         <Route index element= {<HomePage />} />
         <Route path="login" element= {<LoginPage />} />
         <Route path="search/:vocab" element= {<SearchPage />} />
+        <Route path="story" element={<StoryPage />} />
       </Route>
     </Routes>
     

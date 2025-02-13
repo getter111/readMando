@@ -6,7 +6,11 @@ import PracticeIMG from '../assets/images/Practice.jpg';
 import QuizIMG from '../assets/images/Quiz.jpg';
 import TypewriterIMG from '../assets/images/Typewriter.jpg';
 
+import { useNavigate } from "react-router-dom";
+
 export default function HomePage() {
+  const navigate  = useNavigate();
+
   return (
     <div className="bg-gray-100 min-h-screen">
       <main className="container mx-auto p-6">
@@ -17,7 +21,7 @@ export default function HomePage() {
             image= {TypewriterIMG}
             title="Short Story Generator"
             buttonText="Start Here"
-            onClick={() => alert("Navigate to Short Story Generator")}
+            onClick={() => navigate('/story')}
           />
           <FeatureCard
             image={PracticeIMG}
