@@ -14,7 +14,7 @@ export default function StoryPage() {
             }
         };
         fetchStory()
-    });
+    }, []);
 
     return (
         <div>
