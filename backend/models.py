@@ -143,4 +143,4 @@ class StoryGenerationRequest(BaseModel):
 
 class StoryGenerationResponse(BaseModel):
     title: str
-    story: str
+    content: str
