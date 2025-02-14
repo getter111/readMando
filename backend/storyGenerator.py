@@ -12,7 +12,7 @@ client = OpenAI(
 def generateStory(
     difficulty="beginner",
     vocabulary=None, 
-    topic=None
+    topic=None      
 ):
     audience = f"{difficulty.lower()} Chinese language students"
 
@@ -29,7 +29,7 @@ def generateStory(
         + 'Write a short story with a clear beginning, middle, and ending, to improve the readers reading comprehension in Mandarin. '
         + 'The output should be as helpful to the reader as possible. '
         + 'The story should be concise, around 250-300 characters long. '
-        + 'Please adhere to it.'
+        + 'Also please do not add the title of the story in the body of the text. Please adhere to it.'
     )
 
     #https://platform.openai.com/docs/api-reference/chat/create  
@@ -61,9 +61,10 @@ def generate_title(
     title_prompt = (
         f'We are writing a short story in Mandarin. '
         + (f'It is about "{topic}". ' if topic else '')
-        + f'Our reader is: "{target_audience}". Write a short, catchy '
-        "title clearly directed at our reader that is less than "
-        "9 words and proposes a 'big promise' to grab the reader's attention."
+        + f'Our readers are: "{target_audience}". Write a short, catchy ' 
+        + "title clearly directed at our reader that is less than "
+        + "9 words and grabs the reader's attention. "
+        + "Also please do not add anything about the difficulty level in the title"
     )
 
     request = client.chat.completions.create(
