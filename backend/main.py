@@ -18,7 +18,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"], #should match front end port
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173" ], #should match front end port
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,10 +55,11 @@ async def generate_story(
                 )
                 user_stories_crud.create_user_story(user_story)
         
-        return models.StoryGenerationResponse( 
+        return models.StoryGenerationResponse(
             title=story["title"],
-            content=story["story"],
+            content=story["story"]
         )
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating story: {str(e)}")
 
