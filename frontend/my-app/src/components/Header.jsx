@@ -16,8 +16,8 @@ export default function Header() {
   return (
     <header className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
       <div className="flex items-center space-x-4">
-        <Link to="/" className="text-xl font-bold text-blue-600">ReadMando</Link>
-        <select className="bg-gray-200 p-2 rounded-md text-sm">
+        <Link to="/" className="text-xl font-bold text-blue-500">ReadMando</Link>
+        <select className="bg-gray-200 p-2 rounded-md text-sm cursor-pointer">
           <option>Words</option>
           <option>All Words</option>
         </select>
@@ -32,7 +32,7 @@ export default function Header() {
           onKeyDown = {handleEnterKey} //Link to /search:vocab
         />
         <Link to="/login">
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-md">
+          <button className="bg-blue-500 hover:bg-blue-600 transition text-white px-4 py-2 rounded-md cursor-pointer">
             Login / Register
           </button>
         </Link>
