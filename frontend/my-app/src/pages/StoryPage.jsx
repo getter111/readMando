@@ -16,7 +16,9 @@ export default function StoryPage() {
         setStory("");
         
         try {
-            const response = await axios.post("http://127.0.0.1:8000/generate_story",
+            // const response = await axios.post("http://127.0.0.1:8000/generate_story",
+            const response = await axios.post("https://read-mando.fly.dev/generate_story",
+
                 {
                     difficulty: difficulty,
                     vocabulary: vocabulary.split(",").map(word => word.trim()),
