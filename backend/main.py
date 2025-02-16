@@ -18,11 +18,14 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173" ], #should match front end port
+    allow_origins=["http://localhost:5173", "https://my-frontend-url.com"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@app.get("/")
+def read_root():
+    return {"message": "Hello from FastAPI on Fly.io!"}
 
 @app.post("/generate_story")
 async def generate_story(
