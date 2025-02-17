@@ -1,6 +1,7 @@
 # AI Generated Short Stories
 
-Welcome to ReadMando
+Welcome to ReadMando, 
+live demo -> [ReadMando (in progress)](https://app.netlify.com/teams/getter111/sites)
 
 ## About
 
