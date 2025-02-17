@@ -1,9 +1,5 @@
 *.env
 *.log
-.DS_Store
-.vscode/
-.idea/
-*.iml
 
 # Python-specific (backend)
 backend/.venv/
