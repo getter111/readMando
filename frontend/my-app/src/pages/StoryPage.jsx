@@ -27,7 +27,6 @@ export default function StoryPage() {
             );
             setStory(response.data);
             console.log("axios response: " + response.data)
-            console.log("story state response: " + story)
         } catch (error){
             setError("Failed to generate story. Try again!");
             console.log(error)
@@ -52,9 +51,9 @@ export default function StoryPage() {
                                 value={difficulty} 
                                 onChange={(e) => setDifficulty(e.target.value)}
                             >
-                                <option value="easy">Beginner</option>
-                                <option value="medium">Intermediate</option>
-                                <option value="hard">Advanced</option>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
                             </select>
                         </div>
 
