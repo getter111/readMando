@@ -7,19 +7,29 @@ class VocabularyCRUD:
         self.supabase = supabase
 
     def create_vocabulary(self, vocabulary: VocabularyCreate):
+        """
+        Create a new vocabulary entry in the database.
+
+        This function checks for duplicate entries before creating a new vocabulary item.
+        If a duplicate is found, it returns an error message. Otherwise, it inserts the
+        new vocabulary into the database.
+        """
         isDuplicate = self.supabase.table("vocabulary").select("*").eq("word", vocabulary.word).eq("pinyin",vocabulary.pinyin).eq("translation", vocabulary.translation).execute()
         if isDuplicate.data:
             return {"error": "Word already exists in the vocabulary."}
-        
+
         res = self.supabase.table("vocabulary").insert(
             {"word": vocabulary.word, 
              "pinyin": vocabulary.pinyin, 
              "translation": vocabulary.translation, 
-             "audio_file": vocabulary.audio_file}
+             "audio_file": vocabulary.audio_file,
+             "word_type": vocabulary.word_type,
+             "example_sentence": vocabulary.example_sentence
+             }
         ).execute()
         if res.data:  
             return res.data[0]  
-        return None  
+        return None
 
     def get_vocabulary(self, vocab_id: int):
         res = self.supabase.table("vocabulary").select("*").eq("vocab_id", vocab_id).execute()
