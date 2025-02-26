@@ -51,6 +51,8 @@ class VocabularyBase(BaseModel):
     pinyin: Optional[str] = None
     translation: Optional[str] = None
     audio_file: Optional[str] = None
+    word_type: Optional[str] = None
+    example_sentence: Optional[str] = None
 
 class VocabularyCreate(VocabularyBase):
     pass
