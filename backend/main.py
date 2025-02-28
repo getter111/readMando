@@ -13,6 +13,8 @@ import models
 from supaDB import user_crud, vocabulary_crud, story_crud, question_crud,user_vocabulary_crud, user_stories_crud, story_vocabulary_crud
 from storyGenerator import generateStory
 from email_utils import send_verification_email
+from utils import text_to_audio
+from supaDB import upload_audio_to_storage
 
 app = FastAPI()
 
@@ -46,18 +48,37 @@ async def generate_story(
             content=story["story"]
         )
         created_story = story_crud.create_story(save_story)
+        story_id = created_story.data[0]["story_id"]
         
-        # If email provided and verified, save to user_stories
+        # If email provided and verified, save to user_stories bridge table
         if user_email:
             user = user_crud.get_user_by_email(user_email)
             if user and user["is_verified"]:
                 user_story = models.UserStoryCreate(
                     user_id=user["user_id"],
-                    story_id=created_story.data[0]["story_id"], 
+                    story_id= story_id,
                     read_status="FALSE"
                 )
                 user_stories_crud.create_user_story(user_story)
         
+
+
+        """
+        # extract any words from the generated story and title 
+        title = extractVocab(story["title"])
+        words = extractVocab(story["story"])
+        """
+
+
+##need to test
+        # use melo api to generate tts for the title and story
+        title_audio_path = text_to_audio(story["title"], story_id, type="title")
+        story_audio_path = text_to_audio(story["story"], story_id, type="story")
+        # Upload audio files and get URLs
+        title_audio_url = upload_audio_to_storage(story_id, type="title")
+        story_audio_url = upload_audio_to_storage(story_id, type="story")
+
+
         return models.StoryGenerationResponse(
             title=story["title"],
             content=story["story"]
