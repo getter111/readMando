@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 from pydantic import ValidationError
 import models
+import aiofiles
 
 from crud.users import UsersCRUD
 from crud.vocabulary import VocabularyCRUD
@@ -35,8 +36,10 @@ story_vocabulary_crud = StoryVocabularyCRUD(supabase) #TBA if used in future
 
 
 
+BUCKET_NAME = "audio"
+
 ##need to test
-def upload_audio_to_storage(story_id: int, type: str) -> str:
+async def upload_audio_to_storage(story_id: int, type: str) -> str:
 
     folder = "titles" if type == "title" else "stories"
 
@@ -45,11 +48,27 @@ def upload_audio_to_storage(story_id: int, type: str) -> str:
     if not os.path.exists(audio_file_path):
         raise FileNotFoundError(f"Audio file {audio_file_path} not found.")
 
-    with open(audio_file_path, 'rb') as file:
-        storage_response = supabase.storage.from_('audio').upload(f'{folder}/{type}_{story_id}_audio.wav', file)
+    async with aiofiles.open(audio_file_path, "rb") as file:
+        file_content = await file.read()
+    file_upload = supabase.storage.from_(BUCKET_NAME).upload(f'audio_files/{folder}/{type}_{story_id}_audio.wav', file_content)
+    print(file_upload)
+    public_url = supabase.storage.from_('audio').get_public_url(f'audio_files/{folder}/{type}_{story_id}_audio.wav')
 
-    if storage_response.status_code != 200:
-        raise Exception(f"Error uploading audio file: {storage_response.text}")
-    
-    public_url = supabase.storage.from_('audio').get_public_url(f'{folder}/{type}_{story_id}_audio.wav')['publicURL']
     return public_url   
+
+# async def save_audio_url_to_db(story_id: int, type: str, url: str):
+#     column_name = "story_audio" if type == "story" else "title_audio"
+
+#     response = supabase.table("stories").update({column_name: url}).eq("id", story_id).execute()
+
+#     if "error" in response:
+#         raise Exception(f"Error saving audio URL: {response['error']['message']}")
+
+#     return response
+
+# import asyncio
+# async def main():
+
+#     something = await upload_audio_to_storage(1, "title") 
+#     print(something)
+# asyncio.run(main())  
