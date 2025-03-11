@@ -13,3 +13,4 @@ This project generates Chinese short stories with the help of AI. Chinese langua
   - Users can customize the difficulty, length, and themes of the stories.
   - Users can choose specific vocabulary they want to appear in the short stories to target certain words or concepts.
 - **Auto-Generated Questions**: At the end of each story, the AI generates questions related to the content to test reading comprehension.
+- **Text to Speech**: Utilizes https://github.com/myshell-ai/MeloTTS library to translate Chinese characters into English audio
