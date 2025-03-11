@@ -14,7 +14,7 @@ from supaDB import user_crud, vocabulary_crud, story_crud, question_crud,user_vo
 from storyGenerator import generateStory
 from email_utils import send_verification_email
 from utils import text_to_audio
-from supaDB import upload_audio_to_storage
+from supaDB import upload_audio_to_storage, save_audio_url_to_db
 
 app = FastAPI()
 
@@ -135,3 +135,15 @@ async def verify_email(token: str):
 
     # TODO  Generate a list of comprehention questions at the end of the story
     # TODO  
+@app.post("/generate-audio/")
+async def generate_audio(text: str, story_id: int, type: str):
+    # Generate the TTS audio file
+    audio_path = text_to_audio(text, story_id, type)
+
+    # Upload the file to Supabase Storage
+    audio_url = await upload_audio_to_storage(story_id, type)
+
+    # Save URL in Supabase Database
+    await save_audio_url_to_db(story_id, type, audio_url)
+
+    return {"message": "Audio processed successfully", "audio_url": audio_url}
