@@ -45,6 +45,10 @@ class VocabularyCRUD:
         res = self.supabase.table("vocabulary").select("*").eq("translation", translation).execute()
         return res.data[0]
 
+    def batch_insert_vocabulary(self, vocab_list: list[dict]):
+        res = self.supabase.table("vocabulary").upsert(vocab_list).execute()
+        return res.data
+
     # def update_vocabulary(self, vocab_id: int, updates: UserUpdate):
     #     # Convert pydantic model to dictionary excluding unset fields
     #     update_data = updates.model_dump(exclude_unset=True, exclude_defaults=True)
