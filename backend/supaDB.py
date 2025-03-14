@@ -34,25 +34,24 @@ user_vocabulary_crud = UserVocabularyCRUD(supabase)
 user_stories_crud = UserStoryCRUD(supabase)
 story_vocabulary_crud = StoryVocabularyCRUD(supabase) #TBA if used in future
 
-
-
+#supabase storage bucket name
 BUCKET_NAME = "audio"
 
 ##need to test
-async def upload_audio_to_storage(story_id: int, type: str) -> str:
+async def upload_audio_to_storage(id: int, type: str) -> str:
 
     folder = "titles" if type == "title" else "stories"
 
-    audio_file_path = f'audio_files/{folder}/{type}_{story_id}_audio.wav'
+    audio_file_path = f'audio_files/{folder}/{type}_{id}_audio.wav'
 
     if not os.path.exists(audio_file_path):
         raise FileNotFoundError(f"Audio file {audio_file_path} not found.")
 
     async with aiofiles.open(audio_file_path, "rb") as file:
         file_content = await file.read()
-    file_upload = supabase.storage.from_(BUCKET_NAME).upload(f'audio_files/{folder}/{type}_{story_id}_audio.wav', file_content)
+    file_upload = supabase.storage.from_(BUCKET_NAME).upload(f'audio_files/{folder}/{type}_{id}_audio.wav', file_content)
     print(file_upload)
-    public_url = supabase.storage.from_('audio').get_public_url(f'audio_files/{folder}/{type}_{story_id}_audio.wav')
+    public_url = supabase.storage.from_('audio').get_public_url(f'audio_files/{folder}/{type}_{id}_audio.wav')
 
     return public_url   
 
