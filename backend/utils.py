@@ -1,67 +1,56 @@
-# from pypinyin import pinyin, Style
+from pypinyin import pinyin, Style
 # import some_translation_api  #open source machine translation api
 from MeloTTS.melo.api import TTS
+import models
+from supaDB import vocabulary_crud
 
-# def extractVocab(text: str):
-#     words = set(text)  # Extract unique Chinese characters (simplified way)
-#     vocab_list = []
+def extract_vocab(text: str):
+    #extract unique vocab from text
+    words = set(text)
+    vocab_list = []
 
-#     for word in words:
-#         if some_translation_api.is_chinese(word):  # Ensure it's a Chinese character
-#             english_translation = some_translation_api.translate(word, target_lang="en")
-#             pinyin_rep = " ".join([syllable[0] for syllable in pinyin(word, style=Style.TONE3)])  # Convert to Pinyin with tones
+    for word in words:
+        #TODO: research to see if there is free translation api (if not might have to use google translate)
+        english_translation = some_translation_api.translate(word, target_lang="en")
+        pinyin_rep = " ".join([syllable[0] for syllable in pinyin(word, style=Style.TONE3)])  # Convert to Pinyin with tones
 
-#             vocab_list.append({
-#                 "character": word,
-#                 "pinyin": pinyin_rep,
-#                 "english": english_translation
-#             })
+        vocab_list.append({
+            "word": word,
+            "pinyin": pinyin_rep,
+            "translation": english_translation
+            #word_type = "trust the user to fill in this field, create a put endpoint"
+            #example_sentence = "could use ai to fill in this field"
+            #audio_file = "idk if it is wise to let user fill in this field, but also I don't want to voice 1000+ vocab words"
+        })
 
-#     return vocab_list
+    return vocab_list
 
-##maybe import my own dictionary of words and unknown words can be added by the user to the dictionary using a post lmao
-
+#inserts new row if not in table.
+#updates row if already in table.
+def add_vocabulary_to_db(vocab_list: list[dict]):
+    try:
+        res = vocabulary_crud.batch_insert_vocabulary(vocab_list) 
+        print(f"Successfully added {len(res)} new words to the vocabulary table.")
+    except Exception as e:
+        print(f"Error adding vocabulary: {e}")
 
 # use melo api to generate tts for the title and story
-#type should either be: "story" or "title"
-def text_to_audio(text: str, story_id: int, type: str):
+# type should either be: "story" or "title"
+def text_to_audio(text: str, id: int, type: str):
     folder = "titles" if type == "title" else "stories"
 
     speed = 1.0
     device = 'auto'
     model = TTS(language='ZH', device=device)
     speaker_ids = model.hps.data.spk2id
-    output_path = f'audio_files/{folder}/{type}_{story_id}_audio.wav'
+    output_path = f'audio_files/{folder}/{type}_{id}_audio.wav'
     model.tts_to_file(text, speaker_ids['ZH'], output_path, speed=speed)
 
     print(output_path)
     return output_path
 
-
-
-# text_to_audio("逃学的天?", 1, "title")
-
-
-
-
-
-
-"""
-import models
-from supaDB import vocabulary_crud
-
-common_characters = [
-    {"character": "的", "pinyin": "de", "english": "of"},
-    {"character": "一", "pinyin": "yī", "english": "one"},
-    {"character": "是", "pinyin": "shì", "english": "is"},
-    # Add more characters...
-]
-
-for char in common_characters:
-    vocab_entry = models.VocabularyCreate(
-        character=char["character"],
-        pinyin=char["pinyin"],
-        english=char["english"]
-    )
-    vocabulary_crud.create_vocabulary(vocab_entry)
-"""
+# add_vocabulary_to_db([{
+#     "word": "诸葛亮",
+#     "pinyin": "zhùgè liàng",
+#     "translation": "legoat"
+# }])
