@@ -46,7 +46,7 @@ def text_to_audio(text: str, id: int, type: str):
     output_path = f'audio_files/{folder}/{type}_{id}_audio.wav'
     model.tts_to_file(text, speaker_ids['ZH'], output_path, speed=speed)
 
-    print(output_path)
+    print("text_to_audio: " + output_path)
     return output_path
 
 # add_vocabulary_to_db([{
