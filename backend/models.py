@@ -139,9 +139,9 @@ class StoryVocabularyResponse(StoryVocabularyBase):
 
 #story generation model
 class StoryGenerationRequest(BaseModel):
-    difficulty: Optional[str]
-    vocabulary: Optional[List[str]] 
-    topic: Optional[str]
+    difficulty: Optional[str] = "beginner"
+    vocabulary: Optional[List[str]] = None
+    topic: Optional[str] = None
 
 class StoryGenerationResponse(BaseModel):
     title: str

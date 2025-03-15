@@ -37,7 +37,6 @@ story_vocabulary_crud = StoryVocabularyCRUD(supabase) #TBA if used in future
 #supabase storage bucket name
 BUCKET_NAME = "audio"
 
-##need to test
 async def upload_audio_to_storage(id: int, type: str) -> str:
 
     folder = "titles" if type == "title" else "stories"
@@ -50,24 +49,17 @@ async def upload_audio_to_storage(id: int, type: str) -> str:
     async with aiofiles.open(audio_file_path, "rb") as file:
         file_content = await file.read()
     file_upload = supabase.storage.from_(BUCKET_NAME).upload(f'audio_files/{folder}/{type}_{id}_audio.wav', file_content)
-    print(file_upload)
+    print("upload_audio_to_storage: " + file_upload)
     public_url = supabase.storage.from_('audio').get_public_url(f'audio_files/{folder}/{type}_{id}_audio.wav')
 
     return public_url   
 
-# async def save_audio_url_to_db(story_id: int, type: str, url: str):
-#     column_name = "story_audio" if type == "story" else "title_audio"
+async def save_audio_url_to_db(id: int, type: str, url: str):
+    column_name = "story_audio" if type == "story" else "title_audio"
 
-#     response = supabase.table("stories").update({column_name: url}).eq("id", story_id).execute()
+    response = supabase.table("stories").update({column_name: url}).eq("story_id", id).execute()
 
-#     if "error" in response:
-#         raise Exception(f"Error saving audio URL: {response['error']['message']}")
-
-#     return response
-
-# import asyncio
-# async def main():
-
-#     something = await upload_audio_to_storage(1, "title") 
-#     print(something)
-# asyncio.run(main())  
+    if "error" in response:
+        raise Exception(f"Error saving audio URL: {response['error']['message']}")
+    print("audio saved to stories table successfully")
+    return response 

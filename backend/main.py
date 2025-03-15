@@ -13,7 +13,7 @@ import models
 from supaDB import user_crud, vocabulary_crud, story_crud, question_crud,user_vocabulary_crud, user_stories_crud, story_vocabulary_crud
 from storyGenerator import generateStory
 from email_utils import send_verification_email
-from utils import text_to_audio
+from utils import text_to_audio, add_vocabulary_to_db, extract_vocab 
 from supaDB import upload_audio_to_storage, save_audio_url_to_db
 
 app = FastAPI()
@@ -48,7 +48,7 @@ async def generate_story(
             content=story["story"]
         )
         created_story = story_crud.create_story(save_story)
-        story_id = created_story.data[0]["story_id"]
+        story_id = created_story["story_id"]
         
         # If email provided and verified, save to user_stories bridge table
         if user_email:
@@ -62,22 +62,23 @@ async def generate_story(
                 user_stories_crud.create_user_story(user_story)
         
 
-
         """
         # extract any words from the generated story and title 
         title = extractVocab(story["title"])
         words = extractVocab(story["story"])
         """
 
-
-##need to test
         # use melo api to generate tts for the title and story
-        title_audio_path = text_to_audio(story["title"], story_id, type="title")
-        story_audio_path = text_to_audio(story["story"], story_id, type="story")
-        # Upload audio files and get URLs
-        title_audio_url = upload_audio_to_storage(story_id, type="title")
-        story_audio_url = upload_audio_to_storage(story_id, type="story")
+        title_audio_path = text_to_audio(story["title"], story_id, "title")
+        story_audio_path = text_to_audio(story["story"], story_id, "story")
 
+        # Upload audio files to supabase storage and get URLs
+        title_audio_url = await upload_audio_to_storage(story_id, "title")
+        story_audio_url = await upload_audio_to_storage(story_id, "story")
+
+        #save urls to stories table
+        await save_audio_url_to_db(story_id, "title", title_audio_url)
+        await save_audio_url_to_db(story_id, "story", story_audio_url)
 
         return models.StoryGenerationResponse(
             title=story["title"],
@@ -128,22 +129,10 @@ async def verify_email(token: str):
         user_crud.update_user(user["user_id"], updates)
         
         return {"message": "Email verified successfully. Your progress, will now be stored and ready for you the next time you log in!"}
-        # Now we just need to check if user is verified before saving to the db
+        # Now we just need to check if users attribute: is_verified, before saving to the db
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
 
     # TODO  Generate a list of comprehention questions at the end of the story
     # TODO  
-@app.post("/generate-audio/")
-async def generate_audio(text: str, story_id: int, type: str):
-    # Generate the TTS audio file
-    audio_path = text_to_audio(text, story_id, type)
-
-    # Upload the file to Supabase Storage
-    audio_url = await upload_audio_to_storage(story_id, type)
-
-    # Save URL in Supabase Database
-    await save_audio_url_to_db(story_id, type, audio_url)
-
-    return {"message": "Audio processed successfully", "audio_url": audio_url}
