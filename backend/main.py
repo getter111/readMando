@@ -137,3 +137,17 @@ async def verify_email(token: str):
     # TODO  Generate a list of comprehention questions at the end of the story
     # TODO  
 #testing push on laptop
+
+
+# endpoints for vocabulary onhover effect and user vocab editing
+@app.get("/vocabulary/{word}")
+async def get_vocabulary(word: str):
+    vocab = vocabulary_crud.get_vocabulary_by_word(word)
+    if vocab:
+        return vocab
+    return {"vocabExists": False}
+
+@app.post("/vocabulary")
+async def add_vocabulary(vocab: models.VocabularyCreate):
+    return vocabulary_crud.create_vocabulary(vocab)
+
