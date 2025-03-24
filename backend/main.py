@@ -145,7 +145,7 @@ async def get_vocabulary(word: str):
     vocab = vocabulary_crud.get_vocabulary_by_word(word)
     if vocab:
         return vocab
-    return {"vocabExists": False}
+    return {"vocabExists": False, "statusCode": 404}
 
 @app.post("/vocabulary")
 async def add_vocabulary(vocab: models.VocabularyCreate):
