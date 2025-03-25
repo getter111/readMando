@@ -19,7 +19,7 @@ export default function HomePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <FeatureCard
             image= {TypewriterIMG}
-            title="Short Story Generator"
+            title="Story Generator"
             buttonText="Start Here"
             onClick={() => navigate('/story')}
           />
@@ -32,13 +32,13 @@ export default function HomePage() {
           <FeatureCard
             image={DictionaryIMG}
             title="Vocabulary Review"
-            buttonText="Learn More"
-            onClick={() => alert("Navigate to Vocabulary Review")}
+            buttonText="Review"
+            onClick={() => navigate('/review')}
           />
           <FeatureCard
             image={QuizIMG}
             title="Interactive Quiz"
-            buttonText="Take Quiz"
+            buttonText="Test"
             onClick={() => alert("Navigate to Interactive Quiz")}
           />
         </div>
