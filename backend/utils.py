@@ -54,3 +54,17 @@ def text_to_audio(text: str, id: int, type: str):
 #     "pinyin": "zhùgè liàng",
 #     "translation": "legoat"
 # }])
+# text = "我喜欢学习自然语言处理。"
+# text = "自然语言处理是人工智能的重要分支"
+# # Precise mode
+# words = jieba.cut(text, cut_all=False)
+# print("Precise Mode:", "/".join(words))
+# 
+# import jieba.posseg as pseg
+
+# words = pseg.cut("我喜欢学习自然语言处理。")
+# for word, flag in words:
+#     print(f"{word} ({flag})")
+
+
+
