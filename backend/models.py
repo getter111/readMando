@@ -146,3 +146,6 @@ class StoryGenerationRequest(BaseModel):
 class StoryGenerationResponse(BaseModel):
     title: str
     content: str
+
+class StorySegmentationRequest(BaseModel):
+    content: str
