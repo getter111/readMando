@@ -1,37 +1,47 @@
-import {useState} from 'react';
-import axios from 'axios'
+import { useState } from "react";
+import axios from "axios";
+import StoryDisplay from "../components/StoryDisplay"; 
 
 export default function StoryPage() {
-
-    const [story, setStory] = useState("")
-    const [difficulty, setDifficulty] = useState("easy")
-    const [topic, setTopic] = useState("")
-    const [vocabulary, setVocabulary] = useState("")
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState("")
+    const [story, setStory] = useState(null); // Ensure story is an object
+    const [difficulty, setDifficulty] = useState("Beginner");
+    const [topic, setTopic] = useState("");
+    const [vocabulary, setVocabulary] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const fetchStory = async () => {
         setLoading(true);
         setError("");
-        setStory("");
-        
-        try {
-            // const response = await axios.post("http://127.0.0.1:8000/generate_story",
-            const response = await axios.post("https://read-mando.fly.dev/generate_story",
+        setStory(null);
 
-                {
-                    difficulty: difficulty,
-                    vocabulary: vocabulary.split(",").map(word => word.trim()),
-                    topic: topic
-                }
-            );
-            setStory(response.data);
-            console.log("axios response: " + response.data)
-        } catch (error){
+        try {
+            //first generates the story, then need to use jieba to segment the story into individual words
+            const response = await axios.post("http://127.0.0.1:8000/generate_story",{
+            // const response = await axios.post("https://read-mando.fly.dev/generate_story", {
+                difficulty: difficulty,
+                vocabulary: vocabulary.split(",").map(word => word.trim()),
+                topic: topic
+            });
+            console.log("axios response: " , response.data)
+
+            //body of the story (need to segment the title too??)
+            const segmentResponse = await axios.post("http://127.0.0.1:8000/segment_story", { 
+                content: response.data.content
+            });
+            console.log("axios 2: " , segmentResponse.data)
+
+            setStory({
+                title: response.data.title,
+                content: segmentResponse.data.segmented_words
+            })
+
+            // setStory(response.data);
+        } catch (error) {
             setError("Failed to generate story. Try again!");
-            console.log(error)
+            console.error(error);
         } finally {
-            setLoading(false); //reset loading state
+            setLoading(false);//reset loading state
         }
     };
 
@@ -46,9 +56,9 @@ export default function StoryPage() {
 
                         <div className="mb-4">
                             <label className="block font-medium mb-1">Skill Level:</label>
-                            <select 
-                                className="w-full p-2 border rounded cursor-pointer" 
-                                value={difficulty} 
+                            <select
+                                className="w-full p-2 border rounded cursor-pointer"
+                                value={difficulty}
                                 onChange={(e) => setDifficulty(e.target.value)}
                             >
                                 <option value="Beginner">Beginner</option>
@@ -59,28 +69,28 @@ export default function StoryPage() {
 
                         <div className="mb-4">
                             <label className="block font-medium mb-1">Vocabulary (comma-separated words):</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 className="w-full p-2 border rounded"
-                                value={vocabulary} 
-                                onChange={(e) => setVocabulary(e.target.value)} 
+                                value={vocabulary}
+                                onChange={(e) => setVocabulary(e.target.value)}
                                 placeholder="Example: adventure, hero, space"
                             />
                         </div>
 
                         <div className="mb-4">
                             <label className="block font-medium mb-1">Topic:</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 className="w-full p-2 border rounded"
-                                value={topic} 
-                                onChange={(e) => setTopic(e.target.value)} 
+                                value={topic}
+                                onChange={(e) => setTopic(e.target.value)}
                                 placeholder="Example: space exploration"
                             />
                         </div>
 
-                        <button 
-                            onClick={fetchStory} 
+                        <button
+                            onClick={fetchStory}
                             disabled={loading}
                             className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition disabled:bg-gray-400 cursor-pointer"
                         >
@@ -96,10 +106,7 @@ export default function StoryPage() {
                         {loading ? (
                             <p className="text-gray-500">Generating story...</p>
                         ) : story ? (
-                            <div>
-                                <h3 className="text-lg font-bold">{story.title}</h3>
-                                <p className="mt-2">{story.content}</p>
-                            </div>
+                            <StoryDisplay story={story} />
                         ) : (
                             <p className="text-gray-500">No story generated yet.</p>
                         )}
