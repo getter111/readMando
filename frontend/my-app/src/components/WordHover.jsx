@@ -7,7 +7,8 @@ function WordHover({ word }) {
     const [pinyin, setPinyin] = useState("");
     const [notFound, setNotFound] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
-    const [highlight, setHighlight] = useState(""); 
+    const [highlight, setHighlight] = useState("");
+    const [partOfSpeech, setPartOfSpeech] = useState("")
 
     async function fetchTranslation() {
         try {
@@ -16,6 +17,7 @@ function WordHover({ word }) {
                 const data = response.data;
                 setTranslation(data.translation);
                 setPinyin(data.pinyin);
+                setPartOfSpeech(data.word_type);
                 setNotFound(false);
                 console.log(response)
             } else {
@@ -62,6 +64,7 @@ function WordHover({ word }) {
                             {word && <p>Word: {word}</p>}
                             {translation && <p>Translation: {translation}</p>}
                             {pinyin && <p>Pinyin: {pinyin}</p>}
+                            {partOfSpeech && <p>Part of Speech: {partOfSpeech}</p>}
                         </>
                     }
                 </span>
