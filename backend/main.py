@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
 from datetime import datetime, timedelta
 from pydantic import ValidationError
+import jieba
 
 import models
 from supaDB import user_crud, vocabulary_crud, story_crud, question_crud,user_vocabulary_crud, user_stories_crud, story_vocabulary_crud
@@ -67,7 +68,7 @@ async def generate_story(
         title = extractVocab(story["title"])
         words = extractVocab(story["story"])
         """
-
+    
         # use melo api to generate tts for the title and story
         title_audio_path = text_to_audio(story["title"], story_id, "title")
         story_audio_path = text_to_audio(story["story"], story_id, "story")
@@ -135,9 +136,19 @@ async def verify_email(token: str):
     
 
     # TODO  Generate a list of comprehention questions at the end of the story
-    # TODO  
-#testing push on laptop
 
+# uses jieba library to segment the words in the story
+#TODO if the word is missing I want AI to:
+#predict:Part of speech,translation, and the Pinyin
+
+@app.post("/segment_story") #had to add a pydantic model/dict because in react passing json to body not a string. prev was (content:str) casuing 422 error
+async def segment_story(request: models.StorySegmentationRequest):
+    try:
+        #jieba precise mode
+        words = list(jieba.cut(request.content, cut_all=False))
+        return {"segmented_words": words}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error segmenting story: {str(e)}")
 
 # endpoints for vocabulary onhover effect and user vocab editing
 @app.get("/vocabulary/{word}")
