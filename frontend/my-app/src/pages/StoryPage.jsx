@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import StoryDisplay from "../components/StoryDisplay"; 
 
-const apiUrl = import.meta.env.VITE_API_BASE_URL;
+// const apiUrl = import.meta.env.VITE_API_BASE_URL;
 export default function StoryPage() {
     const [story, setStory] = useState(null); // Ensure story is an object
     const [difficulty, setDifficulty] = useState("Beginner");
@@ -26,13 +26,13 @@ export default function StoryPage() {
             console.log("Story and title generation: " , response.data)
 
             //segment the body of the story
-            const segmented_body = await axios.post(`${apiUrl}/segment_story`, { 
+            const segmented_body = await axios.post(`/segment_story`, { 
                 content: response.data.content
             });
             console.log("segmented body: " , segmented_body.data)
 
             //segment the title of the story 
-            const segmented_title = await axios.post(`${apiUrl}/segment_story`, { 
+            const segmented_title = await axios.post(`/segment_story`, { 
                 content: response.data.title
             });
             console.log("segmented title: " , segmented_title.data)
