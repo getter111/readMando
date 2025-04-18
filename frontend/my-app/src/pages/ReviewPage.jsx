@@ -20,6 +20,8 @@ import WordHover from "../components/WordHover"
 import { useState } from "react";
 import axios from "axios";
 
+const apiUrl = import.meta.env.VITE_API_BASE_URL;
+
 export default function ReviewPage() {
   const words = ["你好", "学习", "快乐", "我"];
   const [segmentedWords, setSegmentedWords] = useState([]);
@@ -31,7 +33,7 @@ export default function ReviewPage() {
     setError(null); // Reset error state before making the request
     try {
       const simpleStory = "这是一个测试故事";
-      const segmentResponse = await axios.post("http://127.0.0.1:8000/segment_story", {
+      const segmentResponse = await axios.post(`${apiUrl}/segment_story`, {
         content: simpleStory
       });
 
