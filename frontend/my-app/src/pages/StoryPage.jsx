@@ -20,20 +20,26 @@ export default function StoryPage() {
             const response = await axios.post("http://127.0.0.1:8000/generate_story",{
             // const response = await axios.post("https://read-mando.fly.dev/generate_story", {
                 difficulty: difficulty,
-                vocabulary: vocabulary.split(",").map(word => word.trim()),
+                vocabulary: vocabulary.split(",").map(word => word.trim()), //takes vocab string -> string[]
                 topic: topic
             });
-            console.log("axios response: " , response.data)
+            console.log("Story and title generation: " , response.data)
 
-            //body of the story (need to segment the title too??)
-            const segmentResponse = await axios.post("http://127.0.0.1:8000/segment_story", { 
+            //segment the body of the story
+            const segmented_body = await axios.post("http://127.0.0.1:8000/segment_story", { 
                 content: response.data.content
             });
-            console.log("axios 2: " , segmentResponse.data)
+            console.log("segmented body: " , segmented_body.data)
+
+            //segment the title of the story 
+            const segmented_title = await axios.post("http://127.0.0.1:8000/segment_story", { 
+                content: response.data.title
+            });
+            console.log("segmented title: " , segmented_title.data)
 
             setStory({
-                title: response.data.title,
-                content: segmentResponse.data.segmented_words
+                title: segmented_title.data.segmented_words, //title -> []
+                content: segmented_body.data.segmented_words //content -> []
             })
 
             // setStory(response.data);
