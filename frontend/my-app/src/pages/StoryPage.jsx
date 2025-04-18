@@ -18,7 +18,7 @@ export default function StoryPage() {
 
         try {
             //first generates the story, then need to use jieba to segment the story into individual words
-            const response = await axios.post(`${apiUrl}/generate_story`,{
+            const response = await axios.post(`/generate_story`,{
                 difficulty: difficulty,
                 vocabulary: vocabulary.split(",").map(word => word.trim()), //takes vocab string -> string[]
                 topic: topic
