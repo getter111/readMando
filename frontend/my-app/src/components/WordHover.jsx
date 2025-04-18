@@ -2,6 +2,8 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import axios from 'axios';
 
+const apiUrl = import.meta.env.VITE_API_BASE_URL;
+
 function WordHover({ word }) {
     const [translation, setTranslation] = useState("");
     const [pinyin, setPinyin] = useState("");
@@ -12,7 +14,7 @@ function WordHover({ word }) {
 
     async function fetchTranslation() {
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/vocabulary/${word}`);
+            const response = await axios.get(`${apiUrl}/vocabulary/${word}`);
             if (!response.data.statusCode) { 
                 const data = response.data;
                 setTranslation(data.translation);
