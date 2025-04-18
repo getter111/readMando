@@ -20,10 +20,12 @@ async def send_verification_email(email: str, verification_token: str):
         USE_CREDENTIALS = True
     )
 
+    BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
+
     html = f"""
         <p>Please verify your email by clicking the link below:</p>
         <p>
-            <a href="http://127.0.0.1:8000/verify/{verification_token}">
+            <a href="{BASE_URL}/verify/{verification_token}">
                 Verify Email
             </a>
         </p>
