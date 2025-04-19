@@ -4,6 +4,7 @@
 .vscode/
 .idea/
 *.iml
+.env.local
 
 # Python-specific (backend)
 backend/.venv/
