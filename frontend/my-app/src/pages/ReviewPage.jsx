@@ -33,7 +33,7 @@ export default function ReviewPage() {
     setError(null); // Reset error state before making the request
     try {
       const simpleStory = "这是一个测试故事";
-      const segmentResponse = await axios.post(`${apiUrl}/segment_story`, {
+      const segmentResponse = await axios.post(`https://read-mando.fly.dev/segment_story`, {
         content: simpleStory
       });
 
