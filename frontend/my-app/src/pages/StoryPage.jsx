@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import StoryDisplay from "../components/StoryDisplay"; 
 
-const apiUrl = import.meta.env.VITE_API_BASE_URL;
+const apiUrl = "/api";
 export default function StoryPage() {
     const [story, setStory] = useState(null); // Ensure story is an object
     const [difficulty, setDifficulty] = useState("Beginner");

@@ -20,7 +20,7 @@ import WordHover from "../components/WordHover"
 import { useState } from "react";
 import axios from "axios";
 
-const apiUrl = import.meta.env.VITE_API_BASE_URL;
+const apiUrl = "/api";
 
 export default function ReviewPage() {
   const words = ["你好", "学习", "快乐", "我"];
