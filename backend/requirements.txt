@@ -100,8 +100,9 @@ markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 matplotlib-inline==0.1.7
 mdurl==0.1.2
-mecab-python3==1.0.9
--e git+https://github.com/myshell-ai/MeloTTS.git@209145371cff8fc3bd60d7be902ea69cbdb7965a#egg=melotts
+#local installation, need to install in docker, so fly can deploy
+# mecab-python3==1.0.9
+# -e git+https://github.com/myshell-ai/MeloTTS.git@209145371cff8fc3bd60d7be902ea69cbdb7965a#egg=melotts
 mistune==3.1.0
 mpmath==1.3.0
 multidict==6.1.0
