@@ -1,35 +1,32 @@
-FROM python:3.11.3 AS builder
+FROM python:3.11.3-slim
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app/backend 
+
 WORKDIR /app
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    gcc \
+    libffi-dev \
+    libssl-dev \
+    curl \
+    libpq-dev \
+    git \
+ && rm -rf /var/lib/apt/lists/*
+ 
+# Install Python dependencies
+# COPY requirements.txt ./
+# RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Create a virtual environment
-RUN python -m venv .venv
 COPY requirements.txt ./
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
 
-# Install dependencies in the virtual environment
-RUN .venv/bin/pip install --upgrade pip && \
-    .venv/bin/pip install -r requirements.txt
-
-# Clone and install MeloTTS
-RUN git clone https://github.com/myshell-ai/MeloTTS.git && \
-    .venv/bin/pip install -e MeloTTS && \
-    .venv/bin/python -m unidic download
-
-# Copy everything else in /backend
+# Copy app code
 COPY . .
 
-# Final runtime image
-FROM python:3.11.3-slim
-WORKDIR /app
-
-# Copies image from builder into the runtime image
-COPY --from=builder /app /app
-
-# Call univcorn command main:app to start backend
-CMD ["/app/.venv/bin/uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-
-
+# Start the server
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
