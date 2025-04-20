@@ -3,3 +3,9 @@ fly.toml
 __pycache__/
 .envrc
 .venv/
+
+node_modules/
+.env
+.env.*
+*.log
+*.sqlite3
