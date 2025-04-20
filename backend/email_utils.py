@@ -19,7 +19,7 @@ async def send_verification_email(email: str, verification_token: str):
         MAIL_STARTTLS = True,
         USE_CREDENTIALS = True
     )
-
+    #os.environ.get
     BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
     html = f"""
