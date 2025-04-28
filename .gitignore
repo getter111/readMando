@@ -4,9 +4,19 @@
 .vscode/
 .idea/
 *.iml
-.env.local
 
-# Python-specific (backend)
-backend/.venv/
-backend/__pycache__/
-backend/*.pyc
+# Python-specific
+*.venv/
+*__pycache__/
+*.pyc
+*.egg-info/
+build/
+
+# MeloTTS
+.ipynb_checkpoints/
+basetts_outputs_use_bert/
+basetts_outputs/
+multilingual_ckpts/
+basetts_outputs_package/
+*.zip
+*.wav
