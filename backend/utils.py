@@ -41,7 +41,9 @@ def text_to_audio(text: str, id: int, type: str):
     audio_path = f'audio_files/{folder}/{type}_{id}_audio.wav'
 
     response = requests.post("http://melotts:9000/tts", json={
-        "text": text
+        "text": text,
+        "id": id,
+        "type": type
     })
     with open(audio_path, "wb") as f:
         f.write(response.content)
