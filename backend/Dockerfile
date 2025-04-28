@@ -1,32 +1,43 @@
-FROM python:3.11.3-slim
+# FROM python:3.11.3 AS builder
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app/backend 
+# ENV PYTHONUNBUFFERED=1 \
+#     PYTHONDONTWRITEBYTECODE=1
 
+# WORKDIR /app
+
+# RUN python -m venv .venv
+
+# COPY requirements.txt ./
+# COPY MeloTTS ./MeloTTS
+
+# RUN .venv/bin/pip install -r requirements.txt
+# RUN .venv/bin/python -m unidic download
+
+# FROM python:3.11.3-slim
+
+# WORKDIR /app
+
+# COPY --from=builder /app/.venv .venv/
+# COPY . .
+
+# EXPOSE 8000
+# CMD ["/app/.venv/bin/uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
+# Base image
+FROM python:3.11-slim
+
+# Set working directory to /app inside the container
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    gcc \
-    libffi-dev \
-    libssl-dev \
-    curl \
-    libpq-dev \
-    git \
- && rm -rf /var/lib/apt/lists/*
- 
-# Install Python dependencies
-# COPY requirements.txt ./
-# RUN pip install --upgrade pip && pip install -r requirements.txt
-
-COPY requirements.txt ./
-RUN pip install --no-cache-dir --upgrade pip \
- && pip install --no-cache-dir -r requirements.txt
-
-# Copy app code
+# Copy the whole project from the /backend folder to /app in the container (should be ran in /backend)
 COPY . .
 
-# Start the server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+# RUN python -m unidic download
+
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+#after build run: docker run --env-file .env -p 8080:8000 my-fastapi-app
