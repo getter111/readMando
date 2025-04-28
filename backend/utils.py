@@ -1,8 +1,9 @@
 from pypinyin import pinyin, Style
 # import some_translation_api  #open source machine translation api
-from MeloTTS.melo.api import TTS
-import models
+# from MeloTTS.melo.api import TTS
+# import models
 from supaDB import vocabulary_crud
+import requests
 
 def extract_vocab(text: str):
     #extract unique vocab from text
@@ -34,20 +35,19 @@ def add_vocabulary_to_db(vocab_list: list[dict]):
     except Exception as e:
         print(f"Error adding vocabulary: {e}")
 
-# use melo api to generate tts for the title and story
-# type should either be: "story" or "title"
+#call melotts tts endpoint and write to our audio_path
 def text_to_audio(text: str, id: int, type: str):
     folder = "titles" if type == "title" else "stories"
+    audio_path = f'audio_files/{folder}/{type}_{id}_audio.wav'
 
-    speed = 1.0
-    device = 'auto'
-    model = TTS(language='ZH', device=device)
-    speaker_ids = model.hps.data.spk2id
-    output_path = f'audio_files/{folder}/{type}_{id}_audio.wav'
-    model.tts_to_file(text, speaker_ids['ZH'], output_path, speed=speed)
+    response = requests.post("http://melotts:9000/tts", json={
+        "text": text
+    })
+    with open(audio_path, "wb") as f:
+        f.write(response.content)
 
-    print("text_to_audio: " + output_path)
-    return output_path
+    return audio_path
+
 
 # add_vocabulary_to_db([{
 #     "word": "诸葛亮",
