@@ -74,8 +74,8 @@ async def generate_story(
         story_audio_path = text_to_audio(story["story"], story_id, "story")
 
         # Upload audio files to supabase storage and get URLs
-        title_audio_url = await upload_audio_to_storage(story_id, "title")
-        story_audio_url = await upload_audio_to_storage(story_id, "story")
+        title_audio_url = await upload_audio_to_storage(title_audio_path)
+        story_audio_url = await upload_audio_to_storage(story_audio_path)
 
         #save urls to stories table
         await save_audio_url_to_db(story_id, "title", title_audio_url)
@@ -116,6 +116,7 @@ async def register_user(user: models.UserCreate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+#email_utils calls this endpoint to verify token
 @app.get("/verify/{token}")
 async def verify_email(token: str):
     try:

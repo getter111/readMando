@@ -37,11 +37,10 @@ story_vocabulary_crud = StoryVocabularyCRUD(supabase) #TBA if used in future
 #supabase storage bucket name
 BUCKET_NAME = "audio"
 
-async def upload_audio_to_storage(id: int, type: str) -> str:
-    try: 
-        folder = "titles" if type == "title" else "stories"
-        audio_file_path = f'audio_files/{folder}/{type}_{id}_audio.wav'
+#todo: #delete audio file from memory once comfired that audio is in supabase storage
 
+async def upload_audio_to_storage(audio_file_path: str) -> str:
+    try: 
         if not os.path.exists(audio_file_path):
             raise FileNotFoundError(f"Audio file {audio_file_path} not found.")
 
@@ -49,16 +48,23 @@ async def upload_audio_to_storage(id: int, type: str) -> str:
             file_content = await file.read()
 
         try:
-            file_upload = supabase.storage.from_(BUCKET_NAME).upload(f'audio_files/{folder}/{type}_{id}_audio.wav', file_content)
+            file_upload = supabase.storage.from_(BUCKET_NAME).upload(audio_file_path, file_content)
             print("upload_audio_to_storage: ", file_upload) #error was because i was trying to concate file_upload to a str bruh moment
         except Exception as e:
             raise Exception(f"Error uploading file: {str(e)}")
         
         try:
-            public_url = supabase.storage.from_('audio').get_public_url(f'audio_files/{folder}/{type}_{id}_audio.wav')
+            public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(audio_file_path)
         except Exception as e:
             raise Exception(f"Error generating public URL: {str(e)}")
         
+        #delete local audio file after upload and getting public url from supabase
+        try:
+            os.remove(audio_file_path)
+            print(f"deleted local file: {audio_file_path}")
+        except Exception as e:
+            print(f"failed to delete local file {audio_file_path}: {str(e)}")
+
         return public_url   
     
     except Exception as e:
