@@ -45,7 +45,7 @@ function App() {
             <Route path="review" element = {<ReviewPage />} />
           </Route>
         </Routes>
-        <AudioPlayer audioUrl={"https://zftmkahagsvhgqkvmcop.supabase.co/storage/v1/object/public/audio/audio_files/stories/story_1_audio.wav"} />
+        <AudioPlayer audioUrl={"https://zftmkahagsvhgqkvmcop.supabase.co/storage/v1/object/public/audio/audio_files/stories/story_4_audio.wav?"} />
       </>
   )
 }

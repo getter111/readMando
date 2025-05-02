@@ -5,6 +5,8 @@
 .idea/
 *.iml
 
+TTS/__pycache__
+
 # Python-specific
 *.venv/
 *__pycache__/
