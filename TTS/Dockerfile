@@ -6,8 +6,12 @@ RUN apt-get update && apt-get install -y \
     build-essential libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install -e .
-RUN python melo/init_downloads.py
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip
 
-CMD ["python", "./melo/app.py", "--host", "0.0.0.0", "--port", "8888"]
+#install dependencies thru setup.py
+RUN pip install .
+
+#trigger llm downloads
+RUN python melo/init_downloads.py
+
+CMD ["uvicorn", "main:app",  "--host", "0.0.0.0", "--port", "8888"]
