@@ -17,7 +17,7 @@ model = None
 async def startup():
     global model
     model = TTS(language="ZH", device="auto")
-
+    
 @app.get("/")
 def read_root():
     return {"message": "Hello MeloTTS Microservice!"}
