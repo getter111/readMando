@@ -11,7 +11,4 @@ RUN pip install --upgrade pip
 #install dependencies thru setup.py
 RUN pip install .
 
-#trigger llm downloads
-RUN python melo/init_downloads.py
-
 CMD ["uvicorn", "main:app",  "--host", "0.0.0.0", "--port", "8888"]
