@@ -3,8 +3,17 @@ from melo.api import TTS
 
 import os
 import tempfile #provides safe OS way to create directories 
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "https://readmando.netlify.app"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def delete_file(path: str):
     if os.path.exists(path):

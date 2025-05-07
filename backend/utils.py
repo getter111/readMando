@@ -1,9 +1,11 @@
 from pypinyin import pinyin, Style
 # import some_translation_api  #open source machine translation api
-# from MeloTTS.melo.api import TTS
-# import models
 from supaDB import vocabulary_crud
 import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def extract_vocab(text: str):
     #extract unique vocab from text
@@ -40,7 +42,7 @@ def text_to_audio(text: str, id: int, type: str):
     folder = "titles" if type == "title" else "stories"
     audio_path = f'audio_files/{folder}/{type}_{id}_audio.wav'
 
-    endpoint = "http://127.0.0.1:9000/tts"
+    endpoint = os.environ.get("TTS_BASE_URL")
 
     response = requests.get(endpoint, params={
         "text": text,

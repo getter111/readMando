@@ -10,14 +10,17 @@ export default function StoryPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    //pass in production url from netlify
+    const apiUrl = import.meta.env.VITE_API_BASE_URL;
+
     const fetchStory = async () => {
         setLoading(true);
         setError("");
         setStory(null);
-
+        console.log(apiUrl)
         try {
             //first generates the story, then need to use jieba to segment the story into individual words
-            const response = await axios.post(`https://read-mando.fly.dev/generate_story`,{
+            const response = await axios.post(`${apiUrl}/generate_story`,{
                 difficulty: difficulty,
                 vocabulary: vocabulary.split(",").map(word => word.trim()), //takes vocab string -> string[]
                 topic: topic
@@ -25,13 +28,13 @@ export default function StoryPage() {
             console.log("Story and title generation: " , response.data)
 
             //segment the body of the story
-            const segmented_body = await axios.post(`https://read-mando.fly.dev/segment_story`, { 
+            const segmented_body = await axios.post(`${apiUrl}/segment_story`, { 
                 content: response.data.content
             });
             console.log("segmented body: " , segmented_body.data)
 
             //segment the title of the story 
-            const segmented_title = await axios.post(`https://read-mando.fly.dev/segment_story`, { 
+            const segmented_title = await axios.post(`${apiUrl}/segment_story`, { 
                 content: response.data.title
             });
             console.log("segmented title: " , segmented_title.data)

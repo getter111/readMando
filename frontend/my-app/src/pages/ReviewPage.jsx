@@ -20,7 +20,8 @@ import WordHover from "../components/WordHover"
 import { useState } from "react";
 import axios from "axios";
 
-const apiUrl = "/api";
+//pass in production url from netlify
+const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
 export default function ReviewPage() {
   const words = ["你好", "学习", "快乐", "我"];
@@ -33,10 +34,10 @@ export default function ReviewPage() {
     setError(null); // Reset error state before making the request
     try {
       const simpleStory = "这是一个测试故事";
-      const segmentResponse = await axios.post(`https://read-mando.fly.dev/segment_story`, {
+      const segmentResponse = await axios.post(`${apiUrl}/segment_story`, {
         content: simpleStory
       });
-
+      console.log(apiUrl)
       console.log("Segment response:", segmentResponse);
       setSegmentedWords(segmentResponse.data); // Assuming response.data contains the segmented words
     } catch (error) {
