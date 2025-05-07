@@ -1,5 +1,6 @@
 #only backend requirements, we will be communicating with meloTTS through http not imports
 fastapi==0.115.5
+uvicorn
 aiofiles==23.2.1
 openai==1.55.0
 pydantic[email]>=2.6.4
