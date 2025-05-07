@@ -40,7 +40,9 @@ def text_to_audio(text: str, id: int, type: str):
     folder = "titles" if type == "title" else "stories"
     audio_path = f'audio_files/{folder}/{type}_{id}_audio.wav'
 
-    response = requests.get("http://127.0.0.1:9000/tts", params={
+    endpoint = "http://127.0.0.1:9000/tts"
+
+    response = requests.get(endpoint, params={
         "text": text,
         "id": id,
         "type": type
