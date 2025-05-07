@@ -2,7 +2,7 @@ __pycache__/
 *.pyc
 .git/
 melo/models/
-venv/
+.venv/
 *.ipynb
 *.wav
 *.mp3
@@ -10,7 +10,7 @@ venv/
 *.zip
 *.tar
 datasets/
-
+node_modules/
 __pycache__/
 *.pyc
 *.pyo

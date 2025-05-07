@@ -2,6 +2,7 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import axios from 'axios';
 
+//pass in from netlify
 const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
 function WordHover({ word }) {
@@ -14,6 +15,7 @@ function WordHover({ word }) {
 
     async function fetchTranslation() {
         try {
+            console.log(apiUrl)
             const response = await axios.get(`${apiUrl}/vocabulary/${word}`);
             if (!response.data.statusCode) { 
                 const data = response.data;
