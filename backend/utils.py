@@ -4,6 +4,7 @@ from supaDB import vocabulary_crud
 import requests
 import os
 from dotenv import load_dotenv
+from fastapi import HTTPException
 
 load_dotenv()
 
@@ -44,16 +45,22 @@ def text_to_audio(text: str, id: int, type: str):
 
     endpoint = os.environ.get("TTS_BASE_URL")
 
-    response = requests.get(endpoint, params={
-        "text": text,
-        "id": id,
-        "type": type
-    })
-    with open(audio_path, "wb") as f:
-        f.write(response.content)
+    print(endpoint)
 
-    return audio_path
+    try:
+        response = requests.get(endpoint, params={
+            "text": text,
+            "id": id,
+            "type": type
+        })
 
+        with open(audio_path, "wb") as f:
+            f.write(response.content)
+
+        return audio_path
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calling melotts api: {str(e)}")
 
 # add_vocabulary_to_db([{
 #     "word": "诸葛亮",
