@@ -45,8 +45,6 @@ def text_to_audio(text: str, id: int, type: str):
 
     endpoint = os.environ.get("TTS_BASE_URL")
 
-    print(endpoint)
-
     try:
         response = requests.get(endpoint, params={
             "text": text,
