@@ -1,36 +1,51 @@
-from pypinyin import pinyin, Style
-# import some_translation_api  #open source machine translation api
+from pypinyin import lazy_pinyin, Style
 from supaDB import vocabulary_crud
 import requests
 import os
 from dotenv import load_dotenv
 from fastapi import HTTPException
+from openai import OpenAI
+import json
 
 load_dotenv()
 
-def extract_vocab(text: str):
-    #extract unique vocab from text
-    words = set(text)
-    vocab_list = []
+client = OpenAI(
+    api_key=os.environ.get("OPEN_API_KEY")
+)
 
-    for word in words:
-        #TODO: research to see if there is free translation api (if not might have to use google translate)
-        english_translation = some_translation_api.translate(word, target_lang="en")
-        pinyin_rep = " ".join([syllable[0] for syllable in pinyin(word, style=Style.TONE3)])  # Convert to Pinyin with tones
+#return translation, pos, piyin, example sentence of unknown 子
+def auto_fetch(word: str):
+    outline_prompt = (
+        "Give the English translation, part of speech such as noun, verb, adjective, "
+        f"pinyin, and an simple Chinese example sentence for the Chinese word '{word}'. "
+        "Respond ONLY in JSON format with the keys: \"word\", \"pinyin\", \"translation\", "
+        "\"part of speech\", and \"example sentence\". Example:\n"
+        "{\n"
+        "  \"word\": \"苹果\",\n"
+        "  \"pinyin\": \"píngguǒ\",\n"
+        "  \"translation\": \"apple\",\n"
+        "  \"part of speech\": \"noun\",\n"
+        "  \"example sentence\": \"我喜欢吃苹果。\"\n"
+        "}"
+    )
+    try:
+        # pinyin = " ".join(lazy_pinyin(word, style=Style.TONE))
 
-        vocab_list.append({
-            "word": word,
-            "pinyin": pinyin_rep,
-            "translation": english_translation
-            #word_type = "trust the user to fill in this field, create a put endpoint"
-            #example_sentence = "could use ai to fill in this field"
-            #audio_file = "idk if it is wise to let user fill in this field, but also I don't want to voice 1000+ vocab words"
-        })
+        request = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "user", "content": outline_prompt}
+            ]
+        )
 
-    return vocab_list
+        fetched_word = request.choices[0].message.content.strip()
+        return fetched_word
+        
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Could not generate {word}: {str(e)}")
+print(auto_fetch("一"))
 
-#inserts new row if not in table.
-#updates row if already in table.
+#inserts new row if not in table; updates row if already in table.
 def add_vocabulary_to_db(vocab_list: list[dict]):
     try:
         res = vocabulary_crud.batch_insert_vocabulary(vocab_list) 
@@ -38,7 +53,7 @@ def add_vocabulary_to_db(vocab_list: list[dict]):
     except Exception as e:
         print(f"Error adding vocabulary: {e}")
 
-#call melotts tts endpoint and write to our audio_path
+#call tts endpoint and write to our audio_path
 def text_to_audio(text: str, id: int, type: str):
     folder = "titles" if type == "title" else "stories"
     audio_path = f'audio_files/{folder}/{type}_{id}_audio.wav'
@@ -59,23 +74,3 @@ def text_to_audio(text: str, id: int, type: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calling melotts api: {str(e)}")
-
-# add_vocabulary_to_db([{
-#     "word": "诸葛亮",
-#     "pinyin": "zhùgè liàng",
-#     "translation": "legoat"
-# }])
-# text = "我喜欢学习自然语言处理。"
-# text = "自然语言处理是人工智能的重要分支"
-# # Precise mode
-# words = jieba.cut(text, cut_all=False)
-# print("Precise Mode:", "/".join(words))
-# 
-# import jieba.posseg as pseg
-
-# words = pseg.cut("我喜欢学习自然语言处理。")
-# for word, flag in words:
-#     print(f"{word} ({flag})")
-
-
-
