@@ -45,8 +45,9 @@ class VocabularyCRUD:
         res = self.supabase.table("vocabulary").select("*").eq("translation", translation).execute()
         return res.data[0]
 
+    #if "word" exists update row instead of inserting
     def batch_insert_vocabulary(self, vocab_list: list[dict]):
-        res = self.supabase.table("vocabulary").upsert(vocab_list).execute()
+        res = self.supabase.table("vocabulary").upsert(vocab_list, on_conflict=["word"]).execute()
         return res.data
 
     # def update_vocabulary(self, vocab_id: int, updates: UserUpdate):
