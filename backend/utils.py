@@ -43,7 +43,7 @@ def auto_fetch(word: str):
         
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Could not generate {word}: {str(e)}")
-print(auto_fetch("一"))
+# print(auto_fetch("一"))
 
 #inserts new row if not in table; updates row if already in table.
 def add_vocabulary_to_db(vocab_list: list[dict]):
