@@ -17,7 +17,6 @@ export default function StoryPage() {
         setLoading(true);
         setError("");
         setStory(null);
-        console.log(apiUrl)
         try {
             //first generates the story, then need to use jieba to segment the story into individual words
             const response = await axios.post(`${apiUrl}/generate_story`,{
