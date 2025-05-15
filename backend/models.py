@@ -60,6 +60,8 @@ class VocabularyCreate(VocabularyBase):
 class VocabularyResponse(VocabularyBase):
     vocab_id: int
     created_at: datetime
+class VocabRequest(BaseModel):
+    vocab: str
 
 ### I feel like Progress and Questions table can be combined. Maybe we do not need both###
 
@@ -148,4 +150,5 @@ class StoryGenerationResponse(BaseModel):
     content: str
 
 class StorySegmentationRequest(BaseModel):
-    content: str
+    content: str    
+

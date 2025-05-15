@@ -141,10 +141,10 @@ async def segment_story(request: models.StorySegmentationRequest):
         raise HTTPException(status_code=500, detail=f"Error segmenting story: {str(e)}")
 
 #autofetch unknown words and add to db
-@app.post("/vocabulary/{word}")
-async def add_vocabulary(vocab: str):
+@app.post("/vocabulary")
+async def add_vocabulary(request: models.VocabRequest):
     try:
-        res = auto_fetch(vocab)
+        res = auto_fetch(request.vocab)
         #Response body: "{\n  \"word\": \"诸葛亮\",\n  \"pinyin\": \"Zhūgě Liàng\",\n  \"translation\": \"Zhuge Liang\",\n  \"part of speech\": \"noun\",\n  \"example sentence\": \"诸葛亮是三国时期著名的谋略家。\"\n}"
         if isinstance(res, str):
             unknown_word = json.loads(res) #convert json string -> python dict
@@ -171,7 +171,7 @@ async def add_vocabulary(vocab: str):
         return new_vocab
     
     except Exception as e:
-        return HTTPException(status_code=500, detail=f"Auto-fetch failed for {vocab}: {str(e)}")
+        return HTTPException(status_code=500, detail=f"Auto-fetch failed for {request.vocab}: {str(e)}")
         
 # endpoints to retrieve vocabulary for onhover effect
 @app.get("/vocabulary/{word}")
