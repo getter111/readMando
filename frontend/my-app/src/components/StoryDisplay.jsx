@@ -2,8 +2,9 @@ import WordHover from "./WordHover";
 import PropTypes from "prop-types";
 
 // Regex for English and Chinese punctuation
-const punctuationRegex = /^[\.,!?;:(){}[\]'"`-。，！？；：“”【】()、\s\n\r]+$/;
+const punctuationRegex = /^[.,!?;:(){}[\]'"`-。，！？；：“”【】()、\s\n\r]+$/;
 
+//passing in the segmented array of story content
 function StoryDisplay({ story }) {
     if (!story.content || !Array.isArray(story.content)) 
         return <p className="text-gray-500">No story generated yet.</p>;
@@ -16,7 +17,7 @@ function StoryDisplay({ story }) {
                 : <WordHover key={key} word={word} />;
         });
     };
-
+    console.log(renderSegment)
     const title = renderSegment(story.title, "title");
     const body = renderSegment(story.content, "body");
 
