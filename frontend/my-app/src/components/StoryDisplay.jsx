@@ -8,7 +8,7 @@ const punctuationRegex = /^[.,!?;:(){}[\]'"`-。，！？；：“”【】()、
 const chineseRegex = /^[\u4e00-\u9fff]+$/;
 
 //passing in the segmented array of story content
-function StoryDisplay({ story }) {
+function StoryDisplay({ story }) {  
     if (!story.content || !Array.isArray(story.content)) 
         return <p className="text-gray-500">No story generated yet.</p>;
 
