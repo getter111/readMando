@@ -10,12 +10,13 @@ from datetime import datetime, timedelta
 from pydantic import ValidationError
 import jieba
 import json
+from typing import List
 
 import models
 from supaDB import user_crud, vocabulary_crud, story_crud, question_crud,user_vocabulary_crud, user_stories_crud, story_vocabulary_crud
 from storyGenerator import generateStory
 from email_utils import send_verification_email
-from utils import text_to_audio, add_vocabulary_to_db, auto_fetch
+from utils import text_to_audio, add_vocabulary_to_db, auto_fetch, generateQuestions
 from supaDB import upload_audio_to_storage, save_audio_url_to_db
 
 app = FastAPI()
@@ -76,8 +77,9 @@ async def generate_story(
         #save urls to stories table
         await save_audio_url_to_db(story_id, "title", title_audio_url)
         await save_audio_url_to_db(story_id, "story", story_audio_url)
-
+        
         return models.StoryGenerationResponse(
+            story_id=story_id,
             title=story["title"],
             content=story["story"]
         )
@@ -140,7 +142,7 @@ async def segment_story(request: models.StorySegmentationRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error segmenting story: {str(e)}")
 
-#autofetch unknown words and add to db
+#autofetch unknown words and add to db, should only be used on chinese characters
 @app.post("/vocabulary")
 async def add_vocabulary(request: models.VocabRequest):
     try:
@@ -171,7 +173,7 @@ async def add_vocabulary(request: models.VocabRequest):
         return new_vocab
     
     except Exception as e:
-        return HTTPException(status_code=500, detail=f"Auto-fetch failed for {request.vocab}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Auto-fetch failed for {request.vocab}: {str(e)}")
         
 # endpoints to retrieve vocabulary for onhover effect
 @app.get("/vocabulary/{word}")
@@ -182,4 +184,28 @@ async def get_vocabulary(word: str):
     else:
         raise HTTPException(status_code=404, detail="Vocabulary not found.")
     
-# TODO  Generate a list of comprehention questions at the end of the story
+# Generates a list of comprehention questions
+@app.post("/generate_questions", response_model=List[models.QuestionCreate])
+async def generate_questions(request: models.QuestionGenerationRequest):
+    
+    try:
+        saved_questions = []
+
+        #generate reading comprehension questions
+        response = generateQuestions(request.story, request.difficulty, request.title)
+        questions = json.loads(response) #parse json string 
+
+        #insert generated questions to questions table
+        for q in questions:
+            new_question = models.QuestionCreate(
+                story_id=request.story_id,
+                question_text=q["question_text"],
+                correct_answer=q["correct_answer"],
+                answer_choices=q["answer_choices"]
+            )
+            saved_questions.append(new_question)
+        
+        batch = question_crud.create_questions_batch(saved_questions)
+        return batch
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Question generation failed {str(e)}")
