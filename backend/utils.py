@@ -67,6 +67,7 @@ def text_to_audio(text: str, id: int, type: str):
             "type": type
         })
 
+        #create new audio file
         with open(audio_path, "wb") as f:
             f.write(response.content)
 
@@ -74,3 +75,37 @@ def text_to_audio(text: str, id: int, type: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calling melotts api: {str(e)}")
+    
+def generateQuestions(story:str, difficulty:str, title:str):
+    prompt = (
+        f"Create 5 multiple-choice reading comprehension questions in English for a Chinese language learner.\n\n"
+        f"Use this format:\n"
+        f"[\n"
+        f"  {{\n"
+        f"    \"question_text\": \"What ?\",\n"
+        f"    \"correct_answer\": \"\",\n"
+        f"    \"answer_choices\": [\"A\", \"B\", \"C\", \"D\"]\n"
+        f"  }}\n"
+        f"]\n\n"
+        f"Level: {difficulty}\n"
+        f"Title: {title}\n\n"
+        f"Story:\n{story}\n\n"
+        f"Respond with raw JSON only. No markdown, no explanation, no code block formatting."
+        f"All answers and choices must be in English. Do not label the answer choices with letters."
+    )
+
+    try:
+        request = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        response = request.choices[0].message.content.strip()
+        print("Response: \n")
+        print(response)
+        return response
+        
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Could not generate comprehension questions {str(e)}")
