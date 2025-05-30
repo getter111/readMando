@@ -37,8 +37,6 @@ story_vocabulary_crud = StoryVocabularyCRUD(supabase) #TBA if used in future
 #supabase storage bucket name
 BUCKET_NAME = "audio"
 
-#todo: #delete audio file from memory once comfired that audio is in supabase storage
-
 async def upload_audio_to_storage(audio_file_path: str) -> str:
     try: 
         if not os.path.exists(audio_file_path):
@@ -49,7 +47,7 @@ async def upload_audio_to_storage(audio_file_path: str) -> str:
 
         try:
             file_upload = supabase.storage.from_(BUCKET_NAME).upload(audio_file_path, file_content)
-            print("upload_audio_to_storage: ", file_upload) #error was because i was trying to concate file_upload to a str bruh moment
+            print("upload_audio_to_storage: ", file_upload) #error was because i was trying to print file_upload + str
         except Exception as e:
             raise Exception(f"Error uploading file: {str(e)}")
         

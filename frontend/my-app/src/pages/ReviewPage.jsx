@@ -22,9 +22,10 @@ import axios from "axios";
 
 //pass in production url from netlify
 const apiUrl = import.meta.env.VITE_API_BASE_URL;
+const chineseRegex = /^[\u4e00-\u9fff]+$/;
 
 export default function ReviewPage() {
-  const words = ["你好", "学习", "快乐", "我"];
+  const words = ["你好", "学习", "快乐", "我", "EnglishWord"];
   const [segmentedWords, setSegmentedWords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -54,6 +55,7 @@ export default function ReviewPage() {
       <div className="text-lg">
         Try hovering over these words:{" "}
         {words.map((word, index) => (
+          !chineseRegex.test(word) ? <span key={index}>{word}</span> :
           <WordHover key={index} word={word} />
         ))}
       </div>
