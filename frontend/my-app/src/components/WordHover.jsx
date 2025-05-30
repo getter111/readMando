@@ -4,8 +4,7 @@ import axios from 'axios';
 
 //pass in from netlify
 const apiUrl = import.meta.env.VITE_API_BASE_URL;
-
-const translationCache = new Map();
+const TTL = 7 * 24 * 60 * 60 * 1000; 
 
 function WordHover({ word }) {
     const [translation, setTranslation] = useState("");
@@ -18,7 +17,7 @@ function WordHover({ word }) {
     const [highlight, setHighlight] = useState("");
 
     const localKey = `word:${word}`; //key for localstorage
-
+    
     function setState(definition){
         setTranslation(definition.translation);
         setPinyin(definition.pinyin);
@@ -26,30 +25,46 @@ function WordHover({ word }) {
         setNotFound(false);
     }
 
-    async function fetchTranslation() {
-        //check in memory cache first
-        if (translationCache.has(word)) {
-            try {
-                const cached = translationCache.get(word); //get from memory
-                console.log(`⚡ Using cached data for ${word}`);
-                setState(cached)
-                return;
-            } catch (err) {
-                console.error(`Failed to get from cache for: ${word}. ${err}`);            
+    // add value and custom expiration time to local storage (in ms)
+    function setExpireDate(key, value, ttl) {
+        const now = new Date();
+        const item = {
+            value: value,
+            expiry: now.getTime() + ttl,
+        };
+        localStorage.setItem(key, JSON.stringify(item));
+    }
+
+    // Gets item if not expired
+    function getLocalStorage(key) {
+        const itemStr = localStorage.getItem(key);
+        if (!itemStr) return null;
+
+        try {
+            const item = JSON.parse(itemStr); //oonverts string to a dictionary
+            const now = new Date();
+
+            if (now.getTime() > item.expiry) {
+                localStorage.removeItem(key); //remove expired item
+                return null;
             }
+            return item.value;
+        } catch (e) {
+            console.error("Failed to parse item from localStorage", e);
+            localStorage.removeItem(key);
+            return null;
         }
-        const localData = localStorage.getItem(localKey) //get from local storage
-        if (localData){
-            try {
-                const cached = JSON.parse(localData) 
-                console.log(`💾 localStorage for ${word}`);
-                translationCache.set(word, cached) //cache
-                setState(cached)
-                return;
-            } catch (err) {
-                console.error(`Failed to parse localStorage for: ${word}. ${err}`);            }
+    }
+
+    async function fetchTranslation() {
+        const localValue = getLocalStorage(localKey);
+        if (localValue) {
+            console.log(`💾 Used localStorage for ${word}`);
+            setState(localValue);
+            return;
         }
-        //fetch unknown word from api
+
+        //fetch word from backend
         setIsLoading(true);
         try {
             console.log(`🔍 Fetching translation for: ${word}`);
@@ -63,17 +78,19 @@ function WordHover({ word }) {
                     pinyin: response.data.pinyin,
                     wordType: response.data.word_type,
                 }
-                translationCache.set(word, definition) //cache result
-                localStorage.setItem(localKey,JSON.stringify(definition)) //store in browser local storage
+
+                setExpireDate(localKey, definition, TTL); //store definition in browsers local storage
                 setState(definition)
                 setIsLoading(false);
                 console.log(`✅ Translation:`, definition);
             }  
-        } catch (error) { //gets a 404 status from api response
+        } catch (error) {
+            //404 return from /vocabulary/{word}, so we auto-fetch unknown word from backend
             if (axios.isAxiosError(error) && error.response?.status === 404) {
                 console.log(`${error}, ${word} not found. auto generating...`);
                 setNotFound(true);
                 setHighlight("not-found");
+
                 try {
                     const newWord = await axios.post(`${apiUrl}/vocabulary`, {
                         vocab: word
@@ -86,8 +103,7 @@ function WordHover({ word }) {
                         wordType: newWord.data.word_type,
                     }
 
-                    translationCache.set(word, definition) //cache result
-                    localStorage.setItem(localKey,JSON.stringify(definition)) //store in browser local storage
+                    setExpireDate(localKey, definition, TTL);
                     setState(definition)
                     setHighlight("found");
                 } catch (autoFetchError) {
