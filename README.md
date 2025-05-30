@@ -1,27 +1,37 @@
-# AI Generated Short Stories
+# AI-Generated Short Stories
 
-Welcome to ReadMando, 
-live demo -> [ReadMando (in progress)](https://readmando.netlify.app/)
+📖 **Live Demo** → [ReadMando (in progress)](https://readmando.netlify.app/)
 
 ## About
 
-This project generates Chinese short stories with the help of AI. Chinese language learners can generate and customize their short stories to start practicing their reading comprehension.
+This project helps Chinese language learners improve their reading comprehension by generating dynamic, customizable short stories. Users can tailor stories to their vocabulary level and reading goals.
 
 ## Features
-- **AI-Generated Stories**: Automatically generates Chinese short stories using AI.
-- **Customization Options**: 
-  - Users can customize the difficulty, length, and themes of the stories.
-  - Users can choose specific vocabulary they want to appear in the short stories to target certain words or concepts.
-- **Auto-Generated Questions**: At the end of each story, the AI generates questions related to the content to test reading comprehension.
-- **Text to Speech**: Utilizes MeloTTS library to translate Chinese characters into English audio
-    - link -> https://github.com/myshell-ai/MeloTTS 
-- **Hover/Word Segmentation**:
-  - Users can hover over words to see pinyin, translation, and part-of-speech tags.
-  - Utilizes Jieba library to segment words into a logical text structure.
-    - link -> https://github.com/fxsjy/jieba  
+
+### 📘 Story Generator Page
+
+- **Story Customization**  
+  - Customize difficulty, length, and themes of each story.  
+  - Choose specific vocabulary to appear in the story for targeted learning.
+
+- **Auto-Generated Comprehension Questions**  
+  - At the end of each story, questions are generated automatically to test reading comprehension.
+
+- **Text-to-Speech (TTS)**  
+  - Listen along as you read.
+  - Uses [MeloTTS](https://github.com/myshell-ai/MeloTTS) to convert Chinese characters into natural-sounding Chinese audio.
+
+- **Easy Vocabulary Lookup**  
+  - Hover over any word to see its pinyin, translation, and part-of-speech tag.  
+  - Uses the [Jieba](https://github.com/fxsjy/jieba) segmentation library.
+
+- **Unknown Vocabulary Detection**  
+  - Unknown words not found in the master vocabulary database are automatically processed.  
+  - The app predicts and displays their meaning, part of speech, and pronunciation.
 
 ## Deployment
-Currently structured as two main services. Both built with FastAPI, containerized using Docker, and deployed via [Fly.io](https://fly.io/).
+
+The application is structured as two main microservices. Both built using FastAPI, containerized with Docker, and deployed on [Fly.io](https://fly.io/).
 
 - **Main Backend**:  
 This service handles:
@@ -32,9 +42,3 @@ This service handles:
 
 - **TTS**:  
   The TTS functionality is deployed as a separate service using the [MeloTTS](https://github.com/myshell-ai/MeloTTS) library.
-
-- **In Progress Features**:
-  - App will detect if words are not present in the master vocabulary database while processing the story.
-  - App will predict the meaning of these unfamiliar words.
-  - Registered users can edit the words and choose to add these words to the master vocabulary database, for the betterment of the app.
-  - There may be special rewards for contributors who actively engage and help improve the database of vocabulary.
