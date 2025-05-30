@@ -94,8 +94,6 @@ class QuestionResponse(QuestionBase):
     question_id: int
     created_at: datetime
 
-
-
 # UserVocabulary Table
 class UserVocabularyBase(BaseModel):
     user_id: int
@@ -139,16 +137,23 @@ class StoryVocabularyResponse(StoryVocabularyBase):
     story_vocab_id: int
     created_at: datetime
 
-#story generation model
+
+#models for api requests
 class StoryGenerationRequest(BaseModel):
     difficulty: Optional[str] = "beginner"
     vocabulary: Optional[List[str]] = None
     topic: Optional[str] = None
 
 class StoryGenerationResponse(BaseModel):
+    story_id: int
     title: str
     content: str
 
 class StorySegmentationRequest(BaseModel):
     content: str    
 
+class QuestionGenerationRequest(BaseModel):
+    story_id: int
+    story: str
+    title: str
+    difficulty: str
