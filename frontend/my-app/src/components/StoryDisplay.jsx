@@ -8,7 +8,7 @@ const punctuationRegex = /^[.,!?;:(){}[\]'"`-。，！？；：“”【】()、
 const chineseRegex = /^[\u4e00-\u9fff]+$/;
 
 //passing in the segmented array of story content
-function StoryDisplay({ story }) {  
+function StoryDisplay({ story, fetchQuestions, loadingQuestions, clearStory }) {  
     if (!story.content || !Array.isArray(story.content)) 
         return <p className="text-gray-500">No story generated yet.</p>;
 
@@ -24,9 +24,28 @@ function StoryDisplay({ story }) {
     const body = renderSegment(story.content, "body");
 
     return (
-        <div>
-            <h3 className="text-lg font-bold flex flex-wrap">{title}</h3>
-            <div className="mt-2 flex flex-wrap">{body}</div>
+        <div className="flex flex-col h-full">
+            <div className="flex-grow">
+                <h3 className="text-2xl font-bold flex flex-wrap">{title}</h3>
+                <div className="mt-4 text-lg flex flex-wrap">{body}</div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3">
+                <button
+                    onClick={fetchQuestions}
+                    disabled={loadingQuestions}
+                    className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition disabled:bg-gray-400 cursor-pointer"
+                >
+                    {loadingQuestions ? "Generating Questions..." : "Generate Questions"}
+                </button>
+
+                <button
+                    onClick={clearStory}
+                    className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600 transition cursor-pointer"
+                >
+                    Clear Story
+                </button>
+            </div>
         </div>
     );
 }
@@ -36,6 +55,9 @@ StoryDisplay.propTypes = {
         title: PropTypes.arrayOf(PropTypes.string).isRequired,
         content: PropTypes.arrayOf(PropTypes.string).isRequired,
     }).isRequired,
+    fetchQuestions: PropTypes.func.isRequired,
+    loadingQuestions: PropTypes.bool.isRequired,
+    clearStory: PropTypes.func.isRequired,
 };
 
 export default StoryDisplay;
