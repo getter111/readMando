@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import StoryDisplay from "../components/StoryDisplay"; 
+import QuestionList from "../components/QuestionList";
 
 export default function StoryPage() {
     const [story, setStory] = useState(null); // Ensure story is an object
@@ -75,6 +76,7 @@ export default function StoryPage() {
                 content: segmented_body.data.segmented_words
             }))
             localStorage.setItem("difficulty", difficulty);
+            localStorage.setItem("storyId", response.data.story_id);
 
         } catch (error) {
             setError("Failed to generate story. Try again!");
@@ -94,10 +96,11 @@ export default function StoryPage() {
                 difficulty: difficulty,
                 story_id: storyId
             });
-
             console.log("Questions generated: ", response.data);
+
             setQuestions(response.data)
             localStorage.setItem("questions", JSON.stringify(response.data));
+            
         } catch (error) {
             setError("Failed to generate questions. Try again!");
             console.error(error);
@@ -175,9 +178,10 @@ export default function StoryPage() {
                     </div>
                 </div>
                 <div className="bg-white mt-6 p-6 rounded-lg shadow-md">
-                    
+                    {questions.length > 0 && (
+                        <QuestionList questions={questions} />
+                    )}
                 </div>
-
             </main>
         </div>
     );
