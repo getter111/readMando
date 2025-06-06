@@ -13,11 +13,12 @@ import json
 from typing import List
 
 import models
-from supaDB import user_crud, vocabulary_crud, story_crud, question_crud,user_vocabulary_crud, user_stories_crud, story_vocabulary_crud
+from supaDB import user_crud, vocabulary_crud, story_crud, question_crud, user_vocabulary_crud, user_stories_crud, story_vocabulary_crud, progress_crud
 from storyGenerator import generateStory
 from email_utils import send_verification_email
 from utils import text_to_audio, add_vocabulary_to_db, auto_fetch, generateQuestions
 from supaDB import upload_audio_to_storage, save_audio_url_to_db
+from fastapi.responses import RedirectResponse
 
 app = FastAPI()
 
@@ -31,6 +32,34 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"message": "Hello from FastAPI on Fly.io!"}
+
+# Endpoint to hydrate the story page
+@app.get("/user/{user_id}/story", response_model= models.StoryPageHydration)
+async def get_user_story_page_data(user_id: int):
+    user = user_crud.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # get most recent story id to fetch story content, title, difficuly, audios, and questions
+    most_recent_story_id = user_stories_crud.get_user_story(user_id)["story_id"]
+
+    #if not found that means the user is a guest
+    if not most_recent_story_id:
+        return
+    
+    story_data = story_crud.get_story_by_id(most_recent_story_id)
+    questions = question_crud.get_questions_by_story_id(most_recent_story_id)
+    res = models.StoryPageHydration(
+        story_id=int(most_recent_story_id),
+        content=story_data["content"],
+        title=story_data["title"],
+        difficulty=story_data["difficulty"],
+        title_audio=story_data["title_audio"],
+        story_audio=story_data["story_audio"],
+        questions=questions
+    )
+    print("story hydration")
+    return res
 
 @app.post("/generate_story")
 async def generate_story(
@@ -63,7 +92,7 @@ async def generate_story(
                     story_id= story_id,
                     read_status="FALSE"
                 )
-
+                # Add the story to the user_stories table
                 user_stories_crud.create_user_story(user_story)
 
         # use melo api to generate tts for the title and story
@@ -85,7 +114,24 @@ async def generate_story(
         )
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating story: {str(e)}")
+        print(str(e))
+        raise HTTPException(status_code=500, detail=f"Error generating story")
+
+@app.post("/login")
+async def login_user(user: models.UserCreate):
+    try:
+        #Check if user exists
+        existing_user = user_crud.get_user_by_name(user.username)
+        if not existing_user:
+            raise HTTPException(status_code=404, detail="User does not exist or may not be verified.")
+        
+        if existing_user["is_verified"]:
+            return existing_user
+        else:
+            raise HTTPException(status_code=403, detail="User not verified. Please check your email.")
+    except Exception as e:
+        print(str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 @app.post("/register")
 async def register_user(user: models.UserCreate):
@@ -98,7 +144,7 @@ async def register_user(user: models.UserCreate):
         # Generate verification token
         verification_token = str(uuid4())
 
-        # Save user with unverified status
+        # Save new user status
         created_user = user_crud.create_user(
             models.UserCreate(
                 username=user.username,
@@ -108,13 +154,13 @@ async def register_user(user: models.UserCreate):
         )
 
         # Send verification email
-        await send_verification_email(user.email, verification_token)
-        
-        return {"message": "Registration successful. Please check your email to verify your account."}
+        await send_verification_email(user.username, user.email, verification_token)
+        return {"message": "User registered successfully. Please check your email to verify your account."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
-#email_utils calls this endpoint to verify token
+# endpoint to verify user's token
 @app.get("/verify/{token}")
 async def verify_email(token: str):
     try:
@@ -128,10 +174,11 @@ async def verify_email(token: str):
         )
         user_crud.update_user(user["user_id"], updates)
         
-        return {"message": "Email verified successfully. Your progress, will now be stored and ready for you the next time you log in!"}
+        return RedirectResponse(url="https://readmando.netlify.app/verification-success")
         # Now we just need to check if users attribute: is_verified, before saving to the db
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred")
     
 @app.post("/segment_story") #had to add a pydantic model/dict because in react passing json to body not a string. prev was (content:str) casuing 422 error
 async def segment_story(request: models.StorySegmentationRequest):
@@ -140,7 +187,8 @@ async def segment_story(request: models.StorySegmentationRequest):
         words = list(jieba.cut(request.content, cut_all=False))
         return {"segmented_words": words}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error segmenting story: {str(e)}")
+        print(str(e))
+        raise HTTPException(status_code=500, detail=f"Error segmenting story")
 
 #autofetch unknown words and add to db, should only be used on chinese characters
 @app.post("/vocabulary")
@@ -189,6 +237,12 @@ async def get_vocabulary(word: str):
 async def generate_questions(request: models.QuestionGenerationRequest):
     
     try:
+        existing_questions = question_crud.get_questions_by_story_id(request.story_id)
+
+        #return existing questions if they already exist
+        if existing_questions:
+            return existing_questions
+
         saved_questions = []
 
         #generate reading comprehension questions
@@ -208,4 +262,27 @@ async def generate_questions(request: models.QuestionGenerationRequest):
         batch = question_crud.create_questions_batch(saved_questions)
         return batch
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Question generation failed {str(e)}")
+        print(str(e))
+        raise HTTPException(status_code=500, detail=f"Question generation failed")
+
+# endpoint to save user's progress after completing reading comprehension questions
+@app.post("/save_progress")
+async def save_user_progress(progress: models.ProgressCreate):
+    try:
+        user = user_crud.get_user(progress.user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        saved_progress = progress_crud.upsert_progress(progress)
+        print("dahellu0")
+        user_stories_crud.update_user_story(
+            models.UserStoryUpdate(
+                read_status=True,  # Mark story as read
+                story_id=progress.story_id,
+                user_id=progress.user_id
+            )
+        )
+        return saved_progress
+    except Exception as e:
+        print(str(e))
+        raise HTTPException(status_code=500, detail=f"Error saving progress")
