@@ -42,3 +42,9 @@ This service handles:
 
 - **TTS**:  
   The TTS functionality is deployed as a separate service using the [MeloTTS](https://github.com/myshell-ai/MeloTTS) library.
+
+### ⚠️ Note on Story Generation Speed
+
+Text-to-speech generation for the story will be slow due to cold startups of the backend services. I’m actively working on optimizing performance to reduce these delays. Currently looking into using GPU containers to speed up TTS generation.
+
+If you have any suggestions or ideas to improve this, please feel free to [contact me](mailto:readmandocrew@gmail.com)!
