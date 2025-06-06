@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-async def send_verification_email(email: str, verification_token: str):
+async def send_verification_email(username: str, email: str, verification_token: str):
     
     print(f"Sending email to {email}")
     
@@ -22,17 +22,28 @@ async def send_verification_email(email: str, verification_token: str):
     #os.environ.get
     BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
-    html = f"""
-        <p>Please verify your email by clicking the link below:</p>
-        <p>
-            <a href="{BASE_URL}/verify/{verification_token}">
-                Verify Email
-            </a>
-        </p>
+    # verify it is a real email account, calls backend endpoint
+    html = f"""    
+        <!DOCTYPE html>
+        <html>
+            <body>
+                <div>
+                    <h3>Welcome to ReadMando, {username}! 👋</h3>
+                    <p>We're excited to help you on your Chinese learning journey.</p>
+                    <p>To get started, please verify your email address by clicking the button below:</p>
+                    <p>
+                        <a href="{BASE_URL}/verify/{verification_token}">Verify Email</a>
+                    </p>
+                    <div>
+                        If you did not sign up for ReadMando, you can safely ignore this email.
+                    </div>
+                </div>
+            </body>
+        </html>
     """
     
     message = MessageSchema(
-        subject="Read Mando: Verify Your Email",
+        subject="Activate your ReadMando account",
         recipients=[email],
         body=html,
         subtype="html"
