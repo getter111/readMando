@@ -16,7 +16,7 @@ export default function Header() {
   return (
     <header className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
       <div className="flex items-center space-x-4">
-        <Link to="/" className="text-xl font-bold text-blue-500">ReadMando</Link>
+        <Link to="/" className="text-xl font-bold text-blue-500 hover:text-blue-700 transition">ReadMando</Link>
         <select className="bg-gray-200 p-2 rounded-md text-sm cursor-pointer">
           <option>Words</option>
           <option>All Words</option>

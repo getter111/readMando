@@ -4,12 +4,14 @@ import Header from "./Header";
 
 export default function Layout() {
     return (
-    <div className="bg-gray-100 min-h-screen">
-        <nav>
-            <Header />
-        </nav>
-        <Outlet />        
-    </div>
-    )
+        <div className="bg-gray-100 h-screen flex flex-col">
+            <nav>
+                <Header />
+            </nav>
+            <Outlet />
+        </div>
+    );
 }
+
+
 
