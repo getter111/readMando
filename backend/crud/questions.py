@@ -40,9 +40,9 @@ class QuestionCRUD:
             return res.data[0] 
         return {"error": "Question not found"}
 
-    def get_questions_by_story_id(self, story_id: int) -> List[QuestionResponse]:
+    def get_questions_by_story_id(self, story_id: int) -> List[QuestionCreate]:
         res = self.supabase.table("questions").select("*").eq("story_id", story_id).execute()
-        return res.res.data[0] if res.data else []
+        return res.data if res.data else []
 
     def update_question(self, question_id: int, updates: QuestionUpdate):
         update_data = updates.model_dump(exclude_unset=True, exclude_defaults=True)
