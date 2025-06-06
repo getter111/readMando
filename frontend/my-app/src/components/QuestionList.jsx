@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
+import axios from "axios";
 
-function QuestionList({ questions }) {
+function QuestionList({ questions, user_id, storyId }) {
     const [selectedAnswers, setSelectedAnswers] = useState({}); 
     const [score, setScore] = useState({ correct: 0, total: 0 });
 
+    const apiUrl = import.meta.env.VITE_API_BASE_URL;
+
+    // keep track of answer choices
     useEffect(() => {
         const total = questions.length;
         let correct = 0;
@@ -15,18 +19,28 @@ function QuestionList({ questions }) {
             }
         });
         setScore({ correct, total });
+        if (Object.keys(selectedAnswers).length === total && user_id !== "guest") {
+            // Only save score if all questions answered
+            saveProgress(Math.round((correct / total) * 100), `${correct}/${total}`); //use recalculated state, since setScore is actually async
+        }
+    }, [selectedAnswers, questions]); //calls everytime user answers, or when given a new question list
 
-        // if (Object.keys(selectedAnswers).length === total) {
-        //     save progress to database 
-        // }
-    }, [selectedAnswers, questions]);
+    const saveProgress = async (completion_stats, questions_correct) => {
+        const response = await axios.post(`${apiUrl}/save_progress`, {
+            "user_id": parseInt(user_id),
+            "story_id": storyId,
+            "completion_status": completion_stats,
+            "questions_correct": questions_correct
+        })
+
+        console.log("Progress saved:", response.data);
+    }
 
     const handleSelect = (questionIndex, choice) => {
         setSelectedAnswers(prev => ({
             ...prev,
             [questionIndex]: choice
         }));
-        console.log(selectedAnswers)
     };
 
     const getChoiceStyle = (questionIndex, choice, correctAnswer) => {
@@ -49,9 +63,10 @@ function QuestionList({ questions }) {
     return (
         <div>
             <h2 className="text-xl font-semibold mb-4">Comprehension Questions</h2>
+            {storyId && <p className="text-sm text-gray-500 mb-2">Story ID: {storyId}</p> || 0 }
             <div className="space-y-6">
                 {questions.map((q, index) => (
-                    <div key={index} className="p-4 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
+                    <div key={index} className="p-4 border border-gray-200 rounded-lg shadow-sm">
                         <p className="font-medium mb-3">{index + 1}. {q.question_text}</p>
                         <div className="space-y-2">
                             {q.answer_choices.map((choice, i) => (
@@ -82,7 +97,7 @@ function QuestionList({ questions }) {
                     </div>
                 ))}    
             </div> 
-            {/* show. if selectedAnswers keys array === question length*/}
+            {/* show. if length of selectedAnswers keys array === question length*/}
             {Object.keys(selectedAnswers).length === questions.length && (
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
                     <h3 className="text-lg font-semibold mb-2">Your Score</h3>
@@ -102,6 +117,8 @@ QuestionList.propTypes = {
             correct_answer: PropTypes.string.isRequired,
         })
     ).isRequired,
+    user_id: PropTypes.string.isRequired,
+    storyId: PropTypes.number.isRequired
 };
 
 export default QuestionList;
