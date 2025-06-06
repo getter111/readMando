@@ -8,9 +8,9 @@ const punctuationRegex = /^[.,!?;:(){}[\]'"`-。，！？；：“”【】()、
 const chineseRegex = /^[\u4e00-\u9fff]+$/;
 
 //passing in the segmented array of story content
-function StoryDisplay({ story, fetchQuestions, loadingQuestions, clearStory }) {  
-    if (!story.content || !Array.isArray(story.content)) 
-        return <p className="text-gray-500">No story generated yet.</p>;
+function StoryDisplay({ story, fetchQuestions, loadingQuestions }) {  
+    if (!story.content || !story.title) 
+        return <p className="text-gray-500 flex-auto">No story generated yet.</p>;
 
     const renderSegment = (segment, type = "body") => {
         return segment.map((word, index) => {
@@ -20,8 +20,14 @@ function StoryDisplay({ story, fetchQuestions, loadingQuestions, clearStory }) {
                 : <WordHover key={key} word={word} />;
         });
     };
-    const title = renderSegment(story.title, "title");
-    const body = renderSegment(story.content, "body");
+
+    const title = Array.isArray(story.title)
+        ? renderSegment(story.title, "title")
+        : story.title;
+
+    const body = Array.isArray(story.content)
+        ? renderSegment(story.content, "body")
+        : story.content;
 
     return (
         <div className="flex flex-col h-full">
@@ -39,12 +45,6 @@ function StoryDisplay({ story, fetchQuestions, loadingQuestions, clearStory }) {
                     {loadingQuestions ? "Generating Questions..." : "Generate Questions"}
                 </button>
 
-                <button
-                    onClick={clearStory}
-                    className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600 transition cursor-pointer"
-                >
-                    Clear Story
-                </button>
             </div>
         </div>
     );
