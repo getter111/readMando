@@ -12,6 +12,7 @@ from crud.questions import QuestionCRUD
 from crud.user_vocabulary import UserVocabularyCRUD
 from crud.user_stories import UserStoryCRUD
 from crud.story_vocabulary import StoryVocabularyCRUD
+from crud.progress import ProgressCRUD 
 
 load_dotenv()
 
@@ -29,7 +30,7 @@ user_crud = UsersCRUD(supabase)
 vocabulary_crud = VocabularyCRUD(supabase)
 story_crud = StoryCRUD(supabase)
 question_crud = QuestionCRUD(supabase)
-#todo: progress_crud
+progress_crud = ProgressCRUD(supabase)
 user_vocabulary_crud = UserVocabularyCRUD(supabase)
 user_stories_crud = UserStoryCRUD(supabase)
 story_vocabulary_crud = StoryVocabularyCRUD(supabase) #TBA if used in future
@@ -81,3 +82,7 @@ async def save_audio_url_to_db(id: int, type: str, url: str):
     except Exception as e:
         print(f"save_audio_url_to_db failed: {str(e)}")
         return None
+    
+# user_stories_crud.update_user_story(
+#     updates=models.UserStoryUpdate(read_status=False, story_id=6, user_id=1)
+# )
