@@ -69,8 +69,8 @@ class VocabRequest(BaseModel):
 class ProgressBase(BaseModel):
     user_id: int
     story_id: int
-    completion_status: Optional[float] #better name would probably be comprehension score
-    questions_correct: Optional[int]
+    completion_status: Optional[int]
+    questions_correct: Optional[str]
 
 class ProgressCreate(ProgressBase): 
     pass
@@ -123,7 +123,6 @@ class UserStoryResponse(UserStoryBase):
     user_story_id: int
     created_at: datetime
 
-
 # StoryVocabulary Table
 class StoryVocabularyBase(BaseModel):
     story_id: int
@@ -157,3 +156,12 @@ class QuestionGenerationRequest(BaseModel):
     story: str
     title: str
     difficulty: str
+
+class StoryPageHydration(BaseModel):
+    story_id: int
+    content: str
+    title: str
+    difficulty: str
+    title_audio: Optional[str] = None
+    story_audio: Optional[str] = None
+    questions: List[dict]
