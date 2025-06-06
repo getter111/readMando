@@ -47,4 +47,4 @@ This service handles:
 
 Text-to-speech generation for the story will be slow due to cold startups of the backend services. I’m actively working on optimizing performance to reduce these delays. Currently looking into using GPU containers to speed up TTS generation.
 
-If you have any suggestions or ideas to improve this, please feel free to [contact me](mailto:readmandocrew@gmail.com)!
+If you have any suggestions or ideas to improve this, please feel free to [contact me](mailto:alexlin7211@gmail.com)!
