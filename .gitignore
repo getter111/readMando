@@ -26,3 +26,6 @@ build/
 
 *.zip
 *.wav
+
+#local certificates
+*.pem
