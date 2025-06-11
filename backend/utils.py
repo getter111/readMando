@@ -103,7 +103,6 @@ def generateQuestions(story:str, difficulty:str, title:str):
         )
 
         response = request.choices[0].message.content.strip()
-        print("Response: \n")
         print(response)
         return response
         
