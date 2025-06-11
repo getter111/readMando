@@ -19,7 +19,7 @@ function QuestionList({ questions, user_id, storyId }) {
             }
         });
         setScore({ correct, total });
-        if (Object.keys(selectedAnswers).length === total && user_id !== "guest") {
+        if (Object.keys(selectedAnswers).length === total && user_id) {
             // Only save score if all questions answered
             saveProgress(Math.round((correct / total) * 100), `${correct}/${total}`); //use recalculated state, since setScore is actually async
         }
@@ -27,13 +27,11 @@ function QuestionList({ questions, user_id, storyId }) {
 
     const saveProgress = async (completion_stats, questions_correct) => {
         const response = await axios.post(`${apiUrl}/save_progress`, {
-            "user_id": parseInt(user_id),
+            "user_id": user_id, //if userid is not undefined
             "story_id": storyId,
             "completion_status": completion_stats,
             "questions_correct": questions_correct
         })
-
-        console.log("Progress saved:", response.data);
     }
 
     const handleSelect = (questionIndex, choice) => {
@@ -117,7 +115,7 @@ QuestionList.propTypes = {
             correct_answer: PropTypes.string.isRequired,
         })
     ).isRequired,
-    user_id: PropTypes.string.isRequired,
+    user_id: PropTypes.number.isRequired,
     storyId: PropTypes.number.isRequired
 };
 
