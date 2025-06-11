@@ -2,15 +2,16 @@
 # generating a ebook should be extra feature
 
 #build out back end api and front end reactjs
-from typing import Union
-from fastapi import FastAPI, HTTPException, Depends
+from typing import Optional
+from fastapi import FastAPI, HTTPException, Cookie, Response
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pydantic import ValidationError
 import jieba
 import json
 from typing import List
+from jwt import ExpiredSignatureError, InvalidTokenError
 
 import models
 from supaDB import user_crud, vocabulary_crud, story_crud, question_crud, user_vocabulary_crud, user_stories_crud, story_vocabulary_crud, progress_crud
@@ -19,12 +20,13 @@ from email_utils import send_verification_email
 from utils import text_to_audio, add_vocabulary_to_db, auto_fetch, generateQuestions
 from supaDB import upload_audio_to_storage, save_audio_url_to_db
 from fastapi.responses import RedirectResponse
+from auth import create_token, decode_token
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://readmando.netlify.app", "https://melo-api.fly.dev"], 
+    allow_origins=["http://localhost:5173", "https://localhost:5173", "https://readmando.netlify.app", "https://melo-api.fly.dev"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -117,21 +119,87 @@ async def generate_story(
         print(str(e))
         raise HTTPException(status_code=500, detail=f"Error generating story")
 
+# endpoint to validate user session token
+@app.get("/me")
+async def get_current_user(response: Response, readmando_session: Optional[str] = Cookie(None)):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail="Missing session cookie")
+    
+    try:
+        payload = decode_token(readmando_session)
+        user = user_crud.get_user(payload["user_id"])
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        #refresh token if time < 10 mins
+        exp_time = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+        now = datetime.now(timezone.utc)
+        
+        if (exp_time - now).total_seconds() < 60 * 10: 
+            new_token = create_token(user["user_id"])
+            response.set_cookie(
+                key="readmando_session",
+                value=new_token,
+                httponly=True,
+                secure=True,
+                samesite="None",
+                max_age=604800,
+                path="/"
+            )
+            print("Token Refreshed?", decode_token(new_token)["exp"])
+        return user
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
 @app.post("/login")
-async def login_user(user: models.UserCreate):
+async def login_user(user: models.UserCreate, response: Response): #response refers to the http response
     try:
         #Check if user exists
         existing_user = user_crud.get_user_by_name(user.username)
         if not existing_user:
             raise HTTPException(status_code=404, detail="User does not exist or may not be verified.")
-        
+
         if existing_user["is_verified"]:
-            return existing_user
+            token = create_token(existing_user["user_id"])
+
+            #set session cookie
+            response.set_cookie(
+                key="readmando_session",
+                value=token,
+                httponly=True,
+                secure=True, #true == https, false == http
+                samesite="None", #none means it allows sending cookies btwn backend&frontend
+                max_age=604800,
+                path="/"
+            )
+            
+            updates = models.UserUpdate(
+                session_token= token,
+                last_login= datetime.now(),
+                verification_token= None,  
+            )
+            
+            #save the session token and last login time
+            new_user = user_crud.update_user(existing_user["user_id"], updates)
+            return new_user
         else:
             raise HTTPException(status_code=403, detail="User not verified. Please check your email.")
     except Exception as e:
         print(str(e))
         raise HTTPException(status_code=500, detail="An internal error occurred")
+
+@app.post("/logout")
+def logout(response: Response):
+    response.delete_cookie(
+        key="readmando_session",
+        path="/",
+        secure=True, #true == https, false == http
+        httponly=True, #hide cookies from javascript
+        samesite="None" #none means it allows sending cookies btwn backend&frontend
+    )
+    return {"username": "Guest"}
 
 @app.post("/register")
 async def register_user(user: models.UserCreate):
