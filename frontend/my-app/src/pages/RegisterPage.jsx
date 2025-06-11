@@ -43,16 +43,6 @@ export default function RegisterPage() {
                 </p>
                 
                 <form onSubmit={handleRegister} className="space-y-5">
-                    <div>
-                        <label className="block font-medium mb-1 cursor-text">Username</label>
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            className="w-full p-3 border rounded-lg"
-                            required
-                        />
-                    </div>
 
                     <div>
                         <label className="block font-medium mb-1 cursor-text">Email</label>
@@ -60,6 +50,17 @@ export default function RegisterPage() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            className="w-full p-3 border rounded-lg"
+                            required
+                        />
+                    </div>
+                    
+                    <div>
+                        <label className="block font-medium mb-1 cursor-text">Username</label>
+                        <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                             className="w-full p-3 border rounded-lg"
                             required
                         />
