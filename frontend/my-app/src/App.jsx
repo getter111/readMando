@@ -26,6 +26,7 @@ const getUser = async () => {
       withCredentials: true,
     });
     setUser(res.data)
+    console.log(`Loading data for: ${res.data.username}`)
   } catch (err) {
     console.log("Not authenticated", err);
   }
@@ -39,12 +40,11 @@ const getUser = async () => {
             <Route path="login" element= {<LoginPage setUser={setUser} />} />
             <Route path="register" element= {<RegisterPage />} />
             <Route path="search/:vocab" element= {<SearchPage />} />
-            <Route path="story" element = {<StoryPage user_id={user.user_id}/>} />
+            <Route path="story" element = {<StoryPage user={user}/>} /> {/*if guest user_id should be undefined*/}
             <Route path="review" element = {<ReviewPage />} />
             <Route path="verification-success" element={<VerificationSuccessPage />} />
           </Route>
         </Routes>
-        {/* <AudioPlayer audioUrl={"https://zftmkahagsvhgqkvmcop.supabase.co/storage/v1/object/public/audio/audio_files/stories/story_4_audio.wav?"} /> */}
       </>
   )
 }
