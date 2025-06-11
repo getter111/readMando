@@ -20,10 +20,6 @@ function App() {
     getUser()
   }, [])
 
-  useEffect(() => {
-    console.log("user state:", user)
-  }, [user])
-
 const getUser = async () => {
   try {
     const res = await axios.get(`${apiUrl}/me`, {
