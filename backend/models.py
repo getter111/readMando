@@ -1,7 +1,7 @@
 #validation and serialization of data
 from fastapi import FastAPI
 from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from typing import Optional, List, Union
 from datetime import datetime
 
 # Stories Table
@@ -140,17 +140,22 @@ class StoryVocabularyResponse(StoryVocabularyBase):
     story_vocab_id: int
     created_at: datetime
 
-
+class UserInfo(BaseModel):
+    user_id: Union[int, str]
+    is_verified: bool
 #models for api requests
 class StoryGenerationRequest(BaseModel):
     difficulty: Optional[str] = "beginner"
     vocabulary: Optional[List[str]] = None
     topic: Optional[str] = None
+    user:Optional[UserInfo] = None
 
 class StoryGenerationResponse(BaseModel):
     story_id: int
     title: str
     content: str
+    title_audio: Optional[str] #maybe only logged in users or paid users get this
+    story_audio: Optional[str]
 
 class StorySegmentationRequest(BaseModel):
     content: str    
