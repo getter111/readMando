@@ -42,31 +42,35 @@ async def get_user_story_page_data(user_id: int):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # get most recent story id to fetch story content, title, difficuly, audios, and questions
-    most_recent_story_id = user_stories_crud.get_user_story(user_id)["story_id"]
+    try:
+        # get most recent story id to fetch story content, title, difficuly, audios, and questions
+        most_recent_story_record = user_stories_crud.get_user_story(user_id)
+        if not most_recent_story_record or "story_id" not in most_recent_story_record:
+            raise HTTPException(status_code=404, detail="User has no previously generated stories")
 
-    #if not found that means the user is a guest
-    if not most_recent_story_id:
-        return
-    
-    story_data = story_crud.get_story_by_id(most_recent_story_id)
-    questions = question_crud.get_questions_by_story_id(most_recent_story_id)
-    res = models.StoryPageHydration(
-        story_id=int(most_recent_story_id),
-        content=story_data["content"],
-        title=story_data["title"],
-        difficulty=story_data["difficulty"],
-        title_audio=story_data["title_audio"],
-        story_audio=story_data["story_audio"],
-        questions=questions
-    )
-    print("story hydration")
-    return res
+        most_recent_story_id = most_recent_story_record["story_id"]
+        story_data = story_crud.get_story_by_id(most_recent_story_id)
+        questions = question_crud.get_questions_by_story_id(most_recent_story_id)
+
+        res = models.StoryPageHydration(
+            story_id=most_recent_story_id,
+            content=story_data["content"],
+            title=story_data["title"],
+            difficulty=story_data["difficulty"],
+            title_audio=story_data["title_audio"],
+            story_audio=story_data["story_audio"],
+            questions=questions
+        )   
+
+        print(f"[get_user_story_page_data] Successfully hydrated story page for story_id: {res.story_id}")       
+        return res
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=f"Internal Server Error")
 
 @app.post("/generate_story")
 async def generate_story(
     request: models.StoryGenerationRequest,
-    user_email: str = None,
 ):
     try:
         story = generateStory(
@@ -85,12 +89,10 @@ async def generate_story(
         created_story = story_crud.create_story(save_story)
         story_id = created_story["story_id"]
         
-        # If email provided and verified, save to user_stories bridge table
-        if user_email:
-            user = user_crud.get_user_by_email(user_email)
-            if user and user["is_verified"]:
+        # If verified, save to user_stories bridge table
+        if request.user.user_id != "Guest" and request.user.is_verified: 
                 user_story = models.UserStoryCreate(
-                    user_id=user["user_id"],
+                    user_id=request.user.user_id,
                     story_id= story_id,
                     read_status="FALSE"
                 )
@@ -108,11 +110,18 @@ async def generate_story(
         #save urls to stories table
         await save_audio_url_to_db(story_id, "title", title_audio_url)
         await save_audio_url_to_db(story_id, "story", story_audio_url)
-        
+
+        print(f"[generate_story] Request: difficulty={request.difficulty}, topic={request.topic}, vocab={request.vocabulary}")
+        print(f"[generate_story] Generated story ID: {story_id}")
+        print(f"[generate_story] Title Audio URL: {title_audio_url}")
+        print(f"[generate_story] Story Audio URL: {story_audio_url}")
+
         return models.StoryGenerationResponse(
             story_id=story_id,
             title=story["title"],
-            content=story["story"]
+            content=story["story"],
+            title_audio=title_audio_url,
+            story_audio=story_audio_url
         )
         
     except Exception as e:
@@ -146,12 +155,17 @@ async def get_current_user(response: Response, readmando_session: Optional[str] 
                 max_age=604800,
                 path="/"
             )
-            print("Token Refreshed?", decode_token(new_token)["exp"])
+            print(f"[get_current_user] Decoded token payload: {payload}")
+            print(f"[get_current_user] Refreshed token exp: {decode_token(new_token)['exp']}")
         return user
-    except ExpiredSignatureError:
+    except ExpiredSignatureError as e:
+        print(e)
         raise HTTPException(status_code=401, detail="Token expired")
-    except InvalidTokenError:
+    except InvalidTokenError as e:
+        print(e)
         raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        print (e)
 
 @app.post("/login")
 async def login_user(user: models.UserCreate, response: Response): #response refers to the http response
@@ -181,6 +195,10 @@ async def login_user(user: models.UserCreate, response: Response): #response ref
                 verification_token= None,  
             )
             
+            print(f"[login_user] Attempting login for username: {user.username}")
+            print(f"[login_user] User found: {existing_user}")
+            print(f"[login_user] Generated cookie for user_id {existing_user['user_id']}")
+
             #save the session token and last login time
             new_user = user_crud.update_user(existing_user["user_id"], updates)
             return new_user
@@ -199,6 +217,7 @@ def logout(response: Response):
         httponly=True, #hide cookies from javascript
         samesite="None" #none means it allows sending cookies btwn backend&frontend
     )
+    print("User logged out")
     return {"username": "Guest"}
 
 @app.post("/register")
@@ -220,6 +239,8 @@ async def register_user(user: models.UserCreate):
                 verification_token=verification_token
             )
         )
+        print(f"[register_user] Registering user: {user.username}, email: {user.email}")
+        print(f"[register_user] Verification token generated: {verification_token}")
 
         # Send verification email
         await send_verification_email(user.username, user.email, verification_token)
@@ -279,16 +300,16 @@ async def add_vocabulary(request: models.VocabRequest):
             word_type=unknown_word["part of speech"],
             example_sentence=unknown_word["example sentence"]
         )
-        print("res:str =")
-        print(res)
-        print("unknown_word:dict =")
-        print(unknown_word)
+
+        print(f"[add_vocabulary] Incoming vocab: {request.vocab}")
+        print(f"[add_vocabulary] Auto fetch result: {unknown_word}")
 
         #upserts the unknown word
         add_vocabulary_to_db([new_vocab.model_dump()])
         return new_vocab
     
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail=f"Auto-fetch failed for {request.vocab}: {str(e)}")
         
 # endpoints to retrieve vocabulary for onhover effect
@@ -328,6 +349,10 @@ async def generate_questions(request: models.QuestionGenerationRequest):
             saved_questions.append(new_question)
         
         batch = question_crud.create_questions_batch(saved_questions)
+
+        print(f"[generate_questions] Generating questions for story_id={request.story_id}")
+        print(f"[generate_questions] Questions generated: {questions}")
+
         return batch
     except Exception as e:
         print(str(e))
@@ -342,7 +367,6 @@ async def save_user_progress(progress: models.ProgressCreate):
             raise HTTPException(status_code=404, detail="User not found")
 
         saved_progress = progress_crud.upsert_progress(progress)
-        print("dahellu0")
         user_stories_crud.update_user_story(
             models.UserStoryUpdate(
                 read_status=True,  # Mark story as read
@@ -350,6 +374,9 @@ async def save_user_progress(progress: models.ProgressCreate):
                 user_id=progress.user_id
             )
         )
+        print(f"[save_user_progress] Saving progress for user_id={progress.user_id}, story_id={progress.story_id}")
+        print(f"[save_user_progress] Progress saved: {saved_progress}")
+
         return saved_progress
     except Exception as e:
         print(str(e))
