@@ -24,7 +24,7 @@ export default function LoginPage({ setUser }) {
             const response = await axios.post(`${apiUrl}/login`, {
                 email,
                 username
-            });
+            }, { withCredentials: true });
             setSuccess(true);
             setUser(response.data);
         } catch (err) {
