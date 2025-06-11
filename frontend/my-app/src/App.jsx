@@ -8,20 +8,37 @@ import StoryPage from "./pages/StoryPage"
 import ReviewPage from "./pages/ReviewPage"
 import VerificationSuccessPage from "./pages/VerificationSuccessPage"
 import RegisterPage from "./pages/RegisterPage"
-
+import axios from "axios"
 import { useState, useEffect } from "react"
 
 function App() {
-  const [user, setUser] = useState({"user": "guest"});
+  const [user, setUser] = useState({"username": "Guest"});
+
+  const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
-    console.log("Current user:", user);
-  },  [user]);
+    getUser()
+  }, [])
+
+  useEffect(() => {
+    console.log("user state:", user)
+  }, [user])
+
+const getUser = async () => {
+  try {
+    const res = await axios.get(`${apiUrl}/me`, {
+      withCredentials: true,
+    });
+    setUser(res.data)
+  } catch (err) {
+    console.log("Not authenticated", err);
+  }
+};
 
   return (
     <>
         <Routes>
-          <Route path="/" element= {<Layout />}>
+          <Route path="/" element= {<Layout username={user.username} setUser={setUser}/>}>
             <Route index element= {<HomePage />} />
             <Route path="login" element= {<LoginPage setUser={setUser} />} />
             <Route path="register" element= {<RegisterPage />} />
