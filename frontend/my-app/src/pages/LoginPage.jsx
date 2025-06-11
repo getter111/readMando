@@ -32,6 +32,9 @@ export default function LoginPage({ setUser }) {
             setError("Invalid email or password");
         } finally {
             setLoading(false);
+            setTimeout(() => {
+                navigate("/")
+            },2000)
         }
     };
 
