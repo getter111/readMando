@@ -5,7 +5,7 @@ import QuestionList from "../components/QuestionList";
 import PropTypes from "prop-types";
 import AudioPlayer from "../components/AudioPlayer"
 
-export default function StoryPage({ user_id }) {
+export default function StoryPage({ user }) {
     const [story, setStory] = useState(null); // Ensure story is an object
     const [difficulty, setDifficulty] = useState("Beginner");
     const [topic, setTopic] = useState("");
@@ -29,16 +29,24 @@ export default function StoryPage({ user_id }) {
 
     // hydrates page with users most recent story
         const hydratePage = async () => {
-        if (user_id) {
+        if (user.user_id) {
             // load from backend for logged in users
             try {
-                const response = await axios.get(`${apiUrl}/user/${user_id}/story`);
-                console.log("Loading from backend: ", response.data);
-        
+                const response = await axios.get(`${apiUrl}/user/${user.user_id}/story`);
+                console.log("Loading data from backend for", user.username);
+
                 if (response.data) {
-                    setStory({
-                        title: response.data.title,
+                    //segment the body of the story
+                    const segmented_body = await axios.post(`${apiUrl}/segment_story`, { 
                         content: response.data.content
+                    });
+                    //segment the title of the story 
+                    const segmented_title = await axios.post(`${apiUrl}/segment_story`, { 
+                        content: response.data.title
+                    });
+                    setStory({
+                        title: segmented_title.data.segmented_words,
+                        content: segmented_body.data.segmented_words
                     });
                     setDifficulty(response.data.difficulty);
                     setQuestions(response.data.questions);
@@ -51,11 +59,13 @@ export default function StoryPage({ user_id }) {
             }
         } else {
             // load from localStorage for guest users
-            console.log("Loading story from localStorage");
+            console.log("Loading data from localStorage for", user.username);
             const localStory = localStorage.getItem("story");
             const localDifficulty = localStorage.getItem("difficulty");
             const localQuestions = localStorage.getItem("questions");
             const localStoryId = localStorage.getItem("storyId");
+            const localTitleAudio = localStorage.getItem("titleAudio");
+            const localStoryAudio = localStorage.getItem("storyAudio");
 
             if (localStory && localDifficulty && localQuestions) {
                 const parsedStory = JSON.parse(localStory);
@@ -65,6 +75,8 @@ export default function StoryPage({ user_id }) {
                 setDifficulty(localDifficulty);
                 setQuestions(parsedQuestions);
                 setStoryId(localStoryId);
+                setStoryAudio(localTitleAudio);
+                setTitleAudio(localStoryAudio);
             }
         }
     };
@@ -74,70 +86,75 @@ export default function StoryPage({ user_id }) {
         setError("");
         setStory(null);
         try {
+            console.log("Generating story... ");
             //first generates the story, then need to use jieba to segment the story into individual words
             const response = await axios.post(`${apiUrl}/generate_story`,{
                 difficulty: difficulty,
                 vocabulary: vocabulary.split(",").map(word => word.trim()), //takes vocab string -> string[]
-                topic: topic
+                topic: topic,
+                user: { //user is pydantic model so access with dot notation
+                    user_id: user.user_id || "Guest",
+                    is_verified: user.is_verified || false
+                }
             });
-            console.log("Story and title generation: " , response.data)
-
+        
             //segment the body of the story
             const segmented_body = await axios.post(`${apiUrl}/segment_story`, { 
                 content: response.data.content
             });
-            console.log("segmented body: " , segmented_body.data)
-
             //segment the title of the story 
             const segmented_title = await axios.post(`${apiUrl}/segment_story`, { 
                 content: response.data.title
             });
-            console.log("segmented title: " , segmented_title.data)
 
             setStory({
                 title: segmented_title.data.segmented_words, //title -> []
                 content: segmented_body.data.segmented_words //content -> []
             })
             setStoryId(response.data.story_id)
+            setTitleAudio(response.data.title_audio);
+            setStoryAudio(response.data.story_audio);
 
             //cache the story in case guest refreshes the page
-            if (!user_id) {
+            if (!user.user_id) {
                 localStorage.setItem("story", JSON.stringify({
                     title: segmented_title.data.segmented_words,
                     content: segmented_body.data.segmented_words
                 }));
                 localStorage.setItem("difficulty", difficulty);
                 localStorage.setItem("storyId", response.data.story_id);
+                localStorage.setItem("storyId", response.data.story_id);
+                localStorage.setItem("titleAudio", response.data.title_audio);
+                localStorage.setItem("storyAudio", response.data.story_audio);
             }
         } catch (error) {
             setError("Failed to generate story. Try again!");
-            console.error(error);
+            console.error("Error generating story", error);
         } finally {
             setLoading(false);//reset loading state
         }
     };
 
-
     const fetchQuestions = async () => {
         setLoadingQuestions(true);
         setError("");
         try {
+            console.log("Generating questions... ");
             const response = await axios.post(`${apiUrl}/generate_questions`, {
                 story: story.content.join(""), // convert content & title array into a string
                 title: story.title.join(""), 
                 difficulty: difficulty,
-                story_id: storyId // parseInt(storyId)
+                story_id: storyId
             });
-            console.log("Questions generated: ", response.data);
             setQuestions(response.data)
 
             // cache the questions[dict] in case guest refreshes the page
-            if (!user_id) {
+            if (!user.user_id) {
                 localStorage.setItem("questions", JSON.stringify(response.data));
             }
         } catch (error) {
             setError("Failed to generate questions. Try again!");
-            console.error(error);
+            console.error("Error generating questions", error);
         } finally {
             setLoadingQuestions(false);
         }
@@ -245,7 +262,7 @@ export default function StoryPage({ user_id }) {
                 </div>
                 {questions.length > 0 && typeof storyId === "number" && (
                     <div className="bg-white mt-6 p-6 rounded-lg shadow-md">
-                        <QuestionList questions={questions} user_id={user_id} storyId={storyId} />
+                        <QuestionList questions={questions} user_id={user.user_id} storyId={storyId} />
                     </div>
                 )}
             </main>
@@ -254,5 +271,10 @@ export default function StoryPage({ user_id }) {
 }
 
 StoryPage.propTypes = {
-    user_id: PropTypes.str
-} 
+  user: PropTypes.shape({
+    user_id: PropTypes.number,
+    username: PropTypes.string,
+    email: PropTypes.string,
+    is_verified: PropTypes.bool,
+  }),
+};
