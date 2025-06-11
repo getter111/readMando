@@ -27,6 +27,8 @@ class UserBase(BaseModel):
     verification_token: Optional[str] = None
     is_verified: Optional[bool] = False
     is_active: Optional[bool] = True
+    session_token: Optional[str] = None
+    last_login: Optional[datetime] = None
 
 #used when creating a user
 class UserCreate(UserBase):
@@ -44,6 +46,8 @@ class UserUpdate(BaseModel):
     verification_token: Optional[str] = None
     is_verified: Optional[bool] = None
     is_active: Optional[bool] = None
+    session_token: Optional[str] = None
+    last_login: Optional[datetime] = None
 
 # Vocabulary Table
 class VocabularyBase(BaseModel):

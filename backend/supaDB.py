@@ -83,6 +83,3 @@ async def save_audio_url_to_db(id: int, type: str, url: str):
         print(f"save_audio_url_to_db failed: {str(e)}")
         return None
     
-# user_stories_crud.update_user_story(
-#     updates=models.UserStoryUpdate(read_status=False, story_id=6, user_id=1)
-# )

@@ -1,6 +1,7 @@
 # CRUD for users table
 from supabase import Client
 from models import UserUpdate, UserCreate
+from datetime import datetime
 
 class UsersCRUD:
     def __init__(self, supabase: Client):
@@ -41,9 +42,21 @@ class UsersCRUD:
             return res.data[0]  
         return None  
 
+    def get_user_by_session_token(self, token: str):
+        res = self.supabase.table("users").select("*").eq("session_token", token).execute()
+        if res.data:  
+            return res.data[0]  
+        return None  
+
     def update_user(self, user_id: int, updates: UserUpdate):
         # Convert pydantic model to dictionary excluding unset fields
-        update_data = updates.model_dump(exclude_unset=True, exclude_defaults=True)
+        update_data = updates.model_dump(exclude_unset=True)
+
+        # Convert datetime fields to ISO format
+        for key, val in update_data.items():
+            if isinstance(val, datetime):
+                update_data[key] = val.isoformat()
+
         res = self.supabase.table("users").update(update_data).eq("user_id", user_id).execute()
         return res.data[0]
 
