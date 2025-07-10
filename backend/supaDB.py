@@ -4,6 +4,8 @@ from supabase import create_client, Client
 from pydantic import ValidationError
 import models
 import aiofiles
+from datetime import datetime, timedelta, timezone
+
 
 from crud.users import UsersCRUD
 from crud.vocabulary import VocabularyCRUD
@@ -11,7 +13,6 @@ from crud.stories import StoryCRUD
 from crud.questions import QuestionCRUD
 from crud.user_vocabulary import UserVocabularyCRUD
 from crud.user_stories import UserStoryCRUD
-from crud.story_vocabulary import StoryVocabularyCRUD
 from crud.progress import ProgressCRUD 
 
 load_dotenv()
@@ -24,7 +25,6 @@ if not url or not key:
 
 supabase: Client = create_client(url, key)
 
-
 #tables
 user_crud = UsersCRUD(supabase)
 vocabulary_crud = VocabularyCRUD(supabase)
@@ -33,7 +33,6 @@ question_crud = QuestionCRUD(supabase)
 progress_crud = ProgressCRUD(supabase)
 user_vocabulary_crud = UserVocabularyCRUD(supabase)
 user_stories_crud = UserStoryCRUD(supabase)
-story_vocabulary_crud = StoryVocabularyCRUD(supabase) #TBA if used in future
 
 #supabase storage bucket name
 BUCKET_NAME = "audio"
@@ -83,3 +82,19 @@ async def save_audio_url_to_db(id: int, type: str, url: str):
         print(f"save_audio_url_to_db failed: {str(e)}")
         return None
     
+        
+# user_vocab = models.UserVocabularyCreate(
+#     user_vocab_id=1,
+#     user_id=1,
+#     vocab_id=8073,
+#     status="learning",
+#     correct=0,
+#     incorrect=0,
+#     last_reviewed=datetime.now(timezone.utc),
+#     next_review=datetime.now(timezone.utc) + timedelta(days=1),
+#     ease_factor=2.5,
+#     interval=1,
+#     repetitions=0,
+# )   
+# test = user_vocabulary_crud.update_user_vocabulary(1,user_vocab)
+# print(test)

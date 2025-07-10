@@ -67,8 +67,6 @@ class VocabularyResponse(VocabularyBase):
 class VocabRequest(BaseModel):
     vocab: str
 
-### I feel like Progress and Questions table can be combined. Maybe we do not need both###
-
 # Progress Table
 class ProgressBase(BaseModel):
     user_id: int
@@ -102,16 +100,20 @@ class QuestionResponse(QuestionBase):
 class UserVocabularyBase(BaseModel):
     user_id: int
     vocab_id: int
-    times_reviewed: Optional[int] = None
-    mastery_level: Optional[float] = None
-
+    status: Optional[str] = "learning"  # learning, mastered, needs-review
+    correct: Optional[int] = 0
+    incorrect: Optional[int] = 0
+    last_reviewed: Optional[datetime] = None
+    next_review: Optional[datetime] = None
+    ease_factor: Optional[float] = 2.5 # How easy the word is to remember
+    interval: Optional[int] = 1 # Days until next review
+    repetitions: Optional[int] = 0 # Number of successful reviews in a row
 class UserVocabularyCreate(UserVocabularyBase):
     pass
 class UserVocabularyUpdate(UserVocabularyBase):
     pass
 class UserVocabularyResponse(UserVocabularyBase):
     user_vocab_id: int
-    created_at: datetime
 
 # UserStories Table
 class UserStoryBase(BaseModel):
@@ -125,19 +127,6 @@ class UserStoryUpdate(UserStoryBase):
     pass
 class UserStoryResponse(UserStoryBase):
     user_story_id: int
-    created_at: datetime
-
-# StoryVocabulary Table
-class StoryVocabularyBase(BaseModel):
-    story_id: int
-    vocab_id: int
-
-class StoryVocabularyCreate(StoryVocabularyBase):
-    pass
-class StoryVocabularyUpdate(StoryVocabularyBase):
-    pass
-class StoryVocabularyResponse(StoryVocabularyBase):
-    story_vocab_id: int
     created_at: datetime
 
 class UserInfo(BaseModel):
