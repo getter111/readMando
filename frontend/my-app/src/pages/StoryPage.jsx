@@ -5,7 +5,7 @@ import QuestionList from "../components/QuestionList";
 import PropTypes from "prop-types";
 import AudioPlayer from "../components/AudioPlayer"
 
-export default function StoryPage({ user }) {
+export default function StoryPage({ user, loadingUser}) {
     const [story, setStory] = useState(null); // Ensure story is an object
     const [difficulty, setDifficulty] = useState("Beginner");
     const [topic, setTopic] = useState("");
@@ -24,8 +24,10 @@ export default function StoryPage({ user }) {
 
     //checks if there is a cached story on the first render
     useEffect(() => {
-        hydratePage();
-    }, []);
+        if (!loadingUser && (user.user_id || user.username === "Guest")) {
+            hydratePage();
+        }
+    }, [user, loadingUser]);
 
     // hydrates page with users most recent story
         const hydratePage = async () => {
@@ -277,4 +279,5 @@ StoryPage.propTypes = {
     email: PropTypes.string,
     is_verified: PropTypes.bool,
   }),
+    loadingUser: PropTypes.bool.isRequired,
 };

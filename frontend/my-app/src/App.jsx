@@ -13,6 +13,7 @@ import { useState, useEffect } from "react"
 
 function App() {
   const [user, setUser] = useState({"username": "Guest"});
+  const [loadingUser, setLoadingUser] = useState(true); //flag to check if user is still loading
 
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -25,10 +26,18 @@ const getUser = async () => {
     const res = await axios.get(`${apiUrl}/me`, {
       withCredentials: true,
     });
-    setUser(res.data)
-    console.log(`Loading data for: ${res.data.username}`)
+    if (res?.data) {
+      setUser(res.data);
+      console.log(`Loading data for: ${res.data.username}`);
+    } else {
+      console.log("No user data returned.");
+      setUser({ username: "Guest" });
+    }
   } catch (err) {
     console.log("Not authenticated", err);
+    setUser({ username: "Guest" }); 
+  } finally {
+    setLoadingUser(false);
   }
 };
 
@@ -40,7 +49,7 @@ const getUser = async () => {
             <Route path="login" element= {<LoginPage setUser={setUser} />} />
             <Route path="register" element= {<RegisterPage />} />
             <Route path="search/:vocab" element= {<SearchPage />} />
-            <Route path="story" element = {<StoryPage user={user}/>} /> {/*if guest user_id should be undefined*/}
+            <Route path="story" element = {<StoryPage user={user} loadingUser={loadingUser} />} /> {/*if guest, user_id should be undefined*/}
             <Route path="review" element = {<ReviewPage />} />
             <Route path="verification-success" element={<VerificationSuccessPage />} />
           </Route>
