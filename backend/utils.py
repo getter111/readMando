@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from fastapi import HTTPException
 from openai import OpenAI
 import json
+import httpx
+import aiofiles
 
 load_dotenv()
 
@@ -54,23 +56,29 @@ def add_vocabulary_to_db(vocab_list: list[dict]):
         print(f"Error adding vocabulary: {e}")
 
 #call tts endpoint and write to our audio_path
-def text_to_audio(text: str, id: int, type: str):
+async def text_to_audio(text: str, id: int, type: str):
     folder = "titles" if type == "title" else "stories"
     audio_path = f'audio_files/{folder}/{type}_{id}_audio.wav'
-
     endpoint = os.environ.get("TTS_BASE_URL")
 
+    print(f"[text_to_audio] Using TTS endpoint: {endpoint}\n")
+    print(f"[text_to_audio] Text: '{text}'\n")
+    print(f"[text_to_audio] Generating audio for: {type}, story_id={id}\n")
+
     try:
-        response = requests.get(endpoint, params={
-            "text": text,
-            "id": id,
-            "type": type
-        })
-
+        async with httpx.AsyncClient() as client:
+            response = await client.get(endpoint, params={
+                "text": text,
+                "id": id,
+                "type": type
+            }, timeout=120)
+        print(f"[text_to_audio] TTS response status: {response.status_code}, content length: {len(response.content)}\n")
+        if response.status_code != 200 or not response.content:
+            raise Exception(f"TTS API returned status {response.status_code} or empty content.\n")
+        
         #create new audio file
-        with open(audio_path, "wb") as f:
-            f.write(response.content)
-
+        async with aiofiles.open(audio_path, "wb") as f:
+            await f.write(response.content)
         return audio_path
 
     except Exception as e:

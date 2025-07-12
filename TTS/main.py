@@ -41,7 +41,7 @@ async def tts(text: str, background_tasks: BackgroundTasks, id: int, type: str):
 
     speaker_ids = model.hps.data.spk2id
     model.tts_to_file(text, speaker_ids['ZH'], output_path, speed=1.0)
-    print("OUTPUT PATH: " + output_path)
+    print(f"TTS {type} OUTPUT PATH: " + output_path)
 
     if os.path.exists(output_path):
         # Read the file content into memory

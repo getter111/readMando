@@ -94,10 +94,10 @@ async def generate_story(
                 )
                 # Add the story to the user_stories table
                 user_stories_crud.create_user_story(user_story)
-
+        
         # use melo api to generate tts for the title and story
-        title_audio_path = text_to_audio(story["title"], story_id, "title")
-        story_audio_path = text_to_audio(story["story"], story_id, "story")
+        title_audio_path = await text_to_audio(story["title"], story_id, "title")
+        story_audio_path = await text_to_audio(story["story"], story_id, "story")
 
         # Upload audio files to supabase storage and get URLs
         title_audio_url = await upload_audio_to_storage(title_audio_path)
@@ -107,10 +107,8 @@ async def generate_story(
         await save_audio_url_to_db(story_id, "title", title_audio_url)
         await save_audio_url_to_db(story_id, "story", story_audio_url)
 
-        print(f"[generate_story] Request: difficulty={request.difficulty}, topic={request.topic}, vocab={request.vocabulary}")
-        print(f"[generate_story] Generated story ID: {story_id}")
-        print(f"[generate_story] Title Audio URL: {title_audio_url}")
-        print(f"[generate_story] Story Audio URL: {story_audio_url}")
+        print(f"[generate_story] Request: difficulty={request.difficulty}, topic={request.topic}, vocab={request.vocabulary}\n")
+        print(f"[generate_story] Generated story ID: {story_id}\n")
 
         return models.StoryGenerationResponse(
             story_id=story_id,

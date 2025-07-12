@@ -47,7 +47,7 @@ async def upload_audio_to_storage(audio_file_path: str) -> str:
 
         try:
             file_upload = supabase.storage.from_(BUCKET_NAME).upload(audio_file_path, file_content)
-            print("upload_audio_to_storage: ", file_upload) #error was because i was trying to print file_upload + str
+            print("[upload_audio_to_storage]: ", file_upload) #error was because i was trying to print file_upload + str
         except Exception as e:
             raise Exception(f"Error uploading file: {str(e)}")
         
@@ -59,7 +59,7 @@ async def upload_audio_to_storage(audio_file_path: str) -> str:
         #delete local audio file after upload and getting public url from supabase
         try:
             os.remove(audio_file_path)
-            print(f"deleted local file: {audio_file_path}")
+            print(f"\ndeleted local file: {audio_file_path}\n")
         except Exception as e:
             print(f"failed to delete local file {audio_file_path}: {str(e)}")
 
@@ -76,7 +76,7 @@ async def save_audio_url_to_db(id: int, type: str, url: str):
 
         if "error" in response:
             raise Exception(f"Error saving audio URL: {response['error']['message']}")
-        print("audio saved to stories table successfully")
+        print(f"{url} saved to supabase stories table successfully\n")
         return response 
     except Exception as e:
         print(f"save_audio_url_to_db failed: {str(e)}")
