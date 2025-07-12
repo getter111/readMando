@@ -87,6 +87,7 @@ export default function StoryPage({ user, loadingUser}) {
         setLoading(true);
         setError("");
         setStory(null);
+        setQuestions([]); //unmount previous questions component
         try {
             console.log("Generating story... ");
             //first generates the story, then need to use jieba to segment the story into individual words
