@@ -22,7 +22,7 @@ def generateStory(
     )
     
     outline_prompt = (
-        f'We are writing a short story in Mandarin called "{title}". '
+        f'We are writing a short story in simplified Mandarin called "{title}". '
         + (f'It is about "{topic}". ' if topic else '') 
         + f'Our reader is: {audience}. '
         + (f'The story should include the following vocabulary: {", ".join(vocabulary)} while following the theme of the topic. ' if vocabulary else '')
