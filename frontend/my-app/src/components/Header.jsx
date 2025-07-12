@@ -5,6 +5,8 @@ import axios from "axios";
 
 export default function Header({ username = 'Guest', setUser}) {
   const [vocab, setVocab] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+
   const navigate  = useNavigate();
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -28,41 +30,61 @@ export default function Header({ username = 'Guest', setUser}) {
   const isGuest = username === "Guest";
 
   return (
-    <header className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
-      <div className="flex items-center space-x-4">
-        <Link to="/" className="text-xl font-bold text-blue-500 hover:text-blue-700 transition">ReadMando</Link>
-        <select className="bg-gray-200 p-2 rounded-md text-sm cursor-pointer">
-          <option>Words</option>
-          <option>All Words</option>
-        </select>
+    <header className="bg-white shadow-md py-4 px-4 sm:px-6 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 gap-2">
+        <Link to="/" className="text-xl font-bold text-blue-500 hover:text-blue-700 transition whitespace-nowrap">
+          ReadMando
+        </Link>
+
+        <div className="relative w-full sm:w-64">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 pointer-events-none 
+            ${isFocused ? 'text-gray-700 font-bold' : 'text-gray-400'}`}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+            />
+          </svg>
+
+          <input
+            type="text"
+            placeholder="Search"
+            className="w-full pl-10 p-2 border border-gray-300 rounded-md"
+            value={vocab}
+            onChange={(e) => setVocab(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            onKeyDown={handleEnterKey} //Link to /search:vocab
+          />
+        </div>
       </div>
 
-      <div className="flex items-center space-x-4">
-        <input
-          type="text"
-          placeholder="Search dictionary..."
-          className="p-2 border border-gray-300 rounded-md w-64"
-          value = {vocab}
-          onChange = {(e) => setVocab(e.target.value)}
-          onKeyDown = {handleEnterKey} //Link to /search:vocab
-        />
-
-        <span className="text-gray-600 font-medium">
+      <div className="flex justify-between sm:justify-end items-center gap-2 sm:gap-4">
+        <span className="text-sm sm:text-base text-gray-600 font-medium whitespace-nowrap">
           Welcome, {isGuest ? "Guest" : username}
         </span>
 
         {isGuest ? (
           <Link to="/login">
-            <button className="bg-blue-500 hover:bg-blue-600 transition text-white px-4 py-2 rounded-md cursor-pointer">
+            <button className="bg-blue-500 hover:bg-blue-600 transition text-white px-4 py-2 rounded-md text-sm cursor-pointer">
               Login / Register
             </button>
           </Link>
         ) : (
-            <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 transition text-white px-4 py-2 rounded-md cursor-pointer">
-              Log Out
-            </button>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 transition text-white px-4 py-2 rounded-md text-sm cursor-pointer"
+          >
+            Log Out
+          </button>
         )}
-
       </div>
     </header>
   );

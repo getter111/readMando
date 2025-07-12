@@ -1,7 +1,3 @@
-# complete short story generator website
-# generating a ebook should be extra feature
-
-#build out back end api and front end reactjs
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Cookie, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +10,7 @@ from typing import List
 from jwt import ExpiredSignatureError, InvalidTokenError
 
 import models
-from supaDB import user_crud, vocabulary_crud, story_crud, question_crud, user_vocabulary_crud, user_stories_crud, story_vocabulary_crud, progress_crud
+from supaDB import user_crud, vocabulary_crud, story_crud, question_crud, user_vocabulary_crud, user_stories_crud, progress_crud
 from storyGenerator import generateStory
 from email_utils import send_verification_email
 from utils import text_to_audio, add_vocabulary_to_db, auto_fetch, generateQuestions
@@ -36,7 +32,7 @@ def read_root():
     return {"message": "Hello from FastAPI on Fly.io!"}
 
 # Endpoint to hydrate the story page
-@app.get("/user/{user_id}/story", response_model= models.StoryPageHydration)
+@app.get("/users/{user_id}/stories/latest", response_model= models.StoryPageHydration)
 async def get_user_story_page_data(user_id: int):
     user = user_crud.get_user(user_id)
     if not user:
@@ -68,7 +64,7 @@ async def get_user_story_page_data(user_id: int):
         print(e)
         raise HTTPException(status_code=500, detail=f"Internal Server Error")
 
-@app.post("/generate_story")
+@app.post("/stories")
 async def generate_story(
     request: models.StoryGenerationRequest,
 ):
@@ -165,7 +161,32 @@ async def get_current_user(response: Response, readmando_session: Optional[str] 
         print(e)
         raise HTTPException(status_code=401, detail="Invalid token")
     except Exception as e:
-        print (e)
+        print(e)
+
+#endpoint to add vocabulary to user's study deck
+@app.post("/users/study_deck")
+async def add_vocabulary_to_study_deck(request: models.UserVocabularyRequest, readmando_session: Optional[str] = Cookie(None)):
+    try:
+        if not readmando_session:
+            raise HTTPException(status_code=401, detail="Missing session cookie, please login")
+        
+        payload = decode_token(readmando_session)
+        user_id = payload["user_id"]
+        user = user_crud.get_user(user_id)
+
+        if user and user != "Guest":
+            vocab = vocabulary_crud.get_vocabulary_by_word(request.word)
+            if vocab:
+                study_set_word = models.UserVocabularyCreate (
+                    user_id=user_id,
+                    vocab_id=vocab["vocab_id"],
+                )
+                res = user_vocabulary_crud.create_user_vocabulary(study_set_word)
+                print(f"[add_vocabulary_to_study_set] Added vocabulary to study set for user_id: {user_id}")
+                return res
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=400, detail="Something went wrong while adding vocabulary to study set")
 
 @app.post("/login")
 async def login_user(user: models.UserCreate, response: Response): #response refers to the http response
@@ -269,7 +290,7 @@ async def verify_email(token: str):
         print(str(e))
         raise HTTPException(status_code=500, detail="An internal error occurred")
     
-@app.post("/segment_story") #had to add a pydantic model/dict because in react passing json to body not a string. prev was (content:str) casuing 422 error
+@app.post("/stories/segment") #had to add a pydantic model/dict because in react passing json to body not a string. prev was (content:str) casuing 422 error
 async def segment_story(request: models.StorySegmentationRequest):
     try:
         #jieba precise mode to segment story into most natural words
@@ -322,9 +343,8 @@ async def get_vocabulary(word: str):
         raise HTTPException(status_code=404, detail="Vocabulary not found.")
     
 # Generates a list of comprehention questions
-@app.post("/generate_questions", response_model=List[models.QuestionCreate])
+@app.post("/stories/questions", response_model=List[models.QuestionCreate])
 async def generate_questions(request: models.QuestionGenerationRequest):
-    
     try:
         existing_questions = question_crud.get_questions_by_story_id(request.story_id)
 

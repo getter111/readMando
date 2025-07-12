@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Union
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 # Stories Table
 class StoryBase(BaseModel):
@@ -112,8 +112,8 @@ class UserVocabularyCreate(UserVocabularyBase):
     pass
 class UserVocabularyUpdate(UserVocabularyBase):
     pass
-class UserVocabularyResponse(UserVocabularyBase):
-    user_vocab_id: int
+class UserVocabularyRequest(BaseModel):
+    word: str
 
 # UserStories Table
 class UserStoryBase(BaseModel):

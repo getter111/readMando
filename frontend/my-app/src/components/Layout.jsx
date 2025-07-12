@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 
 export default function Layout({ username, setUser }) {
     return (
-        <div className="bg-gray-100 h-screen flex flex-col">
+        <div className="bg-gray-100 min-h-screen flex flex-col">
             <nav>
                 <Header username={username} setUser={setUser}/>
             </nav>

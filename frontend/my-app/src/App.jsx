@@ -52,6 +52,7 @@ const getUser = async () => {
             <Route path="story" element = {<StoryPage user={user} loadingUser={loadingUser} />} /> {/*if guest, user_id should be undefined*/}
             <Route path="review" element = {<ReviewPage />} />
             <Route path="verification-success" element={<VerificationSuccessPage />} />
+            { /* Add dictionary route*/}
           </Route>
         </Routes>
       </>

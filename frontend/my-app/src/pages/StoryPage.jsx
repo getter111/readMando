@@ -34,16 +34,16 @@ export default function StoryPage({ user, loadingUser}) {
         if (user.user_id) {
             // load from backend for logged in users
             try {
-                const response = await axios.get(`${apiUrl}/user/${user.user_id}/story`);
+                const response = await axios.get(`${apiUrl}/users/${user.user_id}/stories/latest`);
                 console.log("Loading data from backend for", user.username);
 
                 if (response.data) {
                     //segment the body of the story
-                    const segmented_body = await axios.post(`${apiUrl}/segment_story`, { 
+                    const segmented_body = await axios.post(`${apiUrl}/stories/segment`, { 
                         content: response.data.content
                     });
                     //segment the title of the story 
-                    const segmented_title = await axios.post(`${apiUrl}/segment_story`, { 
+                    const segmented_title = await axios.post(`${apiUrl}/stories/segment`, { 
                         content: response.data.title
                     });
                     setStory({
@@ -90,7 +90,7 @@ export default function StoryPage({ user, loadingUser}) {
         try {
             console.log("Generating story... ");
             //first generates the story, then need to use jieba to segment the story into individual words
-            const response = await axios.post(`${apiUrl}/generate_story`,{
+            const response = await axios.post(`${apiUrl}/stories`,{
                 difficulty: difficulty,
                 vocabulary: vocabulary.split(",").map(word => word.trim()), //takes vocab string -> string[]
                 topic: topic,
@@ -101,11 +101,11 @@ export default function StoryPage({ user, loadingUser}) {
             });
         
             //segment the body of the story
-            const segmented_body = await axios.post(`${apiUrl}/segment_story`, { 
+            const segmented_body = await axios.post(`${apiUrl}/stories/segment`, { 
                 content: response.data.content
             });
             //segment the title of the story 
-            const segmented_title = await axios.post(`${apiUrl}/segment_story`, { 
+            const segmented_title = await axios.post(`${apiUrl}/stories/segment`, { 
                 content: response.data.title
             });
 
@@ -142,7 +142,7 @@ export default function StoryPage({ user, loadingUser}) {
         setError("");
         try {
             console.log("Generating questions... ");
-            const response = await axios.post(`${apiUrl}/generate_questions`, {
+            const response = await axios.post(`${apiUrl}/stories/questions`, {
                 story: story.content.join(""), // convert content & title array into a string
                 title: story.title.join(""), 
                 difficulty: difficulty,
@@ -238,12 +238,12 @@ export default function StoryPage({ user, loadingUser}) {
                                 {titleAudio && storyAudio && (
                                     <div className="bg-gray-50 border p-4 rounded-md shadow-sm mb-4">
                                         <div className="flex flex-col sm:flex-row sm:space-x-6 space-y-4 sm:space-y-0">
-                                            <div className="flex-1">
+                                            <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-medium mb-1">Title Audio:</p>
                                                 <AudioPlayer audioUrl={titleAudio} />
                                             </div>
 
-                                            <div className="flex-1">
+                                            <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-medium mb-1">Story Audio:</p>
                                                 <AudioPlayer audioUrl={storyAudio} />
                                             </div>

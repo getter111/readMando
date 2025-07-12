@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 import axios from 'axios';
 
 //pass in from netlify
 const apiUrl = import.meta.env.VITE_API_BASE_URL;
-const TTL = 7 * 24 * 60 * 60 * 1000; 
 
 function WordHover({ word }) {
     const [translation, setTranslation] = useState("");
@@ -16,6 +15,7 @@ function WordHover({ word }) {
     const [showTooltip, setShowTooltip] = useState(false);
     const [highlight, setHighlight] = useState("");
 
+    const tooltipRef = useRef(null);
     const localKey = `word:${word}`; //key for localstorage
     
     function setState(definition){
@@ -23,44 +23,13 @@ function WordHover({ word }) {
         setPinyin(definition.pinyin);
         setPartOfSpeech(definition.wordType);
         setNotFound(false);
-    }
-
-    // add value and custom expiration time to local storage (in ms)
-    function setExpireDate(key, value, ttl) {
-        const now = new Date();
-        const item = {
-            value: value,
-            expiry: now.getTime() + ttl,
-        };
-        localStorage.setItem(key, JSON.stringify(item));
-    }
-
-    // Gets item if not expired
-    function getLocalStorage(key) {
-        const itemStr = localStorage.getItem(key);
-        if (!itemStr) return null;
-
-        try {
-            const item = JSON.parse(itemStr); //oonverts string to a dictionary
-            const now = new Date();
-
-            if (now.getTime() > item.expiry) {
-                localStorage.removeItem(key); //remove expired item
-                return null;
-            }
-            return item.value;
-        } catch (e) {
-            console.error("Failed to parse item from localStorage", e);
-            localStorage.removeItem(key);
-            return null;
-        }
-    }
+    }    
 
     async function fetchTranslation() {
-        const localValue = getLocalStorage(localKey);
+        const localValue = localStorage.getItem(localKey);
         if (localValue) {
             console.log(`💾 Used localStorage for ${word}`);
-            setState(localValue);
+            setState(JSON.parse(localValue));
             return;
         }
 
@@ -78,11 +47,9 @@ function WordHover({ word }) {
                     pinyin: response.data.pinyin,
                     wordType: response.data.word_type,
                 }
-
-                setExpireDate(localKey, definition, TTL); //store definition in browsers local storage
+                localStorage.setItem(localKey, JSON.stringify(definition));
                 setState(definition)
-                setIsLoading(false);
-                console.log(`✅ Translation:`, definition);
+                // console.log(response)
             }  
         } catch (error) {
             //404 return from /vocabulary/{word}, so we auto-fetch unknown word from backend
@@ -103,7 +70,7 @@ function WordHover({ word }) {
                         wordType: newWord.data.word_type,
                     }
 
-                    setExpireDate(localKey, definition, TTL);
+                    localStorage.setItem(localKey, JSON.stringify(definition));
                     setState(definition)
                     setHighlight("found");
                 } catch (autoFetchError) {
@@ -119,34 +86,51 @@ function WordHover({ word }) {
         }
     }   
 
-    const handleMouseEnter = () => {
-        fetchTranslation(); // Check if the word exists on hover
-        setShowTooltip(true);
-        
-        if(!notFound){
-            setHighlight("found"); 
-        } else{
-            setHighlight("not-found"); 
+    const toggleTooltip = () => {
+        const nextState = !showTooltip;
+        setShowTooltip(nextState);
+        setHighlight(nextState ? "found" : "");
+
+        if (nextState) {
+            fetchTranslation();
         }
     };
 
-    const handleMouseLeave = () => {
-        setShowTooltip(false);
-        setHighlight("");
+    const handleClickOutside = (e) => {
+        //if user clicks an element outside this toolkit
+        if (tooltipRef.current && !tooltipRef.current.contains(e.target)) {
+            setShowTooltip(false);
+            setHighlight("");
+        }
+    };
+
+    useEffect(() => {
+        if (showTooltip) {
+            document.addEventListener("mousedown", handleClickOutside);
+        } else {
+            document.removeEventListener("mousedown", handleClickOutside);
+        }
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [showTooltip]);
+
+    const handleAddToStudySet = async () => {
+        console.log(`📚 Added ${word} to study deck`);
+        const response = await axios.post(`${apiUrl}/users/study_deck`, {
+            word: word, 
+        }, { withCredentials: true });
     };
 
 return (
     <div
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         className="relative inline-block"
     >
         <span
+            onClick={toggleTooltip}
             className={`border-b border-dotted cursor-pointer transition ${
                 highlight === "found"
                     ? "bg-green-200"
                     : highlight === "not-found"
-                    ? "bg-red-200"
+                    ? "bg-yellow-200"
                     : "hover:bg-yellow-200"
             }`}
         >
@@ -154,7 +138,8 @@ return (
         </span>
         {showTooltip && (
             <div
-                className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-xs bg-white text-sm text-black p-3 rounded-lg shadow-lg z-50 whitespace-normal pointer-events-auto"
+                ref={tooltipRef}
+                className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-xs bg-white text-base text-black p-4 rounded-xl shadow-lg z-50 whitespace-normal pointer-events-auto max-h-60 overflow-y-auto"
             >
                 {isLoading ? (
                     <p className="text-gray-400">⏳ Loading...</p>
@@ -185,6 +170,12 @@ return (
                                 <span>{partOfSpeech}</span>
                             </p>
                         )}
+                        <button
+                            onClick={handleAddToStudySet}
+                            className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-xl text-base cursor-pointer "
+                        >
+                            Add to Study Set
+                        </button>
                     </>
                 )}
             </div>

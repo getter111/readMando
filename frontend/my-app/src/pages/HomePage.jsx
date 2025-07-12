@@ -12,7 +12,7 @@ export default function HomePage() {
   const navigate  = useNavigate();
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-gray-100 w-full h-full">
       <main className="container mx-auto p-6">
         <IntroCard />
 
@@ -25,21 +25,21 @@ export default function HomePage() {
           />
           <FeatureCard
             image={PracticeIMG}
-            title="Vocabulary Practice"
-            buttonText="Learn More"
-            onClick={() => alert("Navigate to Vocabulary Practice")}
-          />
-          <FeatureCard
-            image={DictionaryIMG}
-            title="Vocabulary Review"
-            buttonText="Review"
-            onClick={() => navigate('/review')}
+            title="Vocabulary Flashcards"
+            buttonText="Practice Study Deck"
+            onClick={() => alert("Navigate to Flashcards")}
           />
           <FeatureCard
             image={QuizIMG}
-            title="Interactive Quiz"
-            buttonText="Test"
+            title="Fill in the blank"
+            buttonText="Begin"
             onClick={() => alert("Navigate to Interactive Quiz")}
+          />
+          <FeatureCard
+            image={DictionaryIMG}
+            title="Story Review"
+            buttonText="Review Past Stories"
+            onClick={() => navigate('/review')}
           />
         </div>
       </main>
