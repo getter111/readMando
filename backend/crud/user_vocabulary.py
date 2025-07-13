@@ -50,6 +50,28 @@ class UserVocabularyCRUD:
         res = self.supabase.table("user_vocabulary").update(update_data).eq("user_vocab_id", user_vocab_id).execute()
         return res.data[0]
     
+    def get_user_vocabulary_by_user_and_word(self, user_id: int, word: str):
+        vocab_res = self.supabase.table("vocabulary").select("vocab_id").eq("word", word).execute()
+
+        if not vocab_res.data: #no such word
+            return None 
+
+        vocab_id = vocab_res.data[0]["vocab_id"]
+
+        # Check if user vocabulary entry exists for the given user and vocab_id
+        user_vocab_res = (
+            self.supabase.table("user_vocabulary")
+            .select("*")
+            .eq("user_id", user_id)
+            .eq("vocab_id", vocab_id)
+            .execute()
+        )
+
+        if user_vocab_res.data:
+            return user_vocab_res.data[0] 
+        return None
+
+
     def delete_user_vocabulary(self, user_vocab_id: int):
         res = self.supabase.table("user_vocabulary").delete().eq("user_vocab_id", user_vocab_id).execute()
         return res.data[0]

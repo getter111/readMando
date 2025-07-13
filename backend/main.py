@@ -175,13 +175,22 @@ async def add_vocabulary_to_study_deck(request: models.UserVocabularyRequest, re
         if user and user != "Guest":
             vocab = vocabulary_crud.get_vocabulary_by_word(request.word)
             if vocab:
-                study_set_word = models.UserVocabularyCreate (
+                # Check for duplicate in user's study deck
+                existing = user_vocabulary_crud.get_user_vocabulary_by_user_and_word(user_id, request.word)
+                if existing:
+                    raise HTTPException(status_code=409, detail="Word is already in study deck")
+                
+                study_set_word = models.UserVocabularyCreate(
                     user_id=user_id,
                     vocab_id=vocab["vocab_id"],
                 )
+
                 res = user_vocabulary_crud.create_user_vocabulary(study_set_word)
-                print(f"[add_vocabulary_to_study_set] Added vocabulary to study set for user_id: {user_id}")
-                return res
+                print(f"[add_vocabulary_to_study_set] Added word to study set for user_id: {user_id}")
+                return res   
+    except HTTPException:
+        # re-raise HTTP exceptions to preserve status codes
+        raise             
     except Exception as e:
         print(e)
         raise HTTPException(status_code=400, detail="Something went wrong while adding vocabulary to study set")

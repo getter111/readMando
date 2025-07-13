@@ -22,6 +22,7 @@ export default function Header({ username = 'Guest', setUser}) {
     try {
       const response = await axios.post(`${apiUrl}/logout`, {}, { withCredentials: true });
       setUser(response.data);
+      navigate("/")
     } catch (err) {
       console.error("Logout failed", err);
     }

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 import axios from 'axios';
+import ToastNotification from "./ToastNotification";
 
 //pass in from netlify
 const apiUrl = import.meta.env.VITE_API_BASE_URL;
@@ -18,6 +19,8 @@ function WordHover({ word }) {
     const tooltipRef = useRef(null);
     const localKey = `word:${word}`; //key for localstorage
     
+    const [toastMsg, setToastMsg] = useState("");
+
     function setState(definition){
         setTranslation(definition.translation);
         setPinyin(definition.pinyin);
@@ -114,73 +117,90 @@ function WordHover({ word }) {
     }, [showTooltip]);
 
     const handleAddToStudySet = async () => {
-        console.log(`📚 Added ${word} to study deck`);
-        const response = await axios.post(`${apiUrl}/users/study_deck`, {
-            word: word, 
-        }, { withCredentials: true });
+        try {
+            await axios.post(`${apiUrl}/users/study_deck`, {
+                word: word, 
+            }, { withCredentials: true });
+            setToastMsg(`✅ Added ${word} to study deck!`);
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response?.status === 409) {
+                    setToastMsg(`⚠️ ${word} already in study deck`);               
+                } else {
+                    setToastMsg("❌ Failed to add word. Please Login.");
+                }
+            } else {
+                setToastMsg("❌ An unexpected error occurred.");
+            }
+        }
     };
 
 return (
-    <div
-        className="relative inline-block"
-    >
-        <span
-            onClick={toggleTooltip}
-            className={`border-b border-dotted cursor-pointer transition ${
-                highlight === "found"
-                    ? "bg-green-200"
-                    : highlight === "not-found"
-                    ? "bg-yellow-200"
-                    : "hover:bg-yellow-200"
-            }`}
-        >
-            {word}
-        </span>
-        {showTooltip && (
-            <div
-                ref={tooltipRef}
-                className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-xs bg-white text-base text-black p-4 rounded-xl shadow-lg z-50 whitespace-normal pointer-events-auto max-h-60 overflow-y-auto"
-            >
-                {isLoading ? (
-                    <p className="text-gray-400">⏳ Loading...</p>
-                ) : notFound ? (
-                    <p className="font-medium">❌ Word not found. Hang tight — generating it now...</p>
-                ) : (
-                    <>
-                        <p className="font-bold">
-                            <span>Word: </span>
-                            <span>{word}</span>
-                        </p>
-                        {pinyin && (
-                            <p className="font-semibold">
-                                <span>Pinyin: </span>
-                                <span>{pinyin}</span>
-                            </p>
-                        )}
-                        {translation && (
-                            <p className="font-semibold">
-                                <span>Translation: </span>
-                                <span>{translation}</span>
-
-                            </p>
-                        )}
-                        {partOfSpeech && (
-                            <p className="font-semibold">
-                                <span>Part of Speech: </span>
-                                <span>{partOfSpeech}</span>
-                            </p>
-                        )}
-                        <button
-                            onClick={handleAddToStudySet}
-                            className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-xl text-base cursor-pointer "
-                        >
-                            Add to Study Set
-                        </button>
-                    </>
-                )}
-            </div>
+    <>
+        {toastMsg && (
+            <ToastNotification message={toastMsg} onClose={() => setToastMsg("")} duration={3000} />
         )}
-    </div>
+        <div
+            className="relative inline-block"
+        >
+            <span
+                onClick={toggleTooltip}
+                className={`border-b border-dotted cursor-pointer transition ${
+                    highlight === "found"
+                        ? "bg-green-200"
+                        : highlight === "not-found"
+                        ? "bg-yellow-200"
+                        : "hover:bg-yellow-200"
+                }`}
+            >
+                {word}
+            </span>
+            {showTooltip && (
+                <div
+                    ref={tooltipRef}
+                    className="fixed sm:absolute bottom-0 sm:bottom-full left-0 sm:left-1/2 sm:-translate-x-1/2 w-full sm:w-max max-w-xs bg-white text-base text-black p-4 sm:rounded-xl rounded-t-xl shadow-lg z-50 whitespace-normal pointer-events-auto max-h-60 sm:max-h-60 overflow-y-auto"
+                >
+                    {isLoading ? (
+                        <p className="text-gray-400">⏳ Loading...</p>
+                    ) : notFound ? (
+                        <p className="font-medium">❌ Word not found. Hang tight — generating it now...</p>
+                    ) : (
+                        <>
+                            <p className="font-bold">
+                                <span>Word: </span>
+                                <span>{word}</span>
+                            </p>
+                            {pinyin && (
+                                <p className="font-semibold">
+                                    <span>Pinyin: </span>
+                                    <span>{pinyin}</span>
+                                </p>
+                            )}
+                            {translation && (
+                                <p className="font-semibold">
+                                    <span>Translation: </span>
+                                    <span>{translation}</span>
+
+                                </p>
+                            )}
+                            {partOfSpeech && (
+                                <p className="font-semibold">
+                                    <span>Part of Speech: </span>
+                                    <span>{partOfSpeech}</span>
+                                </p>
+                            )}
+                            <button
+                                onClick={handleAddToStudySet}
+                                className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-xl text-base cursor-pointer w-full sm:w-auto"
+                            >
+                                Add to Study Set
+                            </button>
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    </>
 );
 
 }
