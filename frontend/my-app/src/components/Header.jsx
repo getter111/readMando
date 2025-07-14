@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PropTypes from 'prop-types'
 import axios from "axios";
-import SearchBar from "./Searchbar";
+import SearchBar from "./SearchBar";
 
 export default function Header({ username = 'Guest', setUser}) {
   const [vocab, setVocab] = useState("");
