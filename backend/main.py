@@ -31,39 +31,6 @@ app.add_middleware(
 def read_root():
     return {"message": "Hello from FastAPI on Fly.io!"}
 
-# Endpoint to hydrate the story page
-@app.get("/users/{user_id}/stories/latest", response_model= models.StoryPageHydration)
-async def get_user_story_page_data(user_id: int):
-    user = user_crud.get_user(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    try:
-        # get most recent story id to fetch story content, title, difficuly, audios, and questions
-        most_recent_story_record = user_stories_crud.get_user_story(user_id)
-        if not most_recent_story_record or "story_id" not in most_recent_story_record:
-            raise HTTPException(status_code=404, detail="User has no previously generated stories")
-
-        most_recent_story_id = most_recent_story_record["story_id"]
-        story_data = story_crud.get_story_by_id(most_recent_story_id)
-        questions = question_crud.get_questions_by_story_id(most_recent_story_id)
-
-        res = models.StoryPageHydration(
-            story_id=most_recent_story_id,
-            content=story_data["content"],
-            title=story_data["title"],
-            difficulty=story_data["difficulty"],
-            title_audio=story_data["title_audio"],
-            story_audio=story_data["story_audio"],
-            questions=questions
-        )   
-
-        print(f"[get_user_story_page_data] Successfully hydrated story page for story_id: {res.story_id}")       
-        return res
-    except Exception as e:
-        print(e)
-        raise HTTPException(status_code=500, detail=f"Internal Server Error")
-
 @app.post("/stories")
 async def generate_story(
     request: models.StoryGenerationRequest,
@@ -122,6 +89,85 @@ async def generate_story(
         print(str(e))
         raise HTTPException(status_code=500, detail=f"Error generating story")
 
+# Endpoint to hydrate the story page
+@app.get("/users/{user_id}/stories/latest", response_model= models.StoryPageHydration)
+async def get_user_story_page_data(user_id: int):
+    user = user_crud.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    try:
+        # get most recent story id to fetch story content, title, difficuly, audios, and questions
+        most_recent_story_record = user_stories_crud.get_user_story(user_id)
+        if not most_recent_story_record or "story_id" not in most_recent_story_record:
+            raise HTTPException(status_code=404, detail="User has no previously generated stories")
+
+        most_recent_story_id = most_recent_story_record["story_id"]
+        story_data = story_crud.get_story_by_id(most_recent_story_id)
+        questions = question_crud.get_questions_by_story_id(most_recent_story_id)
+
+        res = models.StoryPageHydration(
+            story_id=most_recent_story_id,
+            content=story_data["content"],
+            title=story_data["title"],
+            difficulty=story_data["difficulty"],
+            title_audio=story_data["title_audio"],
+            story_audio=story_data["story_audio"],
+            questions=questions
+        )   
+
+        print(f"[get_user_story_page_data] Successfully hydrated story page for story_id: {res.story_id}")       
+        return res
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=f"Internal Server Error")
+
+@app.post("/stories/segment") #had to add a pydantic model/dict because in react passing json to body not a string. prev was (content:str) casuing 422 error
+async def segment_story(request: models.StorySegmentationRequest):
+    try:
+        #jieba precise mode to segment story into most natural words
+        words = list(jieba.cut(request.content, cut_all=False))
+        return {"segmented_words": words}
+    except Exception as e:
+        print(str(e))
+        raise HTTPException(status_code=500, detail=f"Error segmenting story")
+
+# Generates a list of comprehention questions
+@app.post("/stories/questions", response_model=List[models.QuestionCreate])
+async def generate_questions(request: models.QuestionGenerationRequest):
+    try:
+        existing_questions = question_crud.get_questions_by_story_id(request.story_id)
+
+        #return existing questions if they already exist
+        if existing_questions:
+            return existing_questions
+
+        saved_questions = []
+
+        #generate reading comprehension questions
+        response = generateQuestions(request.story, request.difficulty, request.title)
+        questions = json.loads(response) #parse json string 
+
+        #insert generated questions to questions table
+        for q in questions:
+            new_question = models.QuestionCreate(
+                story_id=request.story_id,
+                question_text=q["question_text"],
+                correct_answer=q["correct_answer"],
+                answer_choices=q["answer_choices"]
+            )
+            saved_questions.append(new_question)
+        
+        batch = question_crud.create_questions_batch(saved_questions)
+
+        print(f"[generate_questions] Generating questions for story_id={request.story_id}")
+        print(f"[generate_questions] Questions generated: {questions}")
+
+        return batch
+    except Exception as e:
+        print(str(e))
+        raise HTTPException(status_code=500, detail=f"Question generation failed")
+
 # endpoint to validate user session token
 @app.get("/me")
 async def get_current_user(response: Response, readmando_session: Optional[str] = Cookie(None)):
@@ -161,13 +207,32 @@ async def get_current_user(response: Response, readmando_session: Optional[str] 
     except Exception as e:
         print(e)
 
+# endpoint to retrieve user's study deck
+@app.get("/users/study_deck")
+async def get_user_study_deck(readmando_session: Optional[str] = Cookie(None)):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail="Missing session cookie, please login")
+    
+    try: 
+        payload = decode_token(readmando_session)
+        user_id = payload["user_id"]
+        vocab_ids = user_vocabulary_crud.get_user_vocabulary(user_id)  # Get all vocabulary for the user. returned in [VocabularyResponse]
+        print(f"User {user_id} vocab deck:", vocab_ids)
+        return vocab_ids
+    except HTTPException:
+        # re-raise HTTP exceptions to preserve status codes
+        raise
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=400, detail="Something went wrong while retrieving user's study deck")
+
 #endpoint to add vocabulary to user's study deck
 @app.post("/users/study_deck")
 async def add_vocabulary_to_study_deck(request: models.UserVocabularyRequest, readmando_session: Optional[str] = Cookie(None)):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail="Missing session cookie, please login")
+
     try:
-        if not readmando_session:
-            raise HTTPException(status_code=401, detail="Missing session cookie, please login")
-        
         payload = decode_token(readmando_session)
         user_id = payload["user_id"]
         user = user_crud.get_user(user_id)
@@ -199,7 +264,7 @@ async def add_vocabulary_to_study_deck(request: models.UserVocabularyRequest, re
 async def login_user(user: models.UserCreate, response: Response): #response refers to the http response
     try:
         #Check if user exists
-        existing_user = user_crud.get_user_by_name(user.username)
+        existing_user = user_crud.get_user_by_name(user.username.lower())
         if not existing_user:
             raise HTTPException(status_code=404, detail="User does not exist or may not be verified.")
 
@@ -252,7 +317,7 @@ def logout(response: Response):
 async def register_user(user: models.UserCreate):
     try:
         # Check if user already exists
-        existing_user = user_crud.get_user_by_name(user.username)
+        existing_user = user_crud.get_user_by_name(user.username.lower())
         if existing_user:
             raise HTTPException(status_code=400, detail="Username already registered")
         
@@ -262,8 +327,8 @@ async def register_user(user: models.UserCreate):
         # Save new user status
         created_user = user_crud.create_user(
             models.UserCreate(
-                username=user.username,
-                email=user.email,
+                username=user.username.lower(),
+                email=user.email.lower(),
                 verification_token=verification_token
             )
         )
@@ -297,16 +362,6 @@ async def verify_email(token: str):
         print(str(e))
         raise HTTPException(status_code=500, detail="An internal error occurred")
     
-@app.post("/stories/segment") #had to add a pydantic model/dict because in react passing json to body not a string. prev was (content:str) casuing 422 error
-async def segment_story(request: models.StorySegmentationRequest):
-    try:
-        #jieba precise mode to segment story into most natural words
-        words = list(jieba.cut(request.content, cut_all=False))
-        return {"segmented_words": words}
-    except Exception as e:
-        print(str(e))
-        raise HTTPException(status_code=500, detail=f"Error segmenting story")
-
 #autofetch unknown words and add to db, should only be used on chinese characters
 @app.post("/vocabulary")
 async def add_vocabulary(request: models.VocabRequest):
@@ -349,41 +404,6 @@ async def get_vocabulary(word: str):
     else:
         raise HTTPException(status_code=404, detail="Vocabulary not found.")
     
-# Generates a list of comprehention questions
-@app.post("/stories/questions", response_model=List[models.QuestionCreate])
-async def generate_questions(request: models.QuestionGenerationRequest):
-    try:
-        existing_questions = question_crud.get_questions_by_story_id(request.story_id)
-
-        #return existing questions if they already exist
-        if existing_questions:
-            return existing_questions
-
-        saved_questions = []
-
-        #generate reading comprehension questions
-        response = generateQuestions(request.story, request.difficulty, request.title)
-        questions = json.loads(response) #parse json string 
-
-        #insert generated questions to questions table
-        for q in questions:
-            new_question = models.QuestionCreate(
-                story_id=request.story_id,
-                question_text=q["question_text"],
-                correct_answer=q["correct_answer"],
-                answer_choices=q["answer_choices"]
-            )
-            saved_questions.append(new_question)
-        
-        batch = question_crud.create_questions_batch(saved_questions)
-
-        print(f"[generate_questions] Generating questions for story_id={request.story_id}")
-        print(f"[generate_questions] Questions generated: {questions}")
-
-        return batch
-    except Exception as e:
-        print(str(e))
-        raise HTTPException(status_code=500, detail=f"Question generation failed")
 
 # endpoint to save user's progress after completing reading comprehension questions
 @app.post("/save_progress")

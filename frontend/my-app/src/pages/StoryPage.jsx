@@ -217,13 +217,13 @@ export default function StoryPage({ user, loadingUser}) {
                                 Generate Story
                             </button>
 
-                            <button
+                            {/* <button
                                 // onClick={fetchStory}
                                 disabled={loading}
                                 className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600 transition disabled:bg-gray-400 cursor-pointer"
                             >
                                 Clear Story
-                            </button>
+                            </button> */}
                         </div>
 
                         {error && <p className="text-red-500 mt-2">{error}</p>}

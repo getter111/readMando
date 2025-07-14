@@ -27,13 +27,13 @@ export default function HomePage() {
             image={PracticeIMG}
             title="Vocabulary Flashcards"
             buttonText="Practice Study Deck"
-            onClick={() => alert("Navigate to Flashcards")}
+            onClick={() => navigate('/study')}
           />
           <FeatureCard
             image={QuizIMG}
             title="Fill in the blank"
             buttonText="Begin"
-            onClick={() => alert("Navigate to Interactive Quiz")}
+            onClick={() => navigate('/fill-in-the-blank')}
           />
           <FeatureCard
             image={DictionaryIMG}

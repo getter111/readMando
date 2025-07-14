@@ -6,6 +6,8 @@ import LoginPage from './pages/LoginPage'
 import SearchPage from "./pages/SearchPage"
 import StoryPage from "./pages/StoryPage"
 import ReviewPage from "./pages/ReviewPage"
+import StudyPage from "./pages/StudyPage"
+import PhrasesPage from "./pages/PhrasesPage"
 import VerificationSuccessPage from "./pages/VerificationSuccessPage"
 import RegisterPage from "./pages/RegisterPage"
 import axios from "axios"
@@ -48,10 +50,12 @@ const getUser = async () => {
             <Route index element= {<HomePage />} />
             <Route path="login" element= {<LoginPage setUser={setUser} />} />
             <Route path="register" element= {<RegisterPage />} />
+            <Route path="verification-success" element={<VerificationSuccessPage />} />
             <Route path="search/:vocab" element= {<SearchPage />} />
             <Route path="story" element = {<StoryPage user={user} loadingUser={loadingUser} />} /> {/*if guest, user_id should be undefined*/}
-            <Route path="review" element = {<ReviewPage />} />
-            <Route path="verification-success" element={<VerificationSuccessPage />} />
+            <Route path="study" element = {<StudyPage user={user} loadingUser={loadingUser}/>} /> {/* Study vocab with flashcards*/}
+            <Route path="fill-in-the-blank" element= {<PhrasesPage />} /> {/* Fill in the blank style game */}
+            <Route path="review" element = {<ReviewPage />} /> {/* Review past generated stories */}
             { /* Add dictionary route*/}
           </Route>
         </Routes>

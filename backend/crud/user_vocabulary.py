@@ -33,7 +33,7 @@ class UserVocabularyCRUD:
         #print(vocab_res)
         vocabList = []
         for record in vocab_res.data:
-            res = VocabularyResponse(**record) #create model instance of VocabularyResponse, ** unpacks dictionary keys and values and passes them as arguments
+            res = VocabularyResponse(**record) #turn db res to python model instance of VocabularyResponse, ** unpacks dictionary keys and values and passes them as arguments
             vocabList.append(res)
         return vocabList
     

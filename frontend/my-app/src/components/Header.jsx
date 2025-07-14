@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PropTypes from 'prop-types'
 import axios from "axios";
+import SearchBar from "./Searchbar";
 
 export default function Header({ username = 'Guest', setUser}) {
   const [vocab, setVocab] = useState("");
@@ -37,34 +38,12 @@ export default function Header({ username = 'Guest', setUser}) {
           ReadMando
         </Link>
 
-        <div className="relative w-full sm:w-64">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 pointer-events-none 
-            ${isFocused ? 'text-gray-700 font-bold' : 'text-gray-400'}`}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-            />
-          </svg>
-
-          <input
-            type="text"
-            placeholder="Search"
-            className="w-full pl-10 p-2 border border-gray-300 rounded-md"
-            value={vocab}
-            onChange={(e) => setVocab(e.target.value)}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            onKeyDown={handleEnterKey} //Link to /search:vocab
-          />
-        </div>
+        <SearchBar
+          placeholder="Search Dictionary..."
+          value={vocab}
+          onChange={(e) => setVocab(e.target.value)}
+          onKeyDown={handleEnterKey}
+        />
       </div>
 
       <div className="flex justify-between sm:justify-end items-center gap-2 sm:gap-4">
