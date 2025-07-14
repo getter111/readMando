@@ -26,7 +26,7 @@ export default function HomePage() {
           <FeatureCard
             image={PracticeIMG}
             title="Vocabulary Flashcards"
-            buttonText="Practice Study Deck"
+            buttonText="Practice Now"
             onClick={() => navigate('/study')}
           />
           <FeatureCard
@@ -37,8 +37,8 @@ export default function HomePage() {
           />
           <FeatureCard
             image={DictionaryIMG}
-            title="Story Review"
-            buttonText="Review Past Stories"
+            title="Story Hub"
+            buttonText="Explore for Free"
             onClick={() => navigate('/review')}
           />
         </div>

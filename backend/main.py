@@ -217,7 +217,7 @@ async def get_user_study_deck(readmando_session: Optional[str] = Cookie(None)):
         payload = decode_token(readmando_session)
         user_id = payload["user_id"]
         vocab_ids = user_vocabulary_crud.get_user_vocabulary(user_id)  # Get all vocabulary for the user. returned in [VocabularyResponse]
-        print(f"User {user_id} vocab deck:", vocab_ids)
+        print(f"Got user {user_id}'s vocab deck")
         return vocab_ids
     except HTTPException:
         # re-raise HTTP exceptions to preserve status codes
