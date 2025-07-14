@@ -1,50 +1,83 @@
-# AI-Generated Short Stories
+# ReadMando — *The Platform That Turns Stories into Fluency*
 
-📖 **Live Demo** → [ReadMando (in progress)](https://readmando.netlify.app/)
+**Live Demo** → [ReadMando](https://readmando.netlify.app/)
 
-## About
+---
 
-This project helps Chinese language learners improve their reading comprehension by generating dynamic, customizable short stories. Users can tailor stories to their vocabulary level and reading goals.
+## Overview
 
-## Features
+**ReadMando** is an AI-powered learning platform that helps Mandarin Chinese learners build reading comprehension and vocabulary knowledge through interactive, personalized short stories. Learners can explore, create, and master the Mandarin Chinese, one story at a time.
 
-### 📘 Story Generator Page
+---
 
-- **Story Customization**  
-  - Customize difficulty, length, and themes of each story.  
-  - Choose specific vocabulary to appear in the story for targeted learning.
+## Core Features
 
-- **Auto-Generated Comprehension Questions**  
-  - At the end of each story, questions are generated automatically to test reading comprehension.
+### Story Generator
+- **Customizable Stories**  
+  Choose your story’s difficulty, length, and theme. 
+  Insert specific vocabulary you want to practice! 
+  
+- **Built-In Comprehension Questions**  
+  Every story ends with auto-generated questions to help you reinforce what you just read.
 
 - **Text-to-Speech (TTS)**  
-  - Listen along as you read.
-  - Uses [MeloTTS](https://github.com/myshell-ai/MeloTTS) to convert Chinese characters into natural-sounding Chinese audio.
+  Hear native-like pronunciation while reading. 
+  Powered by [MeloTTS](https://github.com/myshell-ai/MeloTTS) for high-quality Mandarin audio playback.
 
-- **Easy Vocabulary Lookup**  
-  - Hover over any word to see its pinyin, translation, and part-of-speech tag.  
-  - Uses the [Jieba](https://github.com/fxsjy/jieba) segmentation library.
+- **Instant Vocabulary Lookup**  
+  Click on any word to view its pinyin, English translation, and part-of-speech tag. 
+  Built using the [Jieba](https://github.com/fxsjy/jieba) segmentation library.
 
-- **Unknown Vocabulary Detection**  
-  - Unknown words not found in the master vocabulary database are automatically processed.  
-  - The app predicts and displays their meaning, part of speech, and pronunciation.
+- **Unknown Word Detection**  
+  The system automatically detects and annotates unfamiliar words with predicted definitions.
 
-## Deployment
+---
 
-The application is structured as two main microservices. Both built using FastAPI, containerized with Docker, and deployed on [Fly.io](https://fly.io/).
+### 🧠 Vocabulary Flashcards
+- Automatically add any words from your stories into your study deck.
+- Review at your own pace using custom flashcards with pinyin, definitions, and part of speech.
+- Designed to support spaced repetition and personalized practice.
 
-- **Main Backend**:  
-This service handles:
+---
+
+### ✍️ Fill-in-the-Blank
+- An interactive cloze-style activity based on your study deck.
+- Test your understanding by completing sentences using words from your active vocabulary set.
+- Great for retention and active recall.
+
+---
+
+### 📖 Story Hub
+- Browse a growing library of stories created by other learners.
+- Revisit your past generated stories and review comprehension questions.
+- A collaborative and evolving learning resource.
+
+---
+
+## 🧱 Architecture & Deployment
+
+The app is split into two microservices, both built with **FastAPI**, containerized using **Docker**, and deployed with [Fly.io](https://fly.io/):
+
+- **Core Backend**
   - Story generation
-  - Vocabulary processing
-  - User authentication and management
-  - Supabase interactions
+  - Vocabulary processing and storage
+  - User authentication and session handling
+  - Supabase integration for data storage
 
-- **TTS**:  
-  The TTS functionality is deployed as a separate service using the [MeloTTS](https://github.com/myshell-ai/MeloTTS) library.
+- **TTS Service**
+  - Deployed as a separate service using [MeloTTS](https://github.com/myshell-ai/MeloTTS) for Chinese audio generation.
 
-### ⚠️ Note on Story Generation Speed
+---
 
-Text-to-speech generation for the story will be slow due to cold startups of the backend services. I’m actively working on optimizing performance to reduce these delays. Currently looking into using GPU containers to speed up TTS generation.
+## 🚧 Performance Notes
 
-If you have any suggestions or ideas to improve this, please feel free to [contact me](mailto:alexlin7211@gmail.com)!
+**⏳ Cold Start Delays (TTS)**  
+Audio generation may take a few seconds if the backend service is waking from idle. Actively working to optimize performance, including exploring GPU-backed containers to accelerate text-to-speech response times.
+
+---
+
+## 🤝 Feedback & Contributions
+
+Got an idea to improve ReadMando?  
+Feel free to reach out via [email](mailto:alexlin7211@gmail.com). 
+All suggestions and contributions are welcome!
