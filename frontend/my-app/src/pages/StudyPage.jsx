@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SearchBar from "../components/Searchbar";
+import SearchBar from "../components/SearchBar";
 import PropTypes from "prop-types";
 import axios from "axios";
 
