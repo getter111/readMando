@@ -6,7 +6,7 @@
 
 ## Overview
 
-**ReadMando** is an AI-powered learning platform that helps Mandarin Chinese learners build reading comprehension and vocabulary knowledge through interactive, personalized short stories. Learners can explore, create, and master the Mandarin Chinese, one story at a time.
+**ReadMando** is an AI-powered learning platform that helps Mandarin Chinese learners build reading comprehension and vocabulary knowledge through interactive, personalized short stories. Learners can explore, create, and master Mandarin Chinese, one story at a time.
 
 ---
 
@@ -33,28 +33,28 @@
 
 ---
 
-### 🧠 Vocabulary Flashcards
+### Vocabulary Flashcards
 - Automatically add any words from your stories into your study deck.
 - Review at your own pace using custom flashcards with pinyin, definitions, and part of speech.
 - Designed to support spaced repetition and personalized practice.
 
 ---
 
-### ✍️ Fill-in-the-Blank
+### Fill-in-the-Blank
 - An interactive cloze-style activity based on your study deck.
 - Test your understanding by completing sentences using words from your active vocabulary set.
 - Great for retention and active recall.
 
 ---
 
-### 📖 Story Hub
+### Story Hub
 - Browse a growing library of stories created by other learners.
 - Revisit your past generated stories and review comprehension questions.
 - A collaborative and evolving learning resource.
 
 ---
 
-## 🧱 Architecture & Deployment
+## Architecture & Deployment
 
 The app is split into two microservices, both built with **FastAPI**, containerized using **Docker**, and deployed with [Fly.io](https://fly.io/):
 
@@ -69,14 +69,14 @@ The app is split into two microservices, both built with **FastAPI**, containeri
 
 ---
 
-## 🚧 Performance Notes
+## Performance Notes
 
-**⏳ Cold Start Delays (TTS)**  
+**Cold Start Delays (TTS)**  
 Audio generation may take a few seconds if the backend service is waking from idle. Actively working to optimize performance, including exploring GPU-backed containers to accelerate text-to-speech response times.
 
 ---
 
-## 🤝 Feedback & Contributions
+## Feedback & Contributions
 
 Got an idea to improve ReadMando?  
 Feel free to reach out via [email](mailto:alexlin7211@gmail.com). 
