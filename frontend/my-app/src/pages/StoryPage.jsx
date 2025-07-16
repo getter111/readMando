@@ -121,7 +121,7 @@ export default function StoryPage({ user, loadingUser}) {
 
                 setStory(parsedStory);
                 setDifficulty(localDifficulty);
-                setStoryId(localStoryId);
+                setStoryId(localStoryId ? Number(localStoryId) : null);
                 setStoryAudio(localTitleAudio);
                 setTitleAudio(localStoryAudio);
             }
@@ -206,10 +206,10 @@ export default function StoryPage({ user, loadingUser}) {
                 difficulty: difficulty,
                 story_id: storyId
             });
-            setQuestions(response.data)
-
-            // cache the questions[dict] in case guest refreshes the page
-            if (!user.user_id) {
+            if (user.user_id) {
+                setQuestions(response.data)
+            } else if (user.username === "Guest") {
+                // cache the questions[dict] in case guest refreshes the page
                 localStorage.setItem("questions", JSON.stringify(response.data));
             }
         } catch (error) {
