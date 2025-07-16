@@ -22,7 +22,7 @@
 
 - **Text-to-Speech (TTS)**  
   Hear native-like pronunciation while reading. 
-  Powered by [MeloTTS](https://github.com/myshell-ai/MeloTTS) for high-quality Mandarin audio playback.
+  Powered by [edge-tts](https://github.com/rany2/edge-tts) for high-quality Mandarin audio playback.
 
 - **Instant Vocabulary Lookup**  
   Click on any word to view its pinyin, English translation, and part-of-speech tag. 
@@ -56,24 +56,15 @@
 
 ## Architecture & Deployment
 
-The app is split into two microservices, both built with **FastAPI**, containerized using **Docker**, and deployed with [Fly.io](https://fly.io/):
+The backend is built with **FastAPI**, containerized using **Docker**, and deployed with [Fly.io](https://fly.io/):
 
 - **Core Backend**
   - Story generation
   - Vocabulary processing and storage
   - User authentication and session handling
   - Supabase integration for data storage
-
-- **TTS Service**
-  - Deployed as a separate service using [MeloTTS](https://github.com/myshell-ai/MeloTTS) for Chinese audio generation.
-
----
-
-## Performance Notes
-
-**Cold Start Delays (TTS)**  
-Audio generation may take a few seconds if the backend service is waking from idle. Actively working to optimize performance, including exploring GPU-backed containers to accelerate text-to-speech response times.
-
+  - Text-to-Speech
+   
 ---
 
 ## Feedback & Contributions
