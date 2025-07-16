@@ -8,7 +8,10 @@ from datetime import datetime, timezone, timedelta
 class StoryBase(BaseModel):
     title: str
     difficulty: Optional[str] = None
-    content: Optional[str] = None
+    content: Optional[str] = None,
+    voice: Optional[str] = None,
+    topic: Optional[str] = None,
+    vocabulary: Optional[List[str]] = None 
 
 class StoryCreate(StoryBase):
     pass
@@ -138,6 +141,7 @@ class StoryGenerationRequest(BaseModel):
     vocabulary: Optional[List[str]] = None
     topic: Optional[str] = None
     user:Optional[UserInfo] = None
+    voice: Optional[str] = None
 
 class StoryGenerationResponse(BaseModel):
     story_id: int
@@ -163,3 +167,6 @@ class StoryPageHydration(BaseModel):
     title_audio: Optional[str] = None
     story_audio: Optional[str] = None
     questions: List[dict]
+    voice: Optional[str] = None 
+    vocabulary: Optional[List[str]] = None
+    topic: Optional[str] = None

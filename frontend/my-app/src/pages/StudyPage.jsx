@@ -13,7 +13,7 @@ export default function StudyPage({ user, loadingUser}) {
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
-    if (!loadingUser && user.user_id || user.username === "Guest") {
+    if (!loadingUser && (user.user_id || user.username === "Guest")) {
       hydratePage();
     }
   }, [loadingUser, user]);

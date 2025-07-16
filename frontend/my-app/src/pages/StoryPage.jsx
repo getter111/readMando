@@ -1,9 +1,20 @@
 import { useState, useEffect } from "react";
+import { useRef } from "react";
+
 import axios from "axios";
 import StoryDisplay from "../components/StoryDisplay"; 
 import QuestionList from "../components/QuestionList";
 import PropTypes from "prop-types";
 import AudioPlayer from "../components/AudioPlayer"
+
+import xiaoXiaoAudio from "../assets/audio/zh-CN-XiaoxiaoNeural.mp3"; 
+import xiaoYiAudio from "../assets/audio/zh-CN-XiaoyiNeural.mp3"; 
+import xiaoBeiAudio from "../assets/audio/zh-CN-liaoning-XiaobeiNeural.mp3"; 
+import xiaoNiAudio from "../assets/audio/zh-CN-shaanxi-XiaoniNeural.mp3"; 
+import yunJianAudio from "../assets/audio/zh-CN-YunjianNeural.mp3"; 
+import yunXiaAudio from "../assets/audio/zh-CN-YunxiaNeural.mp3"; 
+import yunXiAudio from "../assets/audio/zh-CN-YunxiNeural.mp3"; 
+import yunYangAudio from "../assets/audio/zh-CN-YunyangNeural.mp3"; 
 
 export default function StoryPage({ user, loadingUser}) {
     const [story, setStory] = useState(null); // Ensure story is an object
@@ -13,7 +24,7 @@ export default function StoryPage({ user, loadingUser}) {
     const [loading, setLoading] = useState(false);
     const [loadingQuestions, setLoadingQuestions] = useState(false);
     const [error, setError] = useState("");
-
+    
     const [storyId, setStoryId] = useState(null);
     const [questions, setQuestions] = useState([]);
     const [titleAudio, setTitleAudio] = useState(null);
@@ -22,12 +33,42 @@ export default function StoryPage({ user, loadingUser}) {
     //pass in production url from netlify
     const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
+    const [voice, setVoice] = useState("zh-CN-YunxiaNeural");
+    const voiceAudioMap = {
+    "zh-CN-XiaoxiaoNeural": xiaoXiaoAudio,
+    "zh-CN-XiaoyiNeural": xiaoYiAudio,
+    "zh-CN-YunjianNeural": yunJianAudio,
+    "zh-CN-YunxiNeural": yunXiAudio,
+    "zh-CN-YunxiaNeural": yunXiaAudio,
+    "zh-CN-YunyangNeural": yunYangAudio,
+    "zh-CN-liaoning-XiaobeiNeural": xiaoBeiAudio,
+    "zh-CN-shaanxi-XiaoniNeural": xiaoNiAudio,
+};
+    //keep track of the current audio being played
+    const currentAudioRef = useRef(null);
+
     //checks if there is a cached story on the first render
     useEffect(() => {
         if (!loadingUser && (user.user_id || user.username === "Guest")) {
             hydratePage();
         }
     }, [user, loadingUser]);
+
+    //plays voice demo for selected voice
+    const playVoiceDemo = () => {
+
+        // make sure to pause and reset the prev playing audio
+        if (currentAudioRef.current) {
+            currentAudioRef.current.pause();
+            currentAudioRef.current.currentTime = 0; 
+        }
+
+        const audio = new Audio(voiceAudioMap[voice]);
+        currentAudioRef.current = audio;
+        audio.play().catch((error) => {
+            console.error("Error playing audio:", error);
+        });
+    };
 
     // hydrates page with users most recent story
         const hydratePage = async () => {
@@ -55,11 +96,14 @@ export default function StoryPage({ user, loadingUser}) {
                     setStoryId(response.data.story_id);
                     setStoryAudio(response.data.story_audio);
                     setTitleAudio(response.data.title_audio);
-                }
+                    setVoice(response.data.voice)
+                    setVocabulary(response.data.vocabulary || "");
+                    setTopic(response.data.topic || "");
+                }     
             } catch (err) {
                 console.error("Error fetching user story", err);
             }
-        } else {
+        } else if (user.username === "Guest") {
             // load from localStorage for guest users
             console.log("Loading data from localStorage for", user.username);
             const localStory = localStorage.getItem("story");
@@ -68,18 +112,26 @@ export default function StoryPage({ user, loadingUser}) {
             const localStoryId = localStorage.getItem("storyId");
             const localTitleAudio = localStorage.getItem("titleAudio");
             const localStoryAudio = localStorage.getItem("storyAudio");
+            const localVoiceAudio = localStorage.getItem("voiceAudio");
+            const localTopic = localStorage.getItem("topic");
+            const localVocabulary = localStorage.getItem("vocabulary");
 
-            if (localStory && localDifficulty && localQuestions) {
+            if (localStory && localDifficulty) {
                 const parsedStory = JSON.parse(localStory);
-                const parsedQuestions = JSON.parse(localQuestions);
 
                 setStory(parsedStory);
                 setDifficulty(localDifficulty);
-                setQuestions(parsedQuestions);
                 setStoryId(localStoryId);
                 setStoryAudio(localTitleAudio);
                 setTitleAudio(localStoryAudio);
             }
+            if (localQuestions){
+                const parsedQuestions = JSON.parse(localQuestions);
+                setQuestions(parsedQuestions);
+            } 
+            if (localVoiceAudio) setVoice(localVoiceAudio);
+            if (localTopic) setTopic(localTopic);
+            if (localVocabulary) setVocabulary(localVocabulary);
         }
     };
 
@@ -98,7 +150,8 @@ export default function StoryPage({ user, loadingUser}) {
                 user: { //user is pydantic model so access with dot notation
                     user_id: user.user_id || "Guest",
                     is_verified: user.is_verified || false
-                }
+                },
+                voice: voice
             });
         
             //segment the body of the story
@@ -129,7 +182,11 @@ export default function StoryPage({ user, loadingUser}) {
                 localStorage.setItem("storyId", response.data.story_id);
                 localStorage.setItem("titleAudio", response.data.title_audio);
                 localStorage.setItem("storyAudio", response.data.story_audio);
+                localStorage.setItem("voiceAudio", voice);
+                localStorage.setItem("topic", topic);
+                localStorage.setItem("vocabulary", vocabulary);
             }
+
         } catch (error) {
             setError("Failed to generate story. Try again!");
             console.error("Error generating story", error);
@@ -180,9 +237,9 @@ export default function StoryPage({ user, loadingUser}) {
                                 value={difficulty}
                                 onChange={(e) => setDifficulty(e.target.value)}
                                 >
-                                <option value="Beginner">Beginner</option>
-                                <option value="Intermediate">Intermediate</option>
-                                <option value="Advanced">Advanced</option>
+                                    <option value="Beginner">Beginner</option>
+                                    <option value="Intermediate">Intermediate</option>
+                                    <option value="Advanced">Advanced</option>
                                 </select>
                             </div>
 
@@ -193,7 +250,7 @@ export default function StoryPage({ user, loadingUser}) {
                                 className="w-full p-2 border rounded"
                                 value={vocabulary}
                                 onChange={(e) => setVocabulary(e.target.value)}
-                                placeholder="Example: adventure, hero, space"
+                                placeholder="Example: quintessential, eloquent, job, applications"
                                 />
                             </div>
 
@@ -204,8 +261,49 @@ export default function StoryPage({ user, loadingUser}) {
                                 className="w-full p-2 border rounded"
                                 value={topic}
                                 onChange={(e) => setTopic(e.target.value)}
-                                placeholder="Example: space exploration"
+                                placeholder="Example: exploring space and earth to find aliens, how to apply for a job?"
                                 />
+                            </div>
+                            
+                            <div className="mb-4">
+                                <label className="block font-medium mb-1">Voice:</label>
+                                <select
+                                className="w-full p-2 border rounded cursor-pointer"
+                                value={voice}
+                                onChange={(e) => setVoice(e.target.value)}
+                                >
+                                    <option value="zh-CN-YunxiaNeural">
+                                        Yunxia 云夏 (Male, Cute, Cartoon/Novel)
+                                    </option>
+                                    <option value="zh-CN-XiaoyiNeural">
+                                        Xiaoyi 小艺 (Female, Lively, Cartoon/Novel)
+                                    </option>
+                                    <option value="zh-CN-YunyangNeural">
+                                        Yunyang 云阳 (Male, Professional/Reliable, News)
+                                    </option>
+                                    <option value="zh-CN-XiaoxiaoNeural">
+                                        Xiaoxiao 小晓 (Female, Warm, News/Novel)
+                                    </option>
+                                    <option value="zh-CN-YunjianNeural">
+                                        Yunjian 云健 (Male, Passion, Sports/Novel)
+                                    </option>
+                                    <option value="zh-CN-YunxiNeural">
+                                        Yunxi 云希 (Male, Lively/Sunshine, Novel)
+                                    </option>
+                                    <option value="zh-CN-liaoning-XiaobeiNeural">
+                                        Xiaobei 小贝 (Female, Humorous, Liaoning Dialect)
+                                    </option>
+                                    <option value="zh-CN-shaanxi-XiaoniNeural">
+                                        Xiaoni 小妮 (Female, Bright, Shaanxi Dialect)
+                                    </option>
+                                </select>
+                                <button
+                                    type="button"
+                                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 cursor-pointer mt-2"
+                                    onClick={playVoiceDemo}
+                                >
+                                    ▶️ Play Voice Demo
+                                </button>
                             </div>
                         </div>
                         <div className="space-y-2 mt-4">

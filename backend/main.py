@@ -46,7 +46,10 @@ async def generate_story(
         save_story = models.StoryCreate(
             title=story["title"], 
             difficulty=request.difficulty, 
-            content=story["story"]
+            content=story["story"],
+            voice=request.voice, 
+            topic=request.topic,  
+            vocabulary=request.vocabulary  
         )
 
         created_story = story_crud.create_story(save_story)
@@ -62,11 +65,11 @@ async def generate_story(
                 # Add the story to the user_stories table
                 user_stories_crud.create_user_story(user_story)
         
-        # use melo api to generate tts for the title and story
-        title_audio_path = await text_to_audio(story["title"], story_id, "title")
-        story_audio_path = await text_to_audio(story["story"], story_id, "story")
+        # use edge-tts to generate tts for the title and story, saves a local .wav file
+        title_audio_path = await text_to_audio(story["title"], story_id, "title", request.voice) #add voice param
+        story_audio_path = await text_to_audio(story["story"], story_id, "story", request.voice)
 
-        # Upload audio files to supabase storage and get URLs
+        # Upload audio files to supabase storage and get URLs, deletes local .wav file
         title_audio_url = await upload_audio_to_storage(title_audio_path)
         story_audio_url = await upload_audio_to_storage(story_audio_path)
 
@@ -82,7 +85,7 @@ async def generate_story(
             title=story["title"],
             content=story["story"],
             title_audio=title_audio_url,
-            story_audio=story_audio_url
+            story_audio=story_audio_url,
         )
         
     except Exception as e:
@@ -113,7 +116,10 @@ async def get_user_story_page_data(user_id: int):
             difficulty=story_data["difficulty"],
             title_audio=story_data["title_audio"],
             story_audio=story_data["story_audio"],
-            questions=questions
+            questions=questions,
+            voice=story_data["voice"],
+            vocabulary=story_data["vocabulary"],
+            topic=story_data["topic"]
         )   
 
         print(f"[get_user_story_page_data] Successfully hydrated story page for story_id: {res.story_id}")       

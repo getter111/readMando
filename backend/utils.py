@@ -1,13 +1,10 @@
 from pypinyin import lazy_pinyin, Style
-from supaDB import vocabulary_crud
-import requests
+from supaDB import vocabulary_crud, story_crud, supabase
 import os
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from openai import OpenAI
-import json
-import httpx
-import aiofiles
+import edge_tts
 
 load_dotenv()
 
@@ -55,34 +52,23 @@ def add_vocabulary_to_db(vocab_list: list[dict]):
     except Exception as e:
         print(f"Error adding vocabulary: {e}")
 
-#call tts endpoint and write to our audio_path
-async def text_to_audio(text: str, id: int, type: str):
+#call edge-tts write to our audio_path
+async def text_to_audio(text: str, id: int, type: str, voice: str):
     folder = "titles" if type == "title" else "stories"
     audio_path = f'audio_files/{folder}/{type}_{id}_audio.wav'
-    endpoint = os.environ.get("TTS_BASE_URL")
 
-    print(f"[text_to_audio] Using TTS endpoint: {endpoint}\n")
+    print(f"[text_to_audio] Calling edge tts\n")
     print(f"[text_to_audio] Text: '{text}'\n")
     print(f"[text_to_audio] Generating audio for: {type}, story_id={id}\n")
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(endpoint, params={
-                "text": text,
-                "id": id,
-                "type": type
-            }, timeout=120)
-        print(f"[text_to_audio] TTS response status: {response.status_code}, content length: {len(response.content)}\n")
-        if response.status_code != 200 or not response.content:
-            raise Exception(f"TTS API returned status {response.status_code} or empty content.\n")
-        
-        #create new audio file
-        async with aiofiles.open(audio_path, "wb") as f:
-            await f.write(response.content)
+        communicate = edge_tts.Communicate(text, voice=voice)
+        await communicate.save(audio_path)
+        print(f"[text_to_audio] Audio saved locally to {audio_path}\n")
         return audio_path
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error calling melotts api: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error calling edge-tts: {str(e)}")
     
 def generateQuestions(story:str, difficulty:str, title:str):
     prompt = (

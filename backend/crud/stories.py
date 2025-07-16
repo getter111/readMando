@@ -11,7 +11,11 @@ class StoryCRUD:
         res = self.supabase.table("stories").insert(
             {"title": story.title, 
              "difficulty": story.difficulty, 
-             "content": story.content}
+             "content": story.content,
+             "voice": story.voice,
+             "topic": story.topic,
+             "vocabulary": story.vocabulary
+            }
         ).execute()
         return res.data[0]
 
