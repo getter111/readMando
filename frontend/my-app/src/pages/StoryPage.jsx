@@ -6,6 +6,7 @@ import StoryDisplay from "../components/StoryDisplay";
 import QuestionList from "../components/QuestionList";
 import PropTypes from "prop-types";
 import AudioPlayer from "../components/AudioPlayer"
+import Flashcard from "../components/Flashcard";
 
 import xiaoXiaoAudio from "../assets/audio/zh-CN-XiaoxiaoNeural.mp3"; 
 import xiaoYiAudio from "../assets/audio/zh-CN-XiaoyiNeural.mp3"; 
@@ -29,7 +30,7 @@ export default function StoryPage({ user, loadingUser}) {
     const [questions, setQuestions] = useState([]);
     const [titleAudio, setTitleAudio] = useState(null);
     const [storyAudio, setStoryAudio] = useState(null);
-
+    
     //pass in production url from netlify
     const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -299,8 +300,9 @@ export default function StoryPage({ user, loadingUser}) {
                                 </select>
                                 <button
                                     type="button"
-                                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 cursor-pointer mt-2"
+                                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 cursor-pointer mt-2 transition"
                                     onClick={playVoiceDemo}
+                                    aria-label={`Play voice demo of ${voice} button`}
                                 >
                                     ▶️ Play Voice Demo
                                 </button>
@@ -311,6 +313,7 @@ export default function StoryPage({ user, loadingUser}) {
                                 onClick={fetchStory}
                                 disabled={loading}
                                 className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition disabled:bg-gray-400 cursor-pointer"
+                                aria-label={`Generate story button`}
                             >
                                 Generate Story
                             </button>

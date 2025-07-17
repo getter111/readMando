@@ -150,7 +150,7 @@ return (
                         ? "bg-green-200"
                         : highlight === "not-found"
                         ? "bg-yellow-200"
-                        : "hover:bg-yellow-200"
+                        : "hover:bg-yellow-200 transition"
                 }`}
             >
                 {word}
@@ -192,6 +192,7 @@ return (
                             <button
                                 onClick={handleAddToStudySet}
                                 className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-xl text-base cursor-pointer w-full sm:w-auto"
+                                aria-label={`Add ${translation} to study deck button`}
                             >
                                 Add to Study Set
                             </button>

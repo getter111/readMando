@@ -103,7 +103,7 @@ class QuestionResponse(QuestionBase):
 class UserVocabularyBase(BaseModel):
     user_id: int
     vocab_id: int
-    status: Optional[str] = "learning"  # learning, mastered, needs-review
+    status: Optional[str] = "not memorized"  # memorized/not memorized
     correct: Optional[int] = 0
     incorrect: Optional[int] = 0
     last_reviewed: Optional[datetime] = None

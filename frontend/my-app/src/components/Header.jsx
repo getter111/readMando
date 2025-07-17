@@ -53,7 +53,9 @@ export default function Header({ username = 'Guest', setUser}) {
 
         {isGuest ? (
           <Link to="/login">
-            <button className="bg-blue-500 hover:bg-blue-600 transition text-white px-4 py-2 rounded-md text-sm cursor-pointer">
+            <button className="bg-blue-500 hover:bg-blue-600 transition text-white px-4 py-2 rounded-md text-sm cursor-pointer"
+                    aria-label={`Go to login / register page`}
+            >
               Login / Register
             </button>
           </Link>
@@ -61,6 +63,7 @@ export default function Header({ username = 'Guest', setUser}) {
           <button
             onClick={handleLogout}
             className="bg-red-500 hover:bg-red-600 transition text-white px-4 py-2 rounded-md text-sm cursor-pointer"
+            aria-label={`Logout button`}
           >
             Log Out
           </button>

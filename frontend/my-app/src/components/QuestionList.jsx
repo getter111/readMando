@@ -43,7 +43,7 @@ function QuestionList({ questions, user_id, storyId }) {
 
     const getChoiceStyle = (questionIndex, choice, correctAnswer) => {
         const selected = selectedAnswers[questionIndex];
-        if (!selected) return "hover:bg-gray-100";
+        if (!selected) return "hover:bg-gray-100 transition";
 
         if (choice === correctAnswer) {
             return "bg-green-100 border-green-500 text-green-800";
@@ -76,6 +76,7 @@ function QuestionList({ questions, user_id, storyId }) {
                                         ${getChoiceStyle(index, choice, q.correct_answer)}
                                         ${!selectedAnswers[index] ? "cursor-pointer" : "cursor-default"}
                                     `}
+                                    aria-label={`Answer choice ${choice} button`}
                                 >
                                     {choice}
                                 </button>
