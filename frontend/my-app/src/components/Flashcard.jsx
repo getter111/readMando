@@ -2,7 +2,6 @@ import PropTypes from "prop-types";
 
 export default function Flashcard({ dictionary, onFeedback, flipped, setFlipped}) {
   const handleFlip = () => setFlipped((prev) => !prev);
-
   return (
     <div
       className="w-72 h-44 sm:w-80 sm:h-52 md:w-[350px] md:h-[220px] lg:w-[400px] lg:h-[250px] cursor-pointer"

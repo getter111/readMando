@@ -6,3 +6,32 @@ html, body, #root {
   padding: 0;
 }
 
+.fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 0.5s ease-out forwards;
+}
+
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.summary-background-text {
+  overflow: hidden;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  font-weight: 900;
+  color: #ccc;
+  opacity: 0.069;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  text-transform: uppercase;
+}

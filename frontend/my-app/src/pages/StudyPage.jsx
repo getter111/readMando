@@ -3,15 +3,22 @@ import { useNavigate } from "react-router-dom";
 import SearchBar from "../components/SearchBar";
 import PropTypes from "prop-types";
 import axios from "axios";
+
 import Flashcard from "../components/Flashcard";
+import FlashcardSummary from "../components/FlashcardSummary";
 export default function StudyPage({ user, loadingUser}) {
   const [vocab, setVocab] = useState(""); //search bar state
   const [deckTitle, setDeckTitle] = useState("Study Deck");
   const [deckVocab, setDeckVocab] = useState([]); // state for vocabulary of user's deck
+  const [studySession, setStudySession] = useState([]); //current study session
 
   const [showFlashcards ,setShowFlashcards] = useState(false)
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [flipped, setFlipped] = useState(false)
+
+  const [correctAnswers, setCorrectAnswers] = useState([]);
+  const [incorrectAnswers, setIncorrectAnswers] = useState([]);
+  
 
   const navigate  = useNavigate();
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
@@ -75,8 +82,14 @@ export default function StudyPage({ user, loadingUser}) {
 
       <div className="flex gap-4 mb-4">
         <button className="flex-grow bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 cursor-pointer transition"
-                onClick={() => setShowFlashcards((prev) => !prev)}
-                aria-label={`Study Flashcards button`}
+                onClick={() => {
+                  setStudySession(deckVocab);
+                  setShowFlashcards((prev) => !prev);
+                  setCurrentCardIndex(0);
+                  setCorrectAnswers([]);
+                  setIncorrectAnswers([]);
+                }}
+                aria-label={`Study Flashcards button`}   
         >
           Study
         </button>
@@ -121,64 +134,69 @@ export default function StudyPage({ user, loadingUser}) {
         ))}
       </div>
 
-      {showFlashcards && deckVocab && (
-        <div className="fixed inset-0 bg-amber-50 bg-opacity-70 z-50 flex items-center justify-center p-4">
+      {showFlashcards && studySession && (
+        <div className="fixed inset-0 bg-white/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-xl w-full max-h-[90vh] overflow-auto relative p-6">
-            <button
-              className="absolute top-3 right-3 text-gray-600 hover:text-gray-800 cursor-pointer hover:bg-gray-300 p-2 rounded-full text-xl transition sm:top-4 sm:right-4"
-              onClick={() => setShowFlashcards(false)}
-              aria-label="Close flashcards button"
-            >
-              ✖
-            </button>
             <div className="flex flex-col items-center gap-4">
-              {deckVocab.length > 0 && (
-                <Flashcard
-                  dictionary={deckVocab[currentCardIndex]}
-                  onFeedback={(type, word) => {
-                    console.log(`Feedback: ${type} for ${word.word}`);
-                    // Move to next card
-                    if (currentCardIndex < deckVocab.length - 1) {
+
+              {studySession.length > 0 && currentCardIndex < studySession.length ? (
+                <>
+                  <button 
+                    className="absolute top-3 right-3 text-gray-600 hover:text-gray-800 cursor-pointer hover:bg-gray-300 p-2 rounded-full text-xl transition sm:top-4 sm:right-4"
+                    onClick={() => setShowFlashcards(false)}
+                    aria-label="Close flashcards button"
+                  >
+                    ✖
+                  </button>
+
+                  <Flashcard
+                    dictionary={studySession[currentCardIndex]}
+                    onFeedback={(type, word) => {
+                      console.log(`Feedback: ${type} for ${word.word}`);
+                      
+                      if (type == "again") setIncorrectAnswers(prev => [...prev, word]);
+                      if (type == "good") setCorrectAnswers(prev => [...prev, word]);
+                      if (type == "easy") setCorrectAnswers(prev => [...prev, word]); 
+
                       setCurrentCardIndex((prev) => prev + 1);
                       setFlipped(false);
-                    } else {
-                      console.log("Reached end of deck.");
-                    }
+                      console.log(currentCardIndex)
+                    }}
+                    flipped={flipped}
+                    setFlipped={setFlipped}
+                  />
+
+                  <div className="flex justify-center items-center mt-4 w-full">
+                      Card {currentCardIndex + 1} of {studySession.length}
+                  </div>
+                </>
+              ) : (
+                <FlashcardSummary
+                  correct={correctAnswers.length}
+                  incorrect={incorrectAnswers.length}
+                  onRepeatAll={() => {
+                    setStudySession(deckVocab)
+                    setCurrentCardIndex(0);
+                    setCorrectAnswers([]);
+                    setIncorrectAnswers([]);
+                    setFlipped(false);
                   }}
-                  flipped={flipped}
-                  setFlipped={setFlipped}
+                  onRepeatMistakes={() => {
+                    setStudySession(incorrectAnswers);                    
+                    setCurrentCardIndex(0);
+                    setCorrectAnswers([]);
+                    setIncorrectAnswers([]);
+                    setFlipped(false);
+                  }}
+                  onFinish={() => {
+                    setShowFlashcards(false);
+                    setCurrentCardIndex(0);
+                    setCorrectAnswers([]);
+                    setIncorrectAnswers([]);
+                    setFlipped(false);
+                  }}
                 />
-                )}
-                <div className="flex justify-between items-center mt-4 w-full">
-
-                  <button
-                    onClick={() => {
-                      setCurrentCardIndex((prev) => Math.max(prev - 1, 0))
-                      setFlipped(false)
-                    }}
-                    disabled={currentCardIndex === 0}
-                    className="bg-gray-200 text-gray-700 px-4 py-1 rounded hover:bg-gray-300 disabled:opacity-50 cursor-pointer transition"
-                    aria-label="Go to previous vocabulary word button"
-                  >
-                    ◀ Prev
-                  </button>
-
-                  <span className="text-sm text-gray-500">
-                    Card {currentCardIndex + 1} of {deckVocab.length}
-                  </span>
-
-                  <button
-                    onClick={() => {
-                      setCurrentCardIndex((prev) => Math.min(prev + 1, deckVocab.length - 1))
-                      setFlipped(false); 
-                    }}
-                    disabled={currentCardIndex === deckVocab.length - 1}
-                    className="bg-gray-200 text-gray-700 px-4 py-1 rounded hover:bg-gray-300 disabled:opacity-50 cursor-pointer transition"
-                    aria-label="Go to next vocabulary word button"
-                  >
-                    Next ▶
-                  </button>
-                </div>
+              )}
             </div>
           </div>
         </div>
