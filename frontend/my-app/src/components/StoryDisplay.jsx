@@ -32,8 +32,8 @@ function StoryDisplay({ story, fetchQuestions, loadingQuestions }) {
     return (
         <div className="flex flex-col h-full">
             <div className="flex-grow">
-                <h3 className="text-2xl font-bold flex flex-wrap">{title}</h3>
-                <div className="mt-4 text-lg flex flex-wrap">{body}</div>
+                <h3 className="text-3xl font-black flex flex-wrap">{title}</h3>
+                <div className="mt-4 text-2xl flex flex-wrap">{body}</div>
             </div>
 
             <div className="mt-6 flex flex-col gap-3">

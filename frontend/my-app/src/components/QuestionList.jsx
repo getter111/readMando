@@ -61,7 +61,7 @@ function QuestionList({ questions, user_id, storyId }) {
     return (
         <div>
             <h2 className="text-xl font-semibold mb-4">Comprehension Questions</h2>
-            {storyId && <p className="text-sm text-gray-500 mb-2">Story ID: {storyId}</p> || 0 }
+            {storyId && <p className="text-sm text-[#666666] mb-2">Story ID: {storyId}</p> || 0 }
             <div className="space-y-6">
                 {questions.map((q, index) => (
                     <div key={index} className="p-4 border border-gray-200 rounded-lg shadow-sm">

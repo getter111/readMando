@@ -8,14 +8,17 @@ import jieba
 import json
 from typing import List
 from jwt import ExpiredSignatureError, InvalidTokenError
+import base64
 
 import models
-from supaDB import user_crud, vocabulary_crud, story_crud, question_crud, user_vocabulary_crud, user_stories_crud, progress_crud
+from supaDB import supabase, user_crud, vocabulary_crud, story_crud, question_crud, user_vocabulary_crud, user_stories_crud, progress_crud
 from storyGenerator import generateStory
 from email_utils import send_verification_email
 from utils import text_to_audio, add_vocabulary_to_db, auto_fetch, generateQuestions
 from supaDB import upload_audio_to_storage, save_audio_url_to_db
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
+from io import BytesIO
+from gtts import gTTS
 from auth import create_token, decode_token
 
 app = FastAPI()
@@ -265,6 +268,39 @@ async def add_vocabulary_to_study_deck(request: models.UserVocabularyRequest, re
     except Exception as e:
         print(e)
         raise HTTPException(status_code=400, detail="Something went wrong while adding vocabulary to study set")
+
+@app.get("/study_deck/tts")
+async def text_to_speech(word: str):
+    BUCKET_NAME = "tts-cache"
+
+    # Base64 encode the word since supabase storage can't storage chinese characters
+    encoded_word = base64.urlsafe_b64encode(word.encode("utf-8")).decode("ascii")
+    filename = f"{encoded_word}.mp3"
+
+    try: 
+        #filter file by exact filename instead of listing all files
+        existing = supabase.storage.from_(BUCKET_NAME).list("", options={"search":filename})
+
+        if existing and any(file["name"] == filename for file in existing):
+            file_url = supabase.storage.from_(BUCKET_NAME).get_public_url(filename)
+            return {"url": file_url}
+
+        tts = gTTS(text=word, lang="zh-CN")
+        audio_bytes = BytesIO()
+        tts.write_to_fp(audio_bytes)
+        audio_bytes.seek(0)
+
+        supabase.storage.from_(BUCKET_NAME).upload(
+            filename, 
+            audio_bytes.getvalue(),
+            {"content-type": "audio/mpeg"}
+        )
+
+        file_url = supabase.storage.from_(BUCKET_NAME).get_public_url(filename)
+        return {"url": file_url}
+    except Exception as e:
+        print("TTS error:", e)
+        raise HTTPException(status_code=500, detail="Failed to generate audio")
 
 @app.post("/login")
 async def login_user(user: models.UserCreate, response: Response): #response refers to the http response

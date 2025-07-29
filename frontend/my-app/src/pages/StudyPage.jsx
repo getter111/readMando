@@ -36,11 +36,16 @@ export default function StudyPage({ user, loadingUser}) {
       }
     }
   };
-   const playAudio = () => {
-      const utterance = new SpeechSynthesisUtterance();
-      utterance.lang = "zh-CN"; 
-      speechSynthesis.speak(utterance);
-    };
+
+  const playAudio = async (word) => {
+    try {
+        const res = await axios(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`)
+        const audio = new Audio(res.data.url)
+        await audio.play();
+    } catch (err){
+        console.error("Audio play failed:", err);     
+    }
+  };
 
   const hydratePage = async () => {
     // If user is logged in, fetch their saved vocabulary
@@ -75,7 +80,7 @@ export default function StudyPage({ user, loadingUser}) {
         <h1 className="text-3xl font-bold text-gray-800 break-words">
           {user.username}&apos;s {deckTitle}
         </h1>
-        <p className="mt-2 text-gray-600 break-words">
+        <p className="mt-2 text-[#666666] break-words">
           Review vocabulary and phrases personalized to your learning journey.
         </p>
       </div>
@@ -101,9 +106,9 @@ export default function StudyPage({ user, loadingUser}) {
       </div>
 
       <div className="flex gap-4 mb-4 border-b">
-        <button className="pb-2 border-b-2 border-blue-600 text-blue-600 font-medium cursor-pointer" aria-label={`Filter by none button`}>All (52)</button>
-        <button className="pb-2 text-gray-600 hover:text-blue-600 cursor-pointer transition" aria-label={`Filter by not memorized button`}>Not Memorized (47)</button>
-        <button className="pb-2 text-gray-600 hover:text-blue-600 cursor-pointer transition" aria-label={`Filter by memorized button`}>Memorized (5)</button>
+        <button className="pb-2 text-[#666666] border-b-2 hover:text-blue-600 font-medium cursor-pointer" aria-label={`Filter by none button`}>All (52)</button>
+        <button className="pb-2 text-[#666666] hover:text-blue-600 cursor-pointer transition" aria-label={`Filter by not memorized button`}>Not Memorized (47)</button>
+        <button className="pb-2 text-[#666666] hover:text-blue-600 cursor-pointer transition" aria-label={`Filter by memorized button`}>Memorized (5)</button>
       </div>
 
       <div className="flex justify-start mb-4">
@@ -125,10 +130,22 @@ export default function StudyPage({ user, loadingUser}) {
           <div key={idx} className="bg-white p-4 rounded-xl shadow flex-grow min-w-[250px] max-w-full">
             <p className="text-xl font-semibold text-black break-words">{card.word}</p>
             <p className="text-gray-900 break-words">{card.pinyin}</p>
-            <p className="text-gray-900 break-words">{card.translation} [{card.word_type}]</p>
+            <p className="text-[#666666] break-words">{card.translation} ({card.word_type})</p>
             <div className="flex mt-2 items-center gap-2 text-gray-500">
-              <button className="cursor-pointer hover:bg-yellow-300 transition rounded" aria-label={`Play audio for ${card.translation} button`}>🔊</button>
-              <button className="cursor-pointer hover:bg-pink-300 transition rounded" aria-label={`Add/unadd word: ${card.translation} to study deck button`}>❤️</button>
+              <button 
+                className="cursor-pointer hover:bg-yellow-300 transition rounded" 
+                aria-label={`Play audio for ${card.translation} button`}
+                onClick={() => playAudio(card.word)}
+              >
+                🔊
+              </button>
+            
+              <button 
+                className="cursor-pointer hover:bg-pink-300 transition rounded" 
+                aria-label={`Add/unadd word: ${card.translation} to study deck button`}
+              >
+                ❤️
+              </button>
             </div>
           </div>
         ))}

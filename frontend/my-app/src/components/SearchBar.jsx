@@ -25,7 +25,7 @@ export default function SearchBar({ placeholder = "Search...", value, onChange, 
       <input
         type="text"
         placeholder={placeholder}
-        className="w-full pl-10 p-2 border border-gray-300 rounded-md"
+        className="w-full pl-10 p-2 border border-gray-300 rounded-md text-base text-[#666666]"
         value={value}
         onChange={onChange}
         onFocus={() => setIsFocused(true)}

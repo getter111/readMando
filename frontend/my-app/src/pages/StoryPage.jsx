@@ -6,7 +6,6 @@ import StoryDisplay from "../components/StoryDisplay";
 import QuestionList from "../components/QuestionList";
 import PropTypes from "prop-types";
 import AudioPlayer from "../components/AudioPlayer"
-import Flashcard from "../components/Flashcard";
 
 import xiaoXiaoAudio from "../assets/audio/zh-CN-XiaoxiaoNeural.mp3"; 
 import xiaoYiAudio from "../assets/audio/zh-CN-XiaoyiNeural.mp3"; 
@@ -36,15 +35,15 @@ export default function StoryPage({ user, loadingUser}) {
 
     const [voice, setVoice] = useState("zh-CN-YunxiaNeural");
     const voiceAudioMap = {
-    "zh-CN-XiaoxiaoNeural": xiaoXiaoAudio,
-    "zh-CN-XiaoyiNeural": xiaoYiAudio,
-    "zh-CN-YunjianNeural": yunJianAudio,
-    "zh-CN-YunxiNeural": yunXiAudio,
-    "zh-CN-YunxiaNeural": yunXiaAudio,
-    "zh-CN-YunyangNeural": yunYangAudio,
-    "zh-CN-liaoning-XiaobeiNeural": xiaoBeiAudio,
-    "zh-CN-shaanxi-XiaoniNeural": xiaoNiAudio,
-};
+        "zh-CN-XiaoxiaoNeural": xiaoXiaoAudio,
+        "zh-CN-XiaoyiNeural": xiaoYiAudio,
+        "zh-CN-YunjianNeural": yunJianAudio,
+        "zh-CN-YunxiNeural": yunXiAudio,
+        "zh-CN-YunxiaNeural": yunXiaAudio,
+        "zh-CN-YunyangNeural": yunYangAudio,
+        "zh-CN-liaoning-XiaobeiNeural": xiaoBeiAudio,
+        "zh-CN-shaanxi-XiaoniNeural": xiaoNiAudio,
+    };
     //keep track of the current audio being played
     const currentAudioRef = useRef(null);
 
@@ -269,9 +268,9 @@ export default function StoryPage({ user, loadingUser}) {
                             <div className="mb-4">
                                 <label className="block font-medium mb-1">Voice:</label>
                                 <select
-                                className="w-full p-2 border rounded cursor-pointer"
-                                value={voice}
-                                onChange={(e) => setVoice(e.target.value)}
+                                    className="w-full p-2 border rounded cursor-pointer"
+                                    value={voice}
+                                    onChange={(e) => setVoice(e.target.value)}
                                 >
                                     <option value="zh-CN-YunxiaNeural">
                                         Yunxia 云夏 (Male, Cute, Cartoon/Novel)

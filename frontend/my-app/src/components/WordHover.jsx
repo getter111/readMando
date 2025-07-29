@@ -121,6 +121,10 @@ function WordHover({ word }) {
             await axios.post(`${apiUrl}/users/study_deck`, {
                 word: word, 
             }, { withCredentials: true });
+
+            //pre-cache tts audio to fix slow on first generation
+            await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
+
             setToastMsg(`✅ Added ${word} to study deck!`);
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -145,13 +149,13 @@ return (
         >
             <span
                 onClick={toggleTooltip}
-                className={`border-b border-dotted cursor-pointer transition ${
+                className={`  border-b border-dotted cursor-pointer transition ${
                     highlight === "found"
-                        ? "bg-green-200"
+                        ? "bg-green-600 text-white"
                         : highlight === "not-found"
-                        ? "bg-yellow-200"
+                        ? "bg-yellow-200 text-black"
                         : "hover:bg-yellow-200 transition"
-                }`}
+                } rounded`}
             >
                 {word}
             </span>
@@ -161,37 +165,37 @@ return (
                     className="fixed sm:absolute bottom-0 sm:bottom-full left-0 sm:left-1/2 sm:-translate-x-1/2 w-full sm:w-max max-w-xs bg-white text-base text-black p-4 sm:rounded-xl rounded-t-xl shadow-lg z-50 whitespace-normal pointer-events-auto max-h-60 sm:max-h-60 overflow-y-auto"
                 >
                     {isLoading ? (
-                        <p className="text-gray-400">⏳ Loading...</p>
+                        <p className="text-gray-600 dark:text-gray-300">⏳ Loading...</p>
                     ) : notFound ? (
                         <p className="font-medium">❌ Word not found. Hang tight — generating it now...</p>
                     ) : (
                         <>
-                            <p className="font-bold">
+                            <p className="font-bold text-lg text-gray-900">
                                 <span>Word: </span>
-                                <span>{word}</span>
+                                <span className="font-semibold text-xl">{word}</span>
                             </p>
                             {pinyin && (
-                                <p className="font-semibold">
+                                <p className="font-semibold text-base text-gray-800">
                                     <span>Pinyin: </span>
                                     <span>{pinyin}</span>
                                 </p>
                             )}
                             {translation && (
-                                <p className="font-semibold">
+                                <p className="font-semibold text-base text-gray-800">
                                     <span>Translation: </span>
                                     <span>{translation}</span>
 
                                 </p>
                             )}
                             {partOfSpeech && (
-                                <p className="font-semibold">
+                                <p className="font-semibold text-base text-gray-800">
                                     <span>Part of Speech: </span>
                                     <span>{partOfSpeech}</span>
                                 </p>
                             )}
                             <button
                                 onClick={handleAddToStudySet}
-                                className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-xl text-base cursor-pointer w-full sm:w-auto"
+                                className="mt-2 bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 hover:bg-blue-700 text-white px-3 py-1 rounded-xl text-base cursor-pointer w-full sm:w-auto transition"
                                 aria-label={`Add ${translation} to study deck button`}
                             >
                                 Add to Study Set

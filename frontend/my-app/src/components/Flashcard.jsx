@@ -1,13 +1,15 @@
 import PropTypes from "prop-types";
-
+import axios from "axios";
 export default function Flashcard({ dictionary, onFeedback, flipped, setFlipped}) {
-  const handleFlip = () => setFlipped((prev) => !prev);
-  return (
-    <div
-      className="w-72 h-44 sm:w-80 sm:h-52 md:w-[350px] md:h-[220px] lg:w-[400px] lg:h-[250px] cursor-pointer"
-      onClick={handleFlip}
-    >
- 
+    const apiUrl = import.meta.env.VITE_API_BASE_URL;
+
+    const handleFlip = () => setFlipped((prev) => !prev);
+    return (
+        <div
+            className="w-72 h-44 sm:w-80 sm:h-52 md:w-[350px] md:h-[220px] lg:w-[400px] lg:h-[250px] cursor-pointer"
+            onClick={handleFlip}
+        >
+
         {!flipped ? ( 
             <>
                 {/* Front */}
@@ -17,8 +19,15 @@ export default function Flashcard({ dictionary, onFeedback, flipped, setFlipped}
                     <p className="text-gray-700">{dictionary.pinyin}</p>
                     
                     <button
-                        onClick={(e) => {
-                            e.stopPropagation(); // Prevent flipping
+                        onClick={async (e) => {
+                            try {
+                                e.stopPropagation(); // Prevent flipping
+                                const res = await axios(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(dictionary.word)}`)
+                                const audio = new Audio(res.data.url)
+                                await audio.play();
+                            } catch (err) {
+                                console.error("Audio play failed:", err);     
+                            }
                         }}
                         className="mt-2 text-lg hover:bg-yellow-300 transition cursor-pointer rounded "
                         aria-label={`Play audio of ${dictionary.translation}`}

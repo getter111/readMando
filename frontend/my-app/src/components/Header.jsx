@@ -39,7 +39,7 @@ export default function Header({ username = 'Guest', setUser}) {
         </Link>
 
         <SearchBar
-          placeholder="Search Dictionary..."
+          placeholder="Search dictionary"
           value={vocab}
           onChange={(e) => setVocab(e.target.value)}
           onKeyDown={handleEnterKey}
@@ -47,7 +47,7 @@ export default function Header({ username = 'Guest', setUser}) {
       </div>
 
       <div className="flex justify-between sm:justify-end items-center gap-2 sm:gap-4">
-        <span className="text-sm sm:text-base text-gray-600 font-medium whitespace-nowrap">
+        <span className="text-sm sm:text-base text-[#666666] font-medium whitespace-nowrap">
           Welcome, {isGuest ? "Guest" : username}
         </span>
 
