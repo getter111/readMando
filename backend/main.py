@@ -269,7 +269,7 @@ async def add_vocabulary_to_study_deck(request: models.UserVocabularyRequest, re
         print(e)
         raise HTTPException(status_code=400, detail="Something went wrong while adding vocabulary to study set")
 
-@app.get("/study_deck/tts")
+@app.get("/study_deck/tts") #query param
 async def text_to_speech(word: str):
     BUCKET_NAME = "tts-cache"
 
@@ -301,6 +301,25 @@ async def text_to_speech(word: str):
     except Exception as e:
         print("TTS error:", e)
         raise HTTPException(status_code=500, detail="Failed to generate audio")
+
+@app.get("/study_deck/status") #query param
+async def filter_status(status_filter: Optional[str] = None, readmando_session: Optional[str] = Cookie(None)):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail="Not logged in")
+    
+    payload = decode_token(readmando_session)
+    user_id = payload["user_id"]
+    
+    #for the filter tabs
+    if status_filter:
+        res = user_vocabulary_crud.get_user_vocabulary_status(user_id, status_filter)
+        return res
+    else: #initial load
+        return {
+            "memorized": user_vocabulary_crud.get_user_vocabulary_status(user_id, "memorized"),
+            "not_memorized": user_vocabulary_crud.get_user_vocabulary_status(user_id, "not memorized"),
+            "all": user_vocabulary_crud.get_user_vocabulary_status(user_id)
+        }
 
 @app.post("/login")
 async def login_user(user: models.UserCreate, response: Response): #response refers to the http response

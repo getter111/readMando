@@ -1,7 +1,7 @@
 # CRUD for user_vocabulary table
 from supabase import Client
-from models import UserVocabularyCreate, UserVocabularyUpdate, VocabularyResponse
-from typing import List
+from models import UserVocabularyCreate, UserVocabularyUpdate, VocabularyResponse, UserVocabularyBase
+from typing import List, Optional
 
 class UserVocabularyCRUD:
     def __init__(self, supabase: Client):
@@ -27,16 +27,26 @@ class UserVocabularyCRUD:
         res = self.supabase.table("user_vocabulary").select("*").eq("user_id", user_id).execute() #filter on user_id
         
         vocab_ids = [record["vocab_id"] for record in res.data] #collect keys
-        #print(vocab_ids)
+        # print(vocab_ids)
 
         vocab_res = self.supabase.table("vocabulary").select("*").in_("vocab_id", vocab_ids).execute() #query vocab table using the keys
-        #print(vocab_res)
+        # print(vocab_res)
         vocabList = []
         for record in vocab_res.data:
             res = VocabularyResponse(**record) #turn db res to python model instance of VocabularyResponse, ** unpacks dictionary keys and values and passes them as arguments
             vocabList.append(res)
+        # print("vocablist:", vocabList)
         return vocabList
     
+    #return user's vocabulary training status
+    def get_user_vocabulary_status(self, user_id: int, status_filter: Optional[str] = None) -> List[UserVocabularyBase]:
+        #simple select and return everything
+        if status_filter:
+            res = self.supabase.table("user_vocabulary").select("*").eq("user_id", user_id).eq("status", status_filter).execute()
+        else:
+            res = self.supabase.table("user_vocabulary").select("*").eq("user_id", user_id).execute()
+        return res.data
+
     def update_user_vocabulary(self, user_vocab_id: int, updates: UserVocabularyUpdate):
         update_data = updates.model_dump(
             exclude_unset=True      
