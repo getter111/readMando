@@ -216,7 +216,7 @@ async def get_current_user(response: Response, readmando_session: Optional[str] 
     except Exception as e:
         print(e)
 
-# endpoint to retrieve user's study deck
+# endpoint to retrieve user's study deck (all their saved words)
 @app.get("/users/study_deck")
 async def get_user_study_deck(readmando_session: Optional[str] = Cookie(None)):
     if not readmando_session:
@@ -302,6 +302,7 @@ async def text_to_speech(word: str):
         print("TTS error:", e)
         raise HTTPException(status_code=500, detail="Failed to generate audio")
 
+#get the state of all user_vocabulary words (optionally filter by status)
 @app.get("/study_deck/status") #query param
 async def filter_status(status_filter: Optional[str] = None, readmando_session: Optional[str] = Cookie(None)):
     if not readmando_session:
@@ -320,6 +321,71 @@ async def filter_status(status_filter: Optional[str] = None, readmando_session: 
             "not_memorized": user_vocabulary_crud.get_user_vocabulary_status(user_id, "not memorized"),
             "all": user_vocabulary_crud.get_user_vocabulary_status(user_id)
         }
+
+#endpoint that updates user_vocabulary table for the flashcard study phase when word is marked as again, good, or easy
+@app.put("/study_deck/update")
+async def flashcard_vocabulary_update(
+    request: dict, #payload [user_vocab_id: int, feedback: str]
+    readmando_session: Optional[str] = Cookie(None),
+):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail="Not logged in")
+    try:
+        payload = decode_token(readmando_session)
+        user_id = payload["user_id"]
+
+        user_vocab_id = request.get("user_vocab_id")
+        feedback = request.get("feedback", "again")
+
+        existing = user_vocabulary_crud.get_user_vocabulary_by_id(user_vocab_id)
+        if not existing:
+            raise HTTPException(status_code=404, detail="Vocabulary record not found")
+
+        now = datetime.now(timezone.utc)
+        interval = existing.get("interval", 1)
+        repetitions = existing.get("repetitions", 0)
+        ease_factor = existing.get("ease_factor", 2.5)
+
+        updates = {
+            "last_reviewed": now.isoformat(),
+        }
+
+        if feedback == "again":
+            updates["status"] = "not memorized"
+            updates["incorrect"] = (existing.get("incorrect", 0) or 0) + 1
+            updates["repetitions"] = 0
+            updates["interval"] = 1
+            updates["ease_factor"] = max(1.3, ease_factor - 0.2)
+        elif feedback == "good":
+            updates["status"] = "memorized"
+            updates["correct"] = (existing.get("correct", 0) or 0) + 1
+            repetitions += 1
+            interval = 3 if repetitions == 1 else round(interval * ease_factor)
+            updates["repetitions"] = repetitions
+            updates["interval"] = interval
+            updates["ease_factor"] = ease_factor
+        elif feedback == "easy":
+            updates["status"] = "memorized"
+            updates["correct"] = (existing.get("correct", 0) or 0) + 1
+            repetitions += 1
+            interval = 5 if repetitions == 1 else round(interval * (ease_factor + 0.15))
+            ease_factor += 0.1
+            updates["repetitions"] = repetitions
+            updates["interval"] = interval
+            updates["ease_factor"] = ease_factor
+
+        updates["next_review"] = (now + timedelta(days=updates["interval"])).isoformat()
+        
+        #required fields for UserVocabularyUpdate model 
+        updates["vocab_id"] = existing["vocab_id"]
+        updates["user_id"] = user_id     
+
+        update_model = models.UserVocabularyUpdate(**updates)
+        updated = user_vocabulary_crud.update_user_vocabulary(user_vocab_id, update_model)
+        return updated
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=400, detail="Something went wrong")
 
 @app.post("/login")
 async def login_user(user: models.UserCreate, response: Response): #response refers to the http response

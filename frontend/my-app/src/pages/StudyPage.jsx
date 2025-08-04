@@ -25,17 +25,17 @@ export default function StudyPage({ user, loadingUser}) {
 
   const [memorizedCount, setMemorziedCount] = useState(0)
   const [notMemorziedCount, setNotMemorziedCount] = useState(0)
-  
+
   const defaultWords = [
-    { word: "谢谢", translation: "Thank you", pinyin: "xièxiè", word_type: "expression" },
-    { word: "你", translation: "You", pinyin: "nǐ", word_type: "pronoun" },
-    { word: "访问", translation: "Visit", pinyin: "fǎngwèn", word_type: "verb" },
-    { word: "我的", translation: "My", pinyin: "wǒde", word_type: "pronoun" },
-    { word: "网站", translation: "Website", pinyin: "wǎngzhàn", word_type: "noun" },
-    { word: "很", translation: "Very", pinyin: "hěn", word_type: "adverb" },
-    { word: "高兴", translation: "Happy", pinyin: "gāoxìng", word_type: "adjective" },
-    { word: "认识", translation: "Know/Meet", pinyin: "rènshí", word_type: "verb" },
-    { word: "你们", translation: "You (plural)", pinyin: "nǐmen", word_type: "pronoun" }
+    { word: "谢谢", translation: "Thank you", pinyin: "xièxiè", word_type: "expression", status:"not memorized"},
+    { word: "你", translation: "You", pinyin: "nǐ", word_type: "pronoun", status:"not memorized"},
+    { word: "访问", translation: "Visit", pinyin: "fǎngwèn", word_type: "verb", status:"not memorized"},
+    { word: "我的", translation: "My", pinyin: "wǒde", word_type: "pronoun",status:"not memorized"},
+    { word: "网站", translation: "Website", pinyin: "wǎngzhàn", word_type: "noun", status:"not memorized"},
+    { word: "很", translation: "Very", pinyin: "hěn", word_type: "adverb", status:"not memorized"},
+    { word: "高兴", translation: "Happy", pinyin: "gāoxìng", word_type: "adjective", status:"not memorized"},
+    { word: "认识", translation: "Know/Meet", pinyin: "rènshí", word_type: "verb", status:"not memorized"},
+    { word: "你们", translation: "You (plural)", pinyin: "nǐmen", word_type: "pronoun", status:"not memorized"}
   ]
 
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
@@ -50,7 +50,6 @@ export default function StudyPage({ user, loadingUser}) {
   //rerender if tab is pressed
   useEffect(() => {
     if (deckVocab.length) {
-      console.log("Applying filter:", activeFilter);
       applyFilter(activeFilter);
     }
   }, [activeFilter]);
@@ -85,25 +84,36 @@ export default function StudyPage({ user, loadingUser}) {
   const applyFilter = async (filterType) => {
     let filtered = [];
 
-    try {
-      //get all vocabIds from the filtered tab, use to display our filtered cards
-      if (filterType === "memorized" || filterType === "not memorized") {
-          const response = await axios(`${apiUrl}/study_deck/status?status_filter=${filterType}`, {withCredentials: true})
-          console.log("tab status:",response.data)
+    //   if (filterType === "memorized" || filterType === "not memorized") {
+    //       const response = await axios(`${apiUrl}/study_deck/status?status_filter=${filterType}`, {withCredentials: true})
+    //       const vocabIds = response.data.map(item => item.vocab_id);
+    //       filtered = deckVocab.filter(item => vocabIds.includes(item.vocab_id));
 
-          const vocabIds = response.data.map(item => item.vocab_id);
-
-          filtered = deckVocab.filter(item => vocabIds.includes(item.vocab_id));
-          console.log("filtered: ", filtered)
-
-      } else if (filterType === "all") {
-          filtered = deckVocab;
+    //local filtering instead of api call
+    if (user.user_id) {
+      if (filterType === "memorized") {
+        filtered = deckVocab.filter(item => item.status === "memorized");
+      } 
+      else if (filterType === "not memorized") {
+        filtered = deckVocab.filter(item => item.status === "not memorized");
       }
-
-      setFilteredDeckVocab(filtered); //which triggers useffect searchbar filter
-    } catch (err) {
-        console.error("Error applying filter:", err);
+      else if (filterType === "all") {
+        filtered = deckVocab;
+      }
+    } else {
+        if (filterType === "memorized") {
+          filtered = defaultWords.filter(item => item.status === "memorized");
+        } 
+        else if (filterType === "not memorized") {
+          filtered = defaultWords.filter(item => item.status === "not memorized");
+        }
+        else if (filterType === "all") {
+          filtered = defaultWords;
+        }
     }
+
+    console.log(filterType, " tab")
+    setFilteredDeckVocab(filtered);
   }
 
   const filterBySearch = (query) => {
@@ -113,17 +123,33 @@ export default function StudyPage({ user, loadingUser}) {
 
   const hydratePage = async () => {
     // If user is logged in, fetch their saved vocabulary
-    if (user.user_id){
+    if (user.user_id) {
       try {
+        // fetch user's study deck vocabulary
         const response = await axios.get(`${apiUrl}/users/study_deck`, {withCredentials: true});
-        console.log("user vocab: ",response.data) //[VocabularyResponse]
-        setDeckVocab(response.data);
-        setDisplayedDeckVocab(response.data);
-        setFilteredDeckVocab(response.data)
+        console.log("/users/study_deck: ",response.data) //[VocabularyResponse]
 
-        //init status population
+        //init status population  
         const status = await axios.get(`${apiUrl}/study_deck/status`, {withCredentials: true})
-        console.log("inital status: ",status.data)
+        console.log("/study_deck/status: ",status.data) //[UserVocabularyBase]
+
+        //create a map of vocab_id to user_vocab_id, for quick filter lookups and simplier api calls inside flashcard component
+        const vocabMap = {};
+        [...status.data.all].forEach(item => {
+          vocabMap[item.vocab_id] = item //key: vocab_id, value: user_vocab object
+        })
+
+        //merge the two arrays based on vocab_id
+        const mergedVocab = response.data.map(vocab => ({
+          ...vocab,
+          ...vocabMap[vocab.vocab_id],
+        }));
+
+        console.log("merged vocab with status:", mergedVocab)
+
+        setDeckVocab(mergedVocab);
+        setDisplayedDeckVocab(mergedVocab);
+        setFilteredDeckVocab(mergedVocab)
 
         setMemorziedCount(status.data.memorized.length)
         setNotMemorziedCount(status.data.not_memorized.length)
@@ -135,6 +161,9 @@ export default function StudyPage({ user, loadingUser}) {
         setDeckVocab(defaultWords);
         setDisplayedDeckVocab(defaultWords);
         setFilteredDeckVocab(defaultWords);
+        setMemorziedCount(0)
+        setNotMemorziedCount(defaultWords.length)
+
         console.log("Showing default flashcards for guest user.");
     }
   }
@@ -274,16 +303,32 @@ export default function StudyPage({ user, loadingUser}) {
 
                   <Flashcard
                     dictionary={studySession[currentCardIndex]}
-                    onFeedback={(type, word) => {
-                      console.log(`Feedback: ${type} for ${word.word}`);
+                    onFeedback={async (type, dict) => {
+                      console.log(`Feedback: ${type} for ${dict.word}`);
                       
-                      if (type == "again") setIncorrectAnswers(prev => [...prev, word]);
-                      if (type == "good") setCorrectAnswers(prev => [...prev, word]);
-                      if (type == "easy") setCorrectAnswers(prev => [...prev, word]); 
+                      const payload = {
+                        user_vocab_id: dict.user_vocab_id,
+                        feedback: type,
+                      }
+                      console.log(studySession[currentCardIndex])
+
+                      if (user.user_id) {
+                        try {
+                          await axios.put(`${apiUrl}/study_deck/update`, payload, { withCredentials: true });
+                          console.log("Updated vocab progress");
+                        } catch (err) {
+                          console.error("Failed to update vocab:", err);
+                        }
+                      }
+                      
+                      //update our counts
+                      if (type == "again") setIncorrectAnswers(prev => [...prev, dict]);
+                      if (type == "good") setCorrectAnswers(prev => [...prev, dict]);
+                      if (type == "easy") setCorrectAnswers(prev => [...prev, dict]); 
 
                       setCurrentCardIndex((prev) => prev + 1);
                       setFlipped(false);
-                      console.log(currentCardIndex)
+                      // console.log(currentCardIndex)
                     }}
                     flipped={flipped}
                     setFlipped={setFlipped}
@@ -311,12 +356,13 @@ export default function StudyPage({ user, loadingUser}) {
                     setIncorrectAnswers([]);
                     setFlipped(false);
                   }}
-                  onFinish={() => {
+                  onFinish={async () => {
                     setShowFlashcards(false);
                     setCurrentCardIndex(0);
                     setCorrectAnswers([]);
                     setIncorrectAnswers([]);
                     setFlipped(false);
+                    await hydratePage(); 
                   }}
                 />
               )}

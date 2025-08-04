@@ -106,8 +106,8 @@ class UserVocabularyBase(BaseModel):
     status: Optional[str] = "not memorized"  # memorized/not memorized
     correct: Optional[int] = 0
     incorrect: Optional[int] = 0
-    last_reviewed: Optional[datetime] = None
-    next_review: Optional[datetime] = None
+    last_reviewed: Optional[str] = None
+    next_review: Optional[str] = None
     ease_factor: Optional[float] = 2.5 # How easy the word is to remember
     interval: Optional[int] = 1 # Days until next review
     repetitions: Optional[int] = 0 # Number of successful reviews in a row

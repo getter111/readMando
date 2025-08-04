@@ -23,6 +23,7 @@ class UserVocabularyCRUD:
         res = self.supabase.table("user_vocabulary").insert(insert_data).execute()
         return res.data[0]
     
+    #should be in the vocabulary CRUD? 
     def get_user_vocabulary(self, user_id: int) -> List[VocabularyResponse]:
         res = self.supabase.table("user_vocabulary").select("*").eq("user_id", user_id).execute() #filter on user_id
         
@@ -47,15 +48,17 @@ class UserVocabularyCRUD:
             res = self.supabase.table("user_vocabulary").select("*").eq("user_id", user_id).execute()
         return res.data
 
+    def get_user_vocabulary_by_id(self, user_vocab_id: int) -> UserVocabularyBase:
+        res = self.supabase.table("user_vocabulary").select("*").eq("user_vocab_id", user_vocab_id).execute()
+        if res.data:
+            return res.data[0]
+        else: return None
+
+    #more efficient search then iterating through user_id + vocab_id match
     def update_user_vocabulary(self, user_vocab_id: int, updates: UserVocabularyUpdate):
         update_data = updates.model_dump(
             exclude_unset=True      
         )
-        # Convert datetime fields if present
-        if "last_reviewed" in update_data:
-            update_data["last_reviewed"] = update_data["last_reviewed"].isoformat()
-        if "next_review" in update_data:
-            update_data["next_review"] = update_data["next_review"].isoformat()
 
         res = self.supabase.table("user_vocabulary").update(update_data).eq("user_vocab_id", user_vocab_id).execute()
         return res.data[0]
