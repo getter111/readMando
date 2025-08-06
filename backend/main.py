@@ -283,21 +283,22 @@ async def text_to_speech(word: str):
 
         if existing and any(file["name"] == filename for file in existing):
             file_url = supabase.storage.from_(BUCKET_NAME).get_public_url(filename)
+            print("existing tts found for", word)
             return {"url": file_url}
+        else:
+            tts = gTTS(text=word, lang="zh-CN")
+            audio_bytes = BytesIO()
+            tts.write_to_fp(audio_bytes)
+            audio_bytes.seek(0)
 
-        tts = gTTS(text=word, lang="zh-CN")
-        audio_bytes = BytesIO()
-        tts.write_to_fp(audio_bytes)
-        audio_bytes.seek(0)
-
-        supabase.storage.from_(BUCKET_NAME).upload(
-            filename, 
-            audio_bytes.getvalue(),
-            {"content-type": "audio/mpeg"}
-        )
-
-        file_url = supabase.storage.from_(BUCKET_NAME).get_public_url(filename)
-        return {"url": file_url}
+            supabase.storage.from_(BUCKET_NAME).upload(
+                filename, 
+                audio_bytes.getvalue(),
+                {"content-type": "audio/mpeg"}
+            )
+            print("generated new tts for", word)
+            file_url = supabase.storage.from_(BUCKET_NAME).get_public_url(filename)
+            return {"url": file_url}
     except Exception as e:
         print("TTS error:", e)
         raise HTTPException(status_code=500, detail="Failed to generate audio")

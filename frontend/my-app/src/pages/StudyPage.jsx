@@ -10,8 +10,8 @@ export default function StudyPage({ user, loadingUser}) {
   const [deckTitle, setDeckTitle] = useState("Study Deck");
   
   const [deckVocab, setDeckVocab] = useState([]); // state for vocabulary of user's full deck
-  const [filteredDeckVocab, setFilteredDeckVocab] = useState([]); // vocab filtered by active tab filter
-  const [displayedDeckVocab, setDisplayedDeckVocab] = useState([]); // search filter applied on top of active tab filter
+  const [filteredDeckVocab, setFilteredDeckVocab] = useState([]); // vocab filtered by active tab filter (also data used for study session)
+  const [displayedDeckVocab, setDisplayedDeckVocab] = useState([]); // search filter applied on top of active tab filter (for search bar)
 
   const [activeFilter, setActiveFilter] = useState("all"); 
   const [studySession, setStudySession] = useState([]); //current study session
@@ -23,20 +23,20 @@ export default function StudyPage({ user, loadingUser}) {
   const [correctAnswers, setCorrectAnswers] = useState([]);
   const [incorrectAnswers, setIncorrectAnswers] = useState([]);
 
-  const [memorizedCount, setMemorziedCount] = useState(0)
-  const [notMemorziedCount, setNotMemorziedCount] = useState(0)
+const [defaultWords, setDefaultWords] = useState([
+  { word: "谢谢", translation: "Thank you", pinyin: "xièxiè", word_type: "expression", status:"not memorized"},
+  { word: "你", translation: "You", pinyin: "nǐ", word_type: "pronoun", status:"not memorized"},
+  { word: "访问", translation: "Visit", pinyin: "fǎngwèn", word_type: "verb", status:"not memorized"},
+  { word: "我的", translation: "My", pinyin: "wǒde", word_type: "pronoun",status:"not memorized"},
+  { word: "网站", translation: "Website", pinyin: "wǎngzhàn", word_type: "noun", status:"not memorized"},
+  { word: "很", translation: "Very", pinyin: "hěn", word_type: "adverb", status:"not memorized"},
+  { word: "高兴", translation: "Happy", pinyin: "gāoxìng", word_type: "adjective", status:"not memorized"},
+  { word: "认识", translation: "Know/Meet", pinyin: "rènshí", word_type: "verb", status:"not memorized"},
+  { word: "你们", translation: "You (plural)", pinyin: "nǐmen", word_type: "pronoun", status:"not memorized"}
+]);
 
-  const defaultWords = [
-    { word: "谢谢", translation: "Thank you", pinyin: "xièxiè", word_type: "expression", status:"not memorized"},
-    { word: "你", translation: "You", pinyin: "nǐ", word_type: "pronoun", status:"not memorized"},
-    { word: "访问", translation: "Visit", pinyin: "fǎngwèn", word_type: "verb", status:"not memorized"},
-    { word: "我的", translation: "My", pinyin: "wǒde", word_type: "pronoun",status:"not memorized"},
-    { word: "网站", translation: "Website", pinyin: "wǎngzhàn", word_type: "noun", status:"not memorized"},
-    { word: "很", translation: "Very", pinyin: "hěn", word_type: "adverb", status:"not memorized"},
-    { word: "高兴", translation: "Happy", pinyin: "gāoxìng", word_type: "adjective", status:"not memorized"},
-    { word: "认识", translation: "Know/Meet", pinyin: "rènshí", word_type: "verb", status:"not memorized"},
-    { word: "你们", translation: "You (plural)", pinyin: "nǐmen", word_type: "pronoun", status:"not memorized"}
-  ]
+  const [memorizedCount, setMemorziedCount] = useState(0)
+  const [notMemorziedCount, setNotMemorziedCount] = useState(deckVocab?.length || defaultWords.length)
 
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -157,14 +157,24 @@ export default function StudyPage({ user, loadingUser}) {
           console.log("Error fetching user's saved words:", error);
       }
     } else {
-        // If user is not logged in, show default flashcards
-        setDeckVocab(defaultWords);
-        setDisplayedDeckVocab(defaultWords);
-        setFilteredDeckVocab(defaultWords);
-        setMemorziedCount(0)
-        setNotMemorziedCount(defaultWords.length)
+        // If user is not logged in load from localStorage
+        const localDeck = localStorage.getItem("defaultWords");
 
-        console.log("Showing default flashcards for guest user.");
+        if (localDeck) {
+          const parsedLocalDeck = JSON.parse(localDeck);
+          setDefaultWords(parsedLocalDeck);        
+          setDeckVocab(parsedLocalDeck);
+          setDisplayedDeckVocab(parsedLocalDeck);
+          setFilteredDeckVocab(parsedLocalDeck);
+          setMemorziedCount(parsedLocalDeck.filter(item => item.status === "memorized").length);
+          setNotMemorziedCount(parsedLocalDeck.filter(item => item.status === "not memorized").length);
+          // console.log("Parsed local deck:", parsedLocalDeck);
+        } 
+        else { // first time user is visiting page
+          setDeckVocab(defaultWords); //single source of truth
+          setDisplayedDeckVocab(defaultWords); //keep track of search filter
+          setFilteredDeckVocab(defaultWords); //mainly to keep track of current tab filter
+        }
     }
   }
 
@@ -304,13 +314,13 @@ export default function StudyPage({ user, loadingUser}) {
                   <Flashcard
                     dictionary={studySession[currentCardIndex]}
                     onFeedback={async (type, dict) => {
+
                       console.log(`Feedback: ${type} for ${dict.word}`);
-                      
+
                       const payload = {
                         user_vocab_id: dict.user_vocab_id,
                         feedback: type,
                       }
-                      console.log(studySession[currentCardIndex])
 
                       if (user.user_id) {
                         try {
@@ -319,13 +329,25 @@ export default function StudyPage({ user, loadingUser}) {
                         } catch (err) {
                           console.error("Failed to update vocab:", err);
                         }
+                      } else { //guest user
+                        const updatedWords = [...defaultWords];
+                        const index = updatedWords.findIndex(item => item.word === dict.word);
+
+                        if (index !== -1) {
+                          updatedWords[index] = {
+                            ...updatedWords[index],
+                            status: type === "again" ? "not memorized" : "memorized"
+                          };
+                          setDefaultWords(updatedWords);
+                        }
                       }
-                      
-                      //update our counts
+                      console.log(studySession[currentCardIndex])
+
+                      //update our counts for flashcard summary and repeat mistake logic
                       if (type == "again") setIncorrectAnswers(prev => [...prev, dict]);
                       if (type == "good") setCorrectAnswers(prev => [...prev, dict]);
                       if (type == "easy") setCorrectAnswers(prev => [...prev, dict]); 
-
+                      
                       setCurrentCardIndex((prev) => prev + 1);
                       setFlipped(false);
                       // console.log(currentCardIndex)
@@ -362,6 +384,9 @@ export default function StudyPage({ user, loadingUser}) {
                     setCorrectAnswers([]);
                     setIncorrectAnswers([]);
                     setFlipped(false);
+                    if (!user.user_id) {
+                      localStorage.setItem("defaultWords", JSON.stringify(defaultWords));
+                    }
                     await hydratePage(); 
                   }}
                 />
