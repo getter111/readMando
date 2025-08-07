@@ -10,8 +10,8 @@ export default function StudyPage({ user, loadingUser}) {
   const [deckTitle, setDeckTitle] = useState("Study Deck");
   
   const [deckVocab, setDeckVocab] = useState([]); // state for vocabulary of user's full deck
-  const [filteredDeckVocab, setFilteredDeckVocab] = useState([]); // vocab filtered by active tab filter (also data used for study session)
-  const [displayedDeckVocab, setDisplayedDeckVocab] = useState([]); // search filter applied on top of active tab filter (for search bar)
+  const [tabFilteredDeckVocab, setTabFilteredDeckVocab] = useState([]); // vocab filtered by active tab filter (also data used for study session)
+  const [searchAndTabFilteredDeckVocab, setSearchAndTabFilteredDeckVocab] = useState([]); // search filter applied on top of active tab filter (for search bar)
 
   const [activeFilter, setActiveFilter] = useState("all"); 
   const [studySession, setStudySession] = useState([]); //current study session
@@ -24,15 +24,15 @@ export default function StudyPage({ user, loadingUser}) {
   const [incorrectAnswers, setIncorrectAnswers] = useState([]);
 
 const [defaultWords, setDefaultWords] = useState([
-  { word: "谢谢", translation: "Thank you", pinyin: "xièxiè", word_type: "expression", status:"not memorized"},
-  { word: "你", translation: "You", pinyin: "nǐ", word_type: "pronoun", status:"not memorized"},
-  { word: "访问", translation: "Visit", pinyin: "fǎngwèn", word_type: "verb", status:"not memorized"},
-  { word: "我的", translation: "My", pinyin: "wǒde", word_type: "pronoun",status:"not memorized"},
-  { word: "网站", translation: "Website", pinyin: "wǎngzhàn", word_type: "noun", status:"not memorized"},
-  { word: "很", translation: "Very", pinyin: "hěn", word_type: "adverb", status:"not memorized"},
-  { word: "高兴", translation: "Happy", pinyin: "gāoxìng", word_type: "adjective", status:"not memorized"},
-  { word: "认识", translation: "Know/Meet", pinyin: "rènshí", word_type: "verb", status:"not memorized"},
-  { word: "你们", translation: "You (plural)", pinyin: "nǐmen", word_type: "pronoun", status:"not memorized"}
+  { word: "谢谢", translation: "Thank you", pinyin: "xièxiè", word_type: "expression", status:"not memorized", is_active: true},
+  { word: "你", translation: "You", pinyin: "nǐ", word_type: "pronoun", status:"not memorized", is_active: true},
+  { word: "访问", translation: "Visit", pinyin: "fǎngwèn", word_type: "verb", status:"not memorized", is_active: true},
+  { word: "我的", translation: "My", pinyin: "wǒde", word_type: "pronoun",status:"not memorized", is_active: true},
+  { word: "网站", translation: "Website", pinyin: "wǎngzhàn", word_type: "noun", status:"not memorized", is_active: true},
+  { word: "很", translation: "Very", pinyin: "hěn", word_type: "adverb", status:"not memorized", is_active: true},
+  { word: "高兴", translation: "Happy", pinyin: "gāoxìng", word_type: "adjective", status:"not memorized", is_active: true},
+  { word: "认识", translation: "Know/Meet", pinyin: "rènshí", word_type: "verb", status:"not memorized", is_active: true},
+  { word: "你们", translation: "You (plural)", pinyin: "nǐmen", word_type: "pronoun", status:"not memorized", is_active: true}
 ]);
 
   const [memorizedCount, setMemorziedCount] = useState(0)
@@ -57,19 +57,19 @@ const [defaultWords, setDefaultWords] = useState([
   // Reapply search filter whenever the tab or search bar changes
   useEffect(() => {
     if (searchBar.trim() === "") {
-      setDisplayedDeckVocab(filteredDeckVocab);
+      setSearchAndTabFilteredDeckVocab(tabFilteredDeckVocab);
     } else {
       const lower = searchBar.toLowerCase();
 
-      const filtered = filteredDeckVocab.filter((item) => 
+      const filtered = tabFilteredDeckVocab.filter((item) => 
         item.word.includes(lower) ||
         item.translation.toLowerCase().includes(lower) || 
         item.pinyin.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(lower)
       );
 
-      setDisplayedDeckVocab(filtered);
+      setSearchAndTabFilteredDeckVocab(filtered);
     }
-  }, [filteredDeckVocab, searchBar]);
+  }, [tabFilteredDeckVocab, searchBar]);
 
   const playAudio = async (word) => {
     try {
@@ -83,11 +83,6 @@ const [defaultWords, setDefaultWords] = useState([
 
   const applyFilter = async (filterType) => {
     let filtered = [];
-
-    //   if (filterType === "memorized" || filterType === "not memorized") {
-    //       const response = await axios(`${apiUrl}/study_deck/status?status_filter=${filterType}`, {withCredentials: true})
-    //       const vocabIds = response.data.map(item => item.vocab_id);
-    //       filtered = deckVocab.filter(item => vocabIds.includes(item.vocab_id));
 
     //local filtering instead of api call
     if (user.user_id) {
@@ -113,7 +108,7 @@ const [defaultWords, setDefaultWords] = useState([
     }
 
     console.log(filterType, " tab")
-    setFilteredDeckVocab(filtered);
+    setTabFilteredDeckVocab(filtered);
   }
 
   const filterBySearch = (query) => {
@@ -135,8 +130,9 @@ const [defaultWords, setDefaultWords] = useState([
 
         //create a map of vocab_id to user_vocab_id, for quick filter lookups and simplier api calls inside flashcard component
         const vocabMap = {};
+
         [...status.data.all].forEach(item => {
-          vocabMap[item.vocab_id] = item //key: vocab_id, value: user_vocab object
+            vocabMap[item.vocab_id] = item; // key: vocab_id, value: user_vocab object
         })
 
         //merge the two arrays based on vocab_id
@@ -147,9 +143,11 @@ const [defaultWords, setDefaultWords] = useState([
 
         console.log("merged vocab with status:", mergedVocab)
 
-        setDeckVocab(mergedVocab);
-        setDisplayedDeckVocab(mergedVocab);
-        setFilteredDeckVocab(mergedVocab)
+        const activeVocab = mergedVocab.filter(card => card.is_active !== false);
+
+        setDeckVocab(activeVocab);
+        setSearchAndTabFilteredDeckVocab(activeVocab);
+        setTabFilteredDeckVocab(activeVocab);
 
         setMemorziedCount(status.data.memorized.length)
         setNotMemorziedCount(status.data.not_memorized.length)
@@ -162,19 +160,94 @@ const [defaultWords, setDefaultWords] = useState([
 
         if (localDeck) {
           const parsedLocalDeck = JSON.parse(localDeck);
-          setDefaultWords(parsedLocalDeck);        
-          setDeckVocab(parsedLocalDeck);
-          setDisplayedDeckVocab(parsedLocalDeck);
-          setFilteredDeckVocab(parsedLocalDeck);
-          setMemorziedCount(parsedLocalDeck.filter(item => item.status === "memorized").length);
-          setNotMemorziedCount(parsedLocalDeck.filter(item => item.status === "not memorized").length);
+          const activeLocalDeck = parsedLocalDeck.filter(card => card.is_active === true);
+
+          setDefaultWords(activeLocalDeck);        
+          setDeckVocab(activeLocalDeck);
+          setSearchAndTabFilteredDeckVocab(activeLocalDeck);
+          setTabFilteredDeckVocab(activeLocalDeck);
+
+          setMemorziedCount(activeLocalDeck.filter(item => item.status === "memorized").length);
+          setNotMemorziedCount(activeLocalDeck.filter(item => item.status === "not memorized").length);
           // console.log("Parsed local deck:", parsedLocalDeck);
         } 
         else { // first time user is visiting page
           setDeckVocab(defaultWords); //single source of truth
-          setDisplayedDeckVocab(defaultWords); //keep track of search filter
-          setFilteredDeckVocab(defaultWords); //mainly to keep track of current tab filter
+          setSearchAndTabFilteredDeckVocab(defaultWords); //keep track of search filter
+          setTabFilteredDeckVocab(defaultWords); //mainly to keep track of current tab filter
         }
+    }
+  }
+
+  const handleHeartClick = async (user_vocab_id, word) => {
+
+    if (!user.user_id) {
+      const updatedWords = defaultWords.map(card => {
+        if (card.word === word) {
+          return { ...card, is_active: !card.is_active };
+        }
+        return card;
+      });
+      console.log("Updated default words:", updatedWords);
+
+      setDefaultWords(updatedWords);
+      setDeckVocab(updatedWords);
+
+      setTabFilteredDeckVocab(updatedWords);
+      setSearchAndTabFilteredDeckVocab(updatedWords);
+
+      setMemorziedCount(updatedWords.filter(item => item.status === "memorized").length);
+      setNotMemorziedCount(updatedWords.filter(item => item.status === "not memorized").length);
+
+      localStorage.setItem("defaultWords", JSON.stringify(updatedWords));
+    }
+    else {
+      const payload = {user_vocab_id: user_vocab_id}
+
+      try {
+        const response = await axios.put(`${apiUrl}/study_deck/toggle`, payload, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true, // optional, keep if needed
+        });    
+        
+        //update for UI feedback
+        setDeckVocab(prevDeck => {
+          return prevDeck.map(card => {
+            if (card.user_vocab_id === user_vocab_id) {
+              return { ...card, is_active: !card.is_active };
+            } else {
+              return card;
+            }
+          });
+        });
+
+        setTabFilteredDeckVocab(prevFiltered => {
+          return prevFiltered.map(card => {
+            if (card.user_vocab_id === user_vocab_id) {
+              return { ...card, is_active: !card.is_active };
+            } else {
+              return card;
+            }
+          });
+        });
+
+        setSearchAndTabFilteredDeckVocab(prevFiltered => {
+          return prevFiltered.map(card => {
+            if (card.user_vocab_id === user_vocab_id) {
+              return { ...card, is_active: !card.is_active };
+            } else {
+              return card;
+            }
+          });
+        })
+
+        console.log("Toggled vocabulary:", response.data);
+      } catch (err) {
+        console.error("Error toggling vocabulary:", err);
+        return;
+      }
     }
   }
 
@@ -189,11 +262,11 @@ const [defaultWords, setDefaultWords] = useState([
         </p>
       </div>
 
-      <div className="flex gap-4 mb-4">
+      <div className="flex justify-center gap-4 mb-4">
         <button 
-          className="flex-grow bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 cursor-pointer transition"
+          className="flex-auto bg-blue-600 text-lg font-semibold text-white px-6 py-3 rounded-lg hover:bg-blue-700 cursor-pointer transition"
           onClick={() => {
-            setStudySession(filteredDeckVocab);
+            setStudySession(tabFilteredDeckVocab);
             setShowFlashcards((prev) => !prev);
             setCurrentCardIndex(0);
             setCorrectAnswers([]);
@@ -204,7 +277,7 @@ const [defaultWords, setDefaultWords] = useState([
           Study
         </button>
         <button 
-          className="flex-grow border px-6 py-2 rounded-lg font-medium hover:bg-gray-100 cursor-pointer transition"
+          className="flex-auto border px-6 py-3 text-lg rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 cursor-pointer transition"
           aria-label={`Add/Edit Cards Button`}
         >
           Add/Edit Cards
@@ -270,15 +343,21 @@ const [defaultWords, setDefaultWords] = useState([
         </div>
       </div>
 
-      <div className="flex gap-4 flex-wrap">
-        {displayedDeckVocab.map((card, idx) => (
-          <div key={idx} className="bg-white p-4 rounded-xl shadow flex-grow min-w-[250px] max-w-full">
-            <p className="text-xl font-semibold text-black break-words">{card.word}</p>
-            <p className="text-gray-900 break-words">{card.pinyin}</p>
-            <p className="text-[#666666] break-words">{card.translation} ({card.word_type})</p>
-            <div className="flex mt-2 items-center gap-2 text-gray-500">
+        <div className="flex flex-wrap justify-center gap-6">
+          {searchAndTabFilteredDeckVocab.map((card, idx) => (
+          <div 
+            key={idx} 
+            className="bg-white p-6 rounded-2xl shadow-md flex justify-between items-start flex-grow min-w-[250px] max-w-sm transition hover:shadow-lg"
+          >
+            <div className="mb-4 space-y-1">
+              <p className="text-2xl font-extrabold text-black break-words">{card.word}</p>
+              <p className="text-lg text-gray-700 break-words">{card.pinyin}</p>
+              <p className="text-gray-500 break-words">{card.translation} ({card.word_type})</p>
+            </div>
+
+            <div className="flex items-center gap-3 text-lg">
               <button 
-                className="cursor-pointer hover:bg-yellow-300 transition rounded" 
+                className="p-2 cursor-pointer hover:bg-yellow-200 transition rounded-full" 
                 aria-label={`Play audio for ${card.translation} button`}
                 onClick={() => playAudio(card.word)}
               >
@@ -286,10 +365,11 @@ const [defaultWords, setDefaultWords] = useState([
               </button>
             
               <button 
-                className="cursor-pointer hover:bg-pink-300 transition rounded" 
+                className="p-2 cursor-pointer hover:bg-pink-200 transition rounded-full" 
                 aria-label={`Add/unadd word: ${card.translation} to study deck button`}
+                onClick={() => handleHeartClick(card.user_vocab_id, card.word)}
               >
-                ❤️
+                {card.is_active ? "❤️" : "🤍"}
               </button>
             </div>
           </div>
@@ -297,14 +377,14 @@ const [defaultWords, setDefaultWords] = useState([
       </div>
 
       {showFlashcards && studySession && (
-        <div className="fixed inset-0 bg-white/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-xl w-full max-h-[90vh] overflow-auto relative p-6">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-auto relative p-15">
             <div className="flex flex-col items-center gap-4">
 
               {studySession.length > 0 && currentCardIndex < studySession.length ? (
                 <>
                   <button 
-                    className="absolute top-3 right-3 text-gray-600 hover:text-gray-800 cursor-pointer hover:bg-gray-300 p-2 rounded-full text-xl transition sm:top-4 sm:right-4"
+                    className="absolute top-3 right-3 text-gray-800 cursor-pointer hover:bg-gray-200 p-3 rounded-full text-xl transition sm:top-4 sm:right-4"
                     onClick={() => setShowFlashcards(false)}
                     aria-label="Close flashcards button"
                   >
@@ -338,7 +418,7 @@ const [defaultWords, setDefaultWords] = useState([
                             ...updatedWords[index],
                             status: type === "again" ? "not memorized" : "memorized"
                           };
-                          setDefaultWords(updatedWords);
+                          setDefaultWords(updatedWords); //update defaultword state, to be used at end of session
                         }
                       }
                       console.log(studySession[currentCardIndex])
@@ -349,7 +429,7 @@ const [defaultWords, setDefaultWords] = useState([
                       if (type == "easy") setCorrectAnswers(prev => [...prev, dict]); 
                       
                       setCurrentCardIndex((prev) => prev + 1);
-                      setFlipped(false);
+                      setFlipped(false); //return to front side after feedback
                       // console.log(currentCardIndex)
                     }}
                     flipped={flipped}
@@ -384,6 +464,8 @@ const [defaultWords, setDefaultWords] = useState([
                     setCorrectAnswers([]);
                     setIncorrectAnswers([]);
                     setFlipped(false);
+
+                    //updates memorized/not memorized counts when user finishes session
                     if (!user.user_id) {
                       localStorage.setItem("defaultWords", JSON.stringify(defaultWords));
                     }

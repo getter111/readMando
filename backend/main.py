@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Cookie, Response
+from fastapi import FastAPI, HTTPException, Cookie, Response, Body
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
 from datetime import datetime, timedelta, timezone
@@ -268,6 +268,18 @@ async def add_vocabulary_to_study_deck(request: models.UserVocabularyRequest, re
     except Exception as e:
         print(e)
         raise HTTPException(status_code=400, detail="Something went wrong while adding vocabulary to study set")
+
+#endpoint to update status to active/inactive (soft delete)
+@app.put("/study_deck/toggle")
+async def toggle_vocabulary(request: dict = Body(...)):
+    record = supabase.table("user_vocabulary").select("*").eq("user_vocab_id", request["user_vocab_id"]).execute()
+    
+    existing = record.data[0] if record.data else None
+
+    if existing:
+        new_status = not existing["is_active"]
+        updated = supabase.table("user_vocabulary").update({"is_active": new_status}).eq("user_vocab_id", request["user_vocab_id"]).execute()
+        return updated.data[0]
 
 @app.get("/study_deck/tts") #query param
 async def text_to_speech(word: str):

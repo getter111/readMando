@@ -1,4 +1,4 @@
-# ReadMando — *The Platform That Turns Stories into Fluency*
+# ReadMando — *Turn Stories into Fluency*
 
 **Live Demo** → [ReadMando](https://readmando.netlify.app/)
 

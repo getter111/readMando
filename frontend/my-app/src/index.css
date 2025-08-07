@@ -18,20 +18,3 @@ html, body, #root {
     transform: translateY(0);
   }
 }
-
-.summary-background-text {
-  overflow: hidden;
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 4rem;
-  font-weight: 900;
-  color: #ccc;
-  opacity: 0.069;
-  z-index: 0;
-  pointer-events: none;
-  user-select: none;
-  text-transform: uppercase;
-}

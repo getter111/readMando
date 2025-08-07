@@ -4,95 +4,86 @@ export default function Flashcard({ dictionary, onFeedback, flipped, setFlipped}
     const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
     const handleFlip = () => setFlipped((prev) => !prev);
+
+    const handleAudio = async (e) => {
+        try {
+            e.stopPropagation(); // Prevent flipping
+            const res = await axios(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(dictionary.word)}`)
+            const audio = new Audio(res.data.url)
+            await audio.play();
+        } catch (err) {
+            console.error("Audio play failed:", err);     
+        }
+    };
+
+    const handleFeedback = (e, type) => {
+        e.stopPropagation();
+        onFeedback && onFeedback(type, dictionary);
+    }
+
     return (
         <div
             className="w-72 h-44 sm:w-80 sm:h-52 md:w-[350px] md:h-[220px] lg:w-[400px] lg:h-[250px] cursor-pointer"
-            onClick={handleFlip}
+            onClick={() => handleFlip()}
         >
 
         {!flipped ? ( 
             <>
                 {/* Front */}
-                <div className="bg-white border rounded-xl shadow p-4 flex flex-col justify-between w-full h-full">
-                <div>
-                    <p className="text-2xl font-bold">{dictionary.word}</p>
-                    <p className="text-gray-700">{dictionary.pinyin}</p>
-                    
-                    <button
-                        onClick={async (e) => {
-                            try {
-                                e.stopPropagation(); // Prevent flipping
-                                const res = await axios(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(dictionary.word)}`)
-                                const audio = new Audio(res.data.url)
-                                await audio.play();
-                            } catch (err) {
-                                console.error("Audio play failed:", err);     
-                            }
-                        }}
-                        className="mt-2 text-lg hover:bg-yellow-300 transition cursor-pointer rounded "
-                        aria-label={`Play audio of ${dictionary.translation}`}
-                    >
-                        🔊
-                    </button>
-                    <button className="mt-2 text-lg ml-1 cursor-pointer hover:bg-pink-300 transition rounded "
-                            onClick={(e) => {
-                                e.stopPropagation();
-                            }}
-                            aria-label={`Add word ${dictionary.translation} your study deck`}
-                    >
-                        ❤️
-                    </button>
-
-                </div>
-                <p className="text-xs text-gray-400 mt-2">Tap to see translation</p>
+                <div className="bg-white border rounded-xl shadow p-6 flex flex-col justify-around w-full h-full hover:shadow-lg transition items-center">
+                    <div className="flex flex-col items-center text-center">
+                        <p className="text-3xl font-extrabold text-gray-900 ">{dictionary.word}</p>
+                        <p className="text-xl text-gray-700 mt-1">{dictionary.pinyin}</p>
+                        
+                        <button
+                            onClick={(e) => handleAudio(e)}
+                            className="mt-3 text-xl hover:bg-yellow-200 p-2 transition cursor-pointer rounded-full"
+                            aria-label={`Play audio of ${dictionary.translation}`}
+                        >
+                            🔊
+                        </button>
+                    </div>
+                    <p className="text-sm text-gray-400 mt-3 select-none">Tap to see translation</p>
                 </div> 
             </>
         ) :
         (
             <>
                 {/* Back */}
-                <div className="bg-gray-50 border rounded-xl shadow p-4 flex flex-col justify-between w-full h-full">
-                <div>
-                    <p className="text-xl font-medium">{dictionary.translation}</p>
-                    <p className="text-sm text-gray-500 mt-1">[{dictionary.word_type}]</p>
-                </div>
-                <div className="flex justify-between gap-2 mt-4">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onFeedback && onFeedback("again", dictionary);
-                        }}
-                        className="bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200 transition cursor-pointer"
-                        aria-label={`${dictionary.word} was difficult study again`}
+                <div className="bg-gray-50 border rounded-xl shadow p-6 flex flex-col justify-around items-center content-start hover:shadow-lg transition w-full h-full">
+                    <div className="flex flex-col items-center text-center">
+                        <p className="text-2xl font-extrabold text-gray-900">{dictionary.translation}</p>
+                        <p className="text-xl text-gray-700 mt-1">[{dictionary.word_type}]</p>
+                    </div>
 
-                    >
-                    Again
-                    </button>
+                    <div className="flex justify-between gap-2 mt-4 ">
+                        <button
+                            onClick={(e) => handleFeedback(e, "again")}
+                            className="bg-red-200 text-red-800 text-lg font-bold px-4 py-2 rounded-md hover:bg-red-300 transition cursor-pointer"
+                            aria-label={`${dictionary.word} was difficult study again`}
 
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onFeedback && onFeedback("good", dictionary);
-                        }}
-                        className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded hover:bg-yellow-200 transition cursor-pointer"
-                        aria-label={`I knew ${dictionary.word} it was good`}
+                        >
+                            Again
+                        </button>
 
-                    >
-                    Good
-                    </button>
+                        <button
+                            onClick={(e) => handleFeedback(e, "good")}
+                            className="bg-yellow-200 text-yellow-800 text-lg font-bold px-4 py-2 rounded hover:bg-yellow-300 transition cursor-pointer"
+                            aria-label={`I knew ${dictionary.word} it was good`}
 
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onFeedback && onFeedback("easy", dictionary);
-                        }}
-                        className="bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200 transition cursor-pointer"
-                        aria-label={`I knew ${dictionary.word} it was easy`}
+                        >
+                            Good
+                        </button>
 
-                    >
-                    Easy
-                    </button>
-                </div>
+                        <button
+                            onClick={(e) => handleFeedback(e, "easy")}
+                            className="bg-green-200 text-green-800 text-lg font-bold px-4 py-2 rounded hover:bg-green-300 transition cursor-pointer"
+                            aria-label={`I knew ${dictionary.word} it was easy`}
+
+                        >
+                            Easy
+                        </button>
+                    </div>
                 </div>
             </>
         )}
