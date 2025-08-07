@@ -34,7 +34,7 @@ export default function Header({ username = 'Guest', setUser}) {
   return (
     <header className="bg-white shadow-md py-4 px-4 sm:px-6 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
       <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 gap-2">
-        <Link to="/" className="text-xl font-bold text-blue-500 hover:text-blue-700 transition whitespace-nowrap">
+        <Link to="/" className="text-xl font-bold text-blue-600 hover:text-blue-700 transition whitespace-nowrap">
           ReadMando
         </Link>
 
@@ -47,13 +47,13 @@ export default function Header({ username = 'Guest', setUser}) {
       </div>
 
       <div className="flex justify-between sm:justify-end items-center gap-2 sm:gap-4">
-        <span className="text-sm sm:text-base text-[#666666] font-medium whitespace-nowrap">
+        <span className="text-sm font-semibold sm:text-base text-gray-600 whitespace-nowrap">
           Welcome, {isGuest ? "Guest" : username}
         </span>
 
         {isGuest ? (
           <Link to="/login">
-            <button className="bg-blue-500 hover:bg-blue-600 transition text-white px-4 py-2 rounded-md text-sm cursor-pointer"
+            <button className="bg-blue-600 hover:bg-blue-700 transition text-white font-semibold px-4 py-2 rounded-md text-md cursor-pointer"
                     aria-label={`Go to login / register page`}
             >
               Login / Register
@@ -62,7 +62,7 @@ export default function Header({ username = 'Guest', setUser}) {
         ) : (
           <button
             onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 transition text-white px-4 py-2 rounded-md text-sm cursor-pointer"
+            className="bg-red-600 hover:bg-red-700 transition text-white px-4 py-2 rounded-md text-md font-semibold cursor-pointer"
             aria-label={`Logout button`}
           >
             Log Out

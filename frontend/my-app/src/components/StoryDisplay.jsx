@@ -40,7 +40,7 @@ function StoryDisplay({ story, fetchQuestions, loadingQuestions }) {
                 <button
                     onClick={fetchQuestions}
                     disabled={loadingQuestions}
-                    className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition disabled:bg-gray-400 cursor-pointer"
+                    className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-400 cursor-pointer"
                     aria-label={`Generate Questions button`}
                 >
                     {loadingQuestions ? "Generating Questions..." : "Generate Questions"}

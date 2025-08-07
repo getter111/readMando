@@ -13,7 +13,7 @@ export default function SearchBar({ placeholder = "Search...", value, onChange, 
         strokeWidth={1.5}
         stroke="currentColor"
         className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 pointer-events-none 
-          ${isFocused ? 'text-gray-700 font-bold' : 'text-gray-400'}`}
+          ${isFocused ? 'text-gray-900 font-bold' : 'text-gray-500'}`}
       >
         <path
           strokeLinecap="round"
@@ -25,7 +25,7 @@ export default function SearchBar({ placeholder = "Search...", value, onChange, 
       <input
         type="text"
         placeholder={placeholder}
-        className="w-full pl-10 p-2 border border-gray-300 rounded-md text-base text-[#666666]"
+        className="w-full pl-10 p-2 border rounded-md text-base text-black-500"
         value={value}
         onChange={onChange}
         onFocus={() => setIsFocused(true)}

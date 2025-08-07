@@ -231,11 +231,11 @@ export default function StoryPage({ user, loadingUser}) {
                             <h2 className="text-xl font-semibold mb-4">Customize Your Story</h2>
 
                             <div className="mb-4">
-                                <label className="block font-medium mb-1">Skill Level:</label>
+                                <label className="block font-semibold mb-1">Skill Level:</label>
                                 <select
-                                className="w-full p-2 border rounded cursor-pointer"
-                                value={difficulty}
-                                onChange={(e) => setDifficulty(e.target.value)}
+                                    className="w-full p-2 border rounded cursor-pointer"
+                                    value={difficulty}
+                                    onChange={(e) => setDifficulty(e.target.value)}
                                 >
                                     <option value="Beginner">Beginner</option>
                                     <option value="Intermediate">Intermediate</option>
@@ -244,29 +244,29 @@ export default function StoryPage({ user, loadingUser}) {
                             </div>
 
                             <div className="mb-4">
-                                <label className="block font-medium mb-1">Vocabulary (comma-separated words):</label>
+                                <label className="block font-semibold mb-1">Vocabulary (comma-separated words):</label>
                                 <input
-                                type="text"
-                                className="w-full p-2 border rounded"
-                                value={vocabulary}
-                                onChange={(e) => setVocabulary(e.target.value)}
-                                placeholder="Example: quintessential, eloquent, job, applications"
+                                    type="text"
+                                    className="w-full p-2 border rounded"
+                                    value={vocabulary}
+                                    onChange={(e) => setVocabulary(e.target.value)}
+                                    placeholder="Example: quintessential, eloquent, job, applications"
                                 />
                             </div>
 
                             <div className="mb-4">
-                                <label className="block font-medium mb-1">Topic:</label>
+                                <label className="block font-semibold mb-1">Topic:</label>
                                 <input
-                                type="text"
-                                className="w-full p-2 border rounded"
-                                value={topic}
-                                onChange={(e) => setTopic(e.target.value)}
-                                placeholder="Example: exploring space and earth to find aliens, how to apply for a job?"
+                                    type="text"
+                                    className="w-full p-2 border rounded"
+                                    value={topic}
+                                    onChange={(e) => setTopic(e.target.value)}
+                                    placeholder="Example: exploring space and earth to find aliens, how to apply for a job?"
                                 />
                             </div>
                             
                             <div className="mb-4">
-                                <label className="block font-medium mb-1">Voice:</label>
+                                <label className="block font-semibold mb-1">Voice:</label>
                                 <select
                                     className="w-full p-2 border rounded cursor-pointer"
                                     value={voice}
@@ -297,6 +297,7 @@ export default function StoryPage({ user, loadingUser}) {
                                         Xiaoni 小妮 (Female, Bright, Shaanxi Dialect)
                                     </option>
                                 </select>
+                                
                                 <button
                                     type="button"
                                     className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 cursor-pointer mt-2 transition"
@@ -311,12 +312,11 @@ export default function StoryPage({ user, loadingUser}) {
                             <button
                                 onClick={fetchStory}
                                 disabled={loading}
-                                className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition disabled:bg-gray-400 cursor-pointer"
+                                className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-gray-400 cursor-pointer"
                                 aria-label={`Generate story button`}
                             >
                                 Generate Story
                             </button>
-
                             {/* <button
                                 // onClick={fetchStory}
                                 disabled={loading}
@@ -340,12 +340,12 @@ export default function StoryPage({ user, loadingUser}) {
                                     <div className="bg-gray-50 border p-4 rounded-md shadow-sm mb-4">
                                         <div className="flex flex-col sm:flex-row sm:space-x-6 space-y-4 sm:space-y-0">
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium mb-1">Title Audio:</p>
+                                                <p className="text-sm font-semibold mb-1">Title Audio:</p>
                                                 <AudioPlayer audioUrl={titleAudio} />
                                             </div>
 
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium mb-1">Story Audio:</p>
+                                                <p className="text-sm font-semibold mb-1">Story Audio:</p>
                                                 <AudioPlayer audioUrl={storyAudio} />
                                             </div>
                                         </div>

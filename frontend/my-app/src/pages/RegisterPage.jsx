@@ -38,14 +38,14 @@ export default function RegisterPage() {
         <div className="h-screen w-screen flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-xl">
                 <h1 className="text-3xl font-bold text-center mb-6">Register</h1>
-                <p className="text-center text-gray-600 mb-6 text-sm">
-                    Create a ReadMando account to track your learning progress!
+                <p className="text-center text-gray-600 font-semibold mb-6 text-sm">
+                    Create a ReadMando account to start tracking your progress!
                 </p>
                 
                 <form onSubmit={handleRegister} className="space-y-5">
 
                     <div>
-                        <label className="block font-medium mb-1 cursor-text">Email</label>
+                        <label className="block font-semibold mb-1 cursor-text">Email</label>
                         <input
                             type="email"
                             value={email}
@@ -56,7 +56,7 @@ export default function RegisterPage() {
                     </div>
                     
                     <div>
-                        <label className="block font-medium mb-1 cursor-text">Username</label>
+                        <label className="block font-semibold mb-1 cursor-text">Username</label>
                         <input
                             type="text"
                             value={username}
@@ -68,14 +68,14 @@ export default function RegisterPage() {
 
                     {error && <p className="text-red-500 text-sm">{error}</p>}
                     {success && (
-                        <p className="text-green-600 text-sm">
+                        <p className="text-green-600 font-semibold text-sm">
                             Registration successful! Please check your email to verify your account.
                         </p>
                     )}
 
                     <button
                         type="submit"
-                        className={`w-full bg-blue-500 text-white p-3 rounded-lg transition ${
+                        className={`w-full font-semibold bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition ${
                             loading ? "bg-gray-400 cursor-default" : "hover:bg-blue-600 cursor-pointer"
                         }`}
                         disabled={loading}
@@ -85,10 +85,10 @@ export default function RegisterPage() {
                 </form>
 
                 <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-600">Already have an account?</p>
+                    <p className="text-sm font-semibold text-gray-600">Already have an account?</p>
                     <button
                         onClick={() => navigate("/login")}
-                        className="mt-2 text-blue-500 hover:underline font-medium cursor-pointer select-text"
+                        className="mt-2 text-blue-600 hover:underline font-semibold cursor-pointer select-text"
                     >
                         Login
                     </button>

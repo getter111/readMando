@@ -61,49 +61,51 @@ function QuestionList({ questions, user_id, storyId }) {
     return (
         <div>
             <h2 className="text-xl font-semibold mb-4">Comprehension Questions</h2>
+
             {storyId && <p className="text-sm text-[#666666] mb-2">Story ID: {storyId}</p> || 0 }
-            <div className="space-y-6">
-                {questions.map((q, index) => (
-                    <div key={index} className="p-4 border border-gray-200 rounded-lg shadow-sm">
-                        <p className="font-medium mb-3">{index + 1}. {q.question_text}</p>
-                        <div className="space-y-2">
-                            {q.answer_choices.map((choice, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => handleSelect(index, choice)}
-                                    disabled={selectedAnswers[index]}
-                                    className={`w-full text-left px-4 py-2 border rounded transition 
-                                        ${getChoiceStyle(index, choice, q.correct_answer)}
-                                        ${!selectedAnswers[index] ? "cursor-pointer" : "cursor-default"}
-                                    `}
-                                    aria-label={`Answer choice ${choice} button`}
-                                >
-                                    {choice}
-                                </button>
-                            ))}
+                <div className="space-y-6">
+                    {questions.map((q, index) => (
+                        <div key={index} className="p-4 border border-gray-200 rounded-lg shadow-sm">
+                            <p className="font-semibold mb-3">{index + 1}. {q.question_text}</p>
+                            <div className="space-y-2">
+                                {q.answer_choices.map((choice, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => handleSelect(index, choice)}
+                                        disabled={selectedAnswers[index]}
+                                        className={`w-full text-left px-4 py-2 border rounded transition 
+                                            ${getChoiceStyle(index, choice, q.correct_answer)}
+                                            ${!selectedAnswers[index] ? "cursor-pointer" : "cursor-default"}
+                                        `}
+                                        aria-label={`Answer choice ${choice} button`}
+                                    >
+                                        {choice}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {selectedAnswers[index] && (
+                                <p className="mt-2 text-sm">
+                                    {selectedAnswers[index] === q.correct_answer ? (
+                                        <span className="text-green-600 font-semibold">Correct!</span>
+                                    ) : (
+                                        <span className="text-red-600 font-semibold">
+                                            Incorrect. The correct answer was: {q.correct_answer}.
+                                        </span>
+                                    )}
+                                </p>
+                            )}
                         </div>
-                        {selectedAnswers[index] && (
-                            <p className="mt-2 text-sm">
-                                {selectedAnswers[index] === q.correct_answer ? (
-                                    <span className="text-green-600 font-semibold">Correct!</span>
-                                ) : (
-                                    <span className="text-red-600 font-semibold">
-                                        Incorrect. The correct answer was: {q.correct_answer}.
-                                    </span>
-                                )}
-                            </p>
-                        )}
+                    ))}    
+                </div> 
+                {/* show. if length of selectedAnswers keys array === question length*/}
+                {Object.keys(selectedAnswers).length === questions.length && (
+                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
+                        <h3 className="text-lg font-semibold mb-2">Your Score</h3>
+                        <p>Correct: {score.correct} / {score.total}</p>
+                        <p>Percentage: {score.total ? Math.round((score.correct / score.total) * 100) : 0}%</p>
                     </div>
-                ))}    
-            </div> 
-            {/* show. if length of selectedAnswers keys array === question length*/}
-            {Object.keys(selectedAnswers).length === questions.length && (
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
-                    <h3 className="text-lg font-semibold mb-2">Your Score</h3>
-                    <p>Correct: {score.correct} / {score.total}</p>
-                    <p>Percentage: {score.total ? Math.round((score.correct / score.total) * 100) : 0}%</p>
-                </div>
-            )}  
+                )}  
         </div>
     );
 }

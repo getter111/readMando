@@ -39,13 +39,13 @@ export default function LoginPage({ setUser }) {
     };
 
     return (
-        <div className="h-screen w-screen flex items-center justify-center bg-gray-100">
+        <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-lg">
                 <h1 className="text-3xl font-bold text-center mb-6">Login to ReadMando</h1>
 
                 <form onSubmit={handleLogin} className="space-y-5">
                     <div>
-                        <label className="block font-medium mb-1 cursor-text">Email</label>
+                        <label className="block font-semibold mb-1 cursor-text">Email</label>
                         <input
                             type="email"
                             value={email}
@@ -56,7 +56,7 @@ export default function LoginPage({ setUser }) {
                     </div>
 
                     <div>
-                        <label className="block font-medium mb-1 cursor-text">Username</label>
+                        <label className="block font-semibold mb-1 cursor-text">Username</label>
                         <input
                             type="text"
                             value={username}
@@ -68,13 +68,13 @@ export default function LoginPage({ setUser }) {
 
                     {error && <p className="text-red-500 text-sm">{error}</p>}
                     {success && (
-                        <p className="text-green-600 text-sm">
+                        <p className="text-green-600 font-semibold text-sm">
                             Login successful! Welcome {username}!
                         </p>
                     )}
                     <button
                         type="submit"
-                        className={`w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition disabled:bg-gray-400 ${loading ? "cursor-default" : "cursor-pointer"}`}
+                        className={`w-full bg-blue-600 text-white p-3 font-semibold rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 ${loading ? "cursor-default" : "cursor-pointer"}`}
                         disabled={loading}
                     >
                         {loading ? "Logging in..." : "Login"}
@@ -82,12 +82,12 @@ export default function LoginPage({ setUser }) {
                 </form>
 
                 <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm font-semibold text-gray-600">
                         Don&apos;t have an account?
                     </p>
 
                     <button
-                        className="mt-2 text-blue-500 hover:underline font-medium cursor-pointer select-text"
+                        className="mt-2 font-semibold text-blue-600 hover:underline cursor-pointer select-text"
                         onClick={() => navigate("/register")}
                     >
                         Register
