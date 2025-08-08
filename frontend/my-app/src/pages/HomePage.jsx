@@ -38,7 +38,7 @@ export default function HomePage() {
           <FeatureCard
             image={DictionaryIMG}
             title="Story Hub"
-            buttonText="Explore for Free"
+            buttonText="Explore"
             onClick={() => navigate('/review')}
           />
         </div>

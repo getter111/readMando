@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Cookie, Response, Body
+from fastapi import FastAPI, HTTPException, Cookie, Response, Body, Query
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
 from datetime import datetime, timedelta, timezone
@@ -176,6 +176,53 @@ async def generate_questions(request: models.QuestionGenerationRequest):
     except Exception as e:
         print(str(e))
         raise HTTPException(status_code=500, detail=f"Question generation failed")
+
+@app.get("/stories/all")
+async def get_all_stories(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+):
+    try:
+        stories = story_crud.get_all_stories(skip=skip, limit=limit)
+        return stories
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Failed to fetch stories")
+
+from fastapi import HTTPException, Cookie
+
+@app.put("/stories/{story_id}/toggle-upvote")
+async def toggle_upvote(story_id: int, readmando_session: Optional[str] = Cookie(None)):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail="Missing session cookie")
+
+    try:
+        payload = decode_token(readmando_session)
+        user_id = payload["user_id"]
+
+        story = story_crud.get_story_by_id(story_id)
+        if not story:
+            raise HTTPException(status_code=404, detail="Story not found")
+
+        upvote_record = supabase.table("upvotes").select("*").eq("user_id", user_id).eq("story_id", story_id).execute()
+        
+        if upvote_record.data:
+            # If user already upvoted, remove the upvote
+            supabase.table("upvotes").delete().eq("user_id", user_id).eq("story_id", story_id).execute()
+            new_upvotes = max((story.get("upvotes") or 1) - 1, 0)
+        else:
+            # if user hasn't upvoted, insert new row 
+            supabase.table("upvotes").insert({"user_id": user_id, "story_id": story_id}).execute()
+            new_upvotes = (story.get("upvotes") or 0) + 1
+
+        supabase.table("stories").update({"upvotes": new_upvotes}).eq("story_id", story_id).execute()
+
+        return {"story_id": story_id, "upvotes": new_upvotes, "upvoted": not upvote_record.data}
+
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Failed to toggle upvote")
+
 
 # endpoint to validate user session token
 @app.get("/me")

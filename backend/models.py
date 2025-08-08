@@ -12,6 +12,7 @@ class StoryBase(BaseModel):
     voice: Optional[str] = None,
     topic: Optional[str] = None,
     vocabulary: Optional[List[str]] = None 
+    upvotes: Optional[int] = 0  
 
 class StoryCreate(StoryBase):
     pass
@@ -170,3 +171,4 @@ class StoryPageHydration(BaseModel):
     voice: Optional[str] = None 
     vocabulary: Optional[List[str]] = None
     topic: Optional[str] = None
+    upvotes: Optional[int] = 0

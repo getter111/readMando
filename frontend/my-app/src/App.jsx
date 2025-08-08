@@ -54,7 +54,7 @@ const getUser = async () => {
             <Route path="search/:vocab" element= {<SearchPage />} />
             <Route path="story" element = {<StoryPage user={user} loadingUser={loadingUser} />} /> {/*if guest, user_id should be undefined*/}
             <Route path="study" element = {<StudyPage user={user} loadingUser={loadingUser}/>} /> {/* Study vocab with flashcards*/}
-            <Route path="fill-in-the-blank" element= {<PhrasesPage />} /> {/* Fill in the blank style game */}
+            {/* <Route path="fill-in-the-blank" element= {<PhrasesPage />} />  Fill in the blank style game */}
             <Route path="review" element = {<ReviewPage />} /> {/* Review past generated stories */}
             { /* Add dictionary route*/}
           </Route>
