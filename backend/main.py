@@ -615,3 +615,15 @@ async def save_user_progress(progress: models.ProgressCreate):
     except Exception as e:
         print(str(e))
         raise HTTPException(status_code=500, detail=f"Error saving progress")
+
+#get the stories already generated questions.
+@app.get("/stories/{story_id}/questions")
+async def get_story_questions(story_id: int):
+    try:
+        questions = question_crud.get_questions_by_story_id(story_id)
+        if not questions:
+            raise HTTPException(status_code=404, detail="No questions found for this story")
+        return questions
+    except Exception as e:
+        print(str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch questions")

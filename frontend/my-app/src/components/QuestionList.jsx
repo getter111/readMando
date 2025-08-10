@@ -19,6 +19,7 @@ function QuestionList({ questions, user_id, storyId }) {
             }
         });
         setScore({ correct, total });
+        // console.log(user_id) undefined if guest
         if (Object.keys(selectedAnswers).length === total && user_id) {
             // Only save score if all questions answered
             saveProgress(Math.round((correct / total) * 100), `${correct}/${total}`); //use recalculated state, since setScore is actually async

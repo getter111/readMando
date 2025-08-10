@@ -75,6 +75,13 @@ const [defaultWords, setDefaultWords] = useState([
     }
   }, [tabFilteredDeckVocab, searchBar]);
 
+  useEffect(() => {
+    const activeCards = deckVocab.filter(item => item.is_active);
+
+    setMemorziedCount(activeCards.filter(item => item.status === "memorized").length);
+    setNotMemorziedCount(activeCards.filter(item => item.status === "not memorized").length);
+  }, [deckVocab]);
+
   const playAudio = async (word) => {
     try {
         const res = await axios(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`)
@@ -148,7 +155,7 @@ const [defaultWords, setDefaultWords] = useState([
         // console.log("merged vocab with status:", mergedVocab)
         setMergedVocab(mergedVocab);
 
-        const activeVocab = mergedVocab.filter(card => card.is_active !== false);
+        const activeVocab = mergedVocab.filter(card => card.is_active === true);
 
         setDeckVocab(activeVocab);
         setSearchAndTabFilteredDeckVocab(activeVocab);
@@ -193,7 +200,7 @@ const [defaultWords, setDefaultWords] = useState([
         }
         return card;
       });
-      console.log("Updated default words:", updatedWords);
+      // console.log("Updated default words:", updatedWords);
 
       setToastMsg(updatedWords.find(card => card.word === word).is_active ? `✅ Added ${word} to your deck!` : `❌ Removed ${word} from your deck!`);
 
@@ -203,11 +210,7 @@ const [defaultWords, setDefaultWords] = useState([
       setTabFilteredDeckVocab(updatedWords);
       setSearchAndTabFilteredDeckVocab(updatedWords);
 
-      setMemorziedCount(updatedWords.filter(item => item.status === "memorized").length);
-      setNotMemorziedCount(updatedWords.filter(item => item.status === "not memorized").length);
-
       localStorage.setItem("defaultWords", JSON.stringify(updatedWords));
-
     }
     else {
       const payload = {user_vocab_id: user_vocab_id}
@@ -275,7 +278,8 @@ const [defaultWords, setDefaultWords] = useState([
         <ToastNotification
           message={toastMsg} 
           onClose={() => setToastMsg("")} 
-          duration={3000} />
+          duration={3000} 
+        />
       )}
       <div className="p-6 bg-gray-50 min-h-screen">
         <div className="bg-white p-6 rounded-xl shadow mb-6">
@@ -301,12 +305,12 @@ const [defaultWords, setDefaultWords] = useState([
           >
             Study
           </button>
-          <button 
+          {/* <button 
             className="flex-auto border px-6 py-3 text-lg rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 cursor-pointer transition"
             aria-label={`Add/Edit Cards Button`}
           >
             Add/Edit Cards
-          </button>
+          </button> */}
         </div>
 
         <div className="flex gap-4 mb-4 border-b">
@@ -353,7 +357,7 @@ const [defaultWords, setDefaultWords] = useState([
           />
 
           <div className="flex items-center gap-2 ml-4">
-            <button 
+            {/* <button 
               className="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200 cursor-pointer transition" 
               aria-label={`Share button`}
             >
@@ -364,7 +368,7 @@ const [defaultWords, setDefaultWords] = useState([
               aria-label={`Export as CSV button`}
             >
               CSV
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -430,7 +434,7 @@ const [defaultWords, setDefaultWords] = useState([
                         if (user.user_id) {
                           try {
                             await axios.put(`${apiUrl}/study_deck/update`, payload, { withCredentials: true });
-                            console.log("Updated vocab progress");
+                            // console.log("Updated vocab progress");
                           } catch (err) {
                             console.error("Failed to update vocab:", err);
                           }

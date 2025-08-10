@@ -196,28 +196,33 @@ export default function StoryPage({ user, loadingUser}) {
     };
 
     const fetchQuestions = async () => {
-        setLoadingQuestions(true);
-        setError("");
-        try {
-            console.log("Generating questions... ");
-            const response = await axios.post(`${apiUrl}/stories/questions`, {
-                story: story.content.join(""), // convert content & title array into a string
-                title: story.title.join(""), 
-                difficulty: difficulty,
-                story_id: storyId
-            });
-            if (user.user_id) {
-                setQuestions(response.data)
-            } else if (user.username === "Guest") {
-                // cache the questions[dict] in case guest refreshes the page
-                localStorage.setItem("questions", JSON.stringify(response.data));
+        if (questions.length < 0){
+            setLoadingQuestions(true);
+            setError("");
+            try {
+                console.log("Generating questions... ");
+                const response = await axios.post(`${apiUrl}/stories/questions`, {
+                    story: story.content.join(""), // convert content & title array into a string
+                    title: story.title.join(""), 
+                    difficulty: difficulty,
+                    story_id: storyId
+                });
+                if (user.user_id) {
+                    setQuestions(response.data)
+                } else if (user.username === "Guest") {
+                    // cache the questions[dict] in case guest refreshes the page
+                    localStorage.setItem("questions", JSON.stringify(response.data));
+                }
+            } catch (error) {
+                setError("Failed to generate questions. Try again!");
+                console.error("Error generating questions", error);
+            } finally {
+                setLoadingQuestions(false);
             }
-        } catch (error) {
-            setError("Failed to generate questions. Try again!");
-            console.error("Error generating questions", error);
-        } finally {
-            setLoadingQuestions(false);
+        } else{
+            console.log("questions already been generated.");
         }
+            
     }
 
     return (

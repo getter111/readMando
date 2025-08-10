@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
-
-export default function ReviewPage({ user }) {
+import AudioPlayer from "../components/AudioPlayer";
+import { Link } from "react-router-dom";
+export default function ReviewPage({ user, loadingUser }) {
   const [stories, setStories] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -13,48 +13,48 @@ export default function ReviewPage({ user }) {
   }, []);
 
   const fetchStories = async () => {
-    setLoading(true);
     setError("");
     try {
       const res = await axios.get(`${apiUrl}/stories/all`);
-      setStories(res.data);
-      // console.log("Fetched stories:", res.data);
-    } catch (err) {
-      console.error("Error fetching stories:", err);
-      setError("Failed to load stories.");
-    } finally {
-      setLoading(false);
+      const storyData = res.data
+      // console.log("Fetched stories:", storyData);
+      
+      setStories(storyData);
+      } catch (err) {
+        // console.error("Error fetching stories:", err);
+        setError("Failed to load stories.");
     }
   };
 
   const handleUpvote = async (story_id) => {
-
-    if (!user) {
+    if (!user.user_id) {
       alert("Please log in to upvote stories!");
-    }
-    try {
-      const res = await axios.put(`${apiUrl}/stories/${story_id}/toggle-upvote`, {}, { withCredentials: true });
-      // console.log("Upvote response:", res.data);
-      setStories(stories =>
-        stories.map(story =>
-          story.story_id === story_id
-            ? { ...story, upvotes: res.data.upvotes }
-            : story
-        )
-      );
-    } catch (err) {
-      console.error("Error upvoting story:", err);
+    } 
+    else {
+      try {
+        const res = await axios.put(`${apiUrl}/stories/${story_id}/toggle-upvote`, {}, { withCredentials: true });
+        // console.log("Upvote response:", res.data);
+        setStories(stories =>
+          stories.map(story =>
+            story.story_id === story_id
+              ? { ...story, upvotes: res.data.upvotes }
+              : story
+          )
+        );
+      } catch (err) {
+        console.error("Error upvoting story:", err);
+      }
     }
   };
 
-  if (loading) return <div className="flex justify-center items-center h-full w-full text-xl">Loading stories...</div>;
+  if (loadingUser) return <div className="flex justify-center items-center h-full w-full text-xl">Loading stories...</div>;
   if (error) return <div className="flex justify-center items-center h-full w-full text-xl text-red-500">{error}</div>;
 
   return (
     <div className="px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-center">Community Stories</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">Top Stories</h1>
 
-      {loading && (
+      {loadingUser && (
         <div className="flex font-bold justify-center items-center h-full w-full text-xl">
           Loading stories...
         </div>
@@ -66,7 +66,7 @@ export default function ReviewPage({ user }) {
         </div>
       )}
 
-      {stories.length === 0 && !loading && (
+      {stories.length === 0 && !loadingUser && (
         <div className="text-center font-bold text-gray-500">No stories yet.</div>
       )}
 
@@ -98,23 +98,38 @@ export default function ReviewPage({ user }) {
             </p>
 
             <div className="flex flex-wrap gap-2 mb-4">
+              <span className="text-sm font-semibold text-gray-600 mt-1 flex flex-wrap gap-2 items-center">Vocabulary Used:</span>
               {story.vocabulary?.map((wordObj, idx) => (
                 <button
                   key={idx}
                   className="bg-blue-100 font-semibold text-blue-700 px-2 py-1 rounded-lg hover:bg-blue-200 text-sm transition cursor-pointer"
-                  onClick={() => print("Hello")}
+                  onClick={() => window.open(`https://translate.google.com/?sl=en&tl=zh-CN&text=${encodeURIComponent(wordObj)}&op=translate`, "_blank")}
                 >
-                  + {wordObj}
+                  {wordObj}
                 </button>
               ))}
             </div>
 
-            <a
-              href={`/story?story_id=${story.story_id}`}
-              className="text-blue-600 hover:underline mt-auto font-semibold transition"
+            <div className="flex flex-col sm:flex-row sm:space-x-6 space-y-4 sm:space-y-0">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold mb-1">Title Audio:</p>
+                <AudioPlayer audioUrl={(stories[0].title_audio)} />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold mb-1">Story Audio:</p>
+                <AudioPlayer audioUrl={stories[0].story_audio} />
+              </div>
+            </div>
+            
+            <Link 
+              to={`/story/story_id=${story.story_id}`}
+              className="text-blue-600 hover:underline mt-auto font-bold transition text-xl"
+              state={{story}}
             >
               Read Story →
-            </a>
+            </Link>
+
           </div>
         ))}
       </div>
@@ -124,4 +139,5 @@ export default function ReviewPage({ user }) {
 
 ReviewPage.propTypes = {
   user: PropTypes.object,
+  loadingUser: PropTypes.bool,
 };

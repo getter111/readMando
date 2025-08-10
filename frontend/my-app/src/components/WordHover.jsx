@@ -31,7 +31,7 @@ function WordHover({ word }) {
     async function fetchTranslation() {
         const localValue = localStorage.getItem(localKey);
         if (localValue) {
-            console.log(`💾 Used localStorage for ${word}`);
+            // console.log(`💾 Used localStorage for ${word}`);
             setState(JSON.parse(localValue));
             return;
         }
@@ -39,7 +39,7 @@ function WordHover({ word }) {
         //fetch word from backend
         setIsLoading(true);
         try {
-            console.log(`🔍 Fetching translation for: ${word}`);
+            // console.log(`🔍 Fetching translation for: ${word}`);
             const response = await axios.get(`${apiUrl}/vocabulary/${word}`);
             
             //if there's a status code then it means its ggs, since it returns a 404 status code
@@ -57,7 +57,7 @@ function WordHover({ word }) {
         } catch (error) {
             //404 return from /vocabulary/{word}, so we auto-fetch unknown word from backend
             if (axios.isAxiosError(error) && error.response?.status === 404) {
-                console.log(`${error}, ${word} not found. auto generating...`);
+                // console.log(`${error}, ${word} not found. auto generating...`);
                 setNotFound(true);
                 setHighlight("not-found");
 
@@ -77,11 +77,11 @@ function WordHover({ word }) {
                     setState(definition)
                     setHighlight("found");
                 } catch (autoFetchError) {
-                    console.error(`❌ auto-fetch API ${autoFetchError}`);
+                    // console.error(`❌ auto-fetch API ${autoFetchError}`);
                     setNotFound(true);
                 }
             } else {
-                console.error(`Error in fetchTranslation()? ${error}`);
+                // console.error(`Error in fetchTranslation()? ${error}`);
                 setNotFound(true);
             }
         } finally {
@@ -195,7 +195,7 @@ return (
                             )}
                             <button
                                 onClick={handleAddToStudySet}
-                                className="mt-2 bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 hover:bg-blue-700 text-white px-3 py-1 rounded-xl text-base cursor-pointer w-full sm:w-auto transition"
+                                className="mt-2 bg-blue-600 focus:outline-none focus:ring-2 font-semibold focus:ring-blue-400 focus:ring-offset-2 hover:bg-blue-700 text-white px-3 py-1 rounded-xl text-base cursor-pointer w-full sm:w-auto transition"
                                 aria-label={`Add ${translation} to study deck button`}
                             >
                                 Add to Study Set
