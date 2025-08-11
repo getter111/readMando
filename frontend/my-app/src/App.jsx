@@ -74,8 +74,7 @@ function App() {
             }}
             role="alert"
           >
-            ⚠️ Safari users: To enable full functionality, please disable
-            &nbsp;<em>Prevent cross-site tracking</em> in Safari settings.
+            ⚠️ Safari users: To enable full functionality, please disable &nbsp;<em>Prevent cross-site tracking</em> in Safari settings and switch to public browsing.
           </div>
         )}
 
