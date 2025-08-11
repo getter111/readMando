@@ -586,7 +586,16 @@ async def add_vocabulary(request: models.VocabRequest):
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=f"Auto-fetch failed for {request.vocab}: {str(e)}")
-        
+    
+@app.get("/vocabulary/all")
+async def get_all_vocabulary(skip: int = Query(0, ge=0), limit: int = Query(30, ge=1, le=100)):
+    try:
+        vocab = vocabulary_crud.get_all_vocabulary(skip=skip, limit=limit)
+        return vocab
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Failed to fetch vocabulary")
+
 # endpoints to retrieve vocabulary for onhover effect
 @app.get("/vocabulary/{word}")
 async def get_vocabulary(word: str, limit: int = 10):
@@ -594,7 +603,6 @@ async def get_vocabulary(word: str, limit: int = 10):
     try:
         search_character = vocabulary_crud.get_vocabulary_by_word(word, limit)
         if search_character is not None:
-            print(search_character)
             return search_character
     except Exception as e:
         print(f"Error searching by word")
@@ -602,7 +610,6 @@ async def get_vocabulary(word: str, limit: int = 10):
     try:
         search_translation = vocabulary_crud.get_vocabulary_by_translation(word)
         if search_translation is not None:
-            print(search_translation)
             return search_translation
     except Exception as e:
         print(f"Error searching by translation")

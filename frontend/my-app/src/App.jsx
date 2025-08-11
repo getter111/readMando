@@ -54,7 +54,7 @@ const getUser = async () => {
             <Route path="register" element= {<RegisterPage />} />
             <Route path="verification-success" element={<VerificationSuccessPage />} />
             <Route path="dictionary/:vocab" element= {<SearchPage user={user} loadingUser={loadingUser} />} />
-            <Route path="dictionary" element= {<DictionaryPage />} />
+            <Route path="dictionary" element= {<DictionaryPage user={user} loadingUser={loadingUser}/>} />
 
             <Route path="story" element = {<StoryPage user={user} loadingUser={loadingUser} />} /> {/*if guest, user_id should be undefined*/}
             <Route path="study" element = {<StudyPage user={user} loadingUser={loadingUser}/>} /> {/* Study vocab with flashcards*/}

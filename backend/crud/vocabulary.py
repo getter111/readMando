@@ -39,11 +39,13 @@ class VocabularyCRUD:
     
     def get_vocabulary_by_word(self, word: str, limit: int):
         res = (self.supabase.table("vocabulary").select("*").like("word", f"%{word}%").limit(limit).execute())
+        print(f"Supabase returned {len(res.data)} rows: {res.data}")
         return res.data
 
     def get_vocabulary_by_translation(self, translation: str):
         try:
             res = (self.supabase.table('vocabulary').select().text_search('translation', translation).execute())
+            (f"Supabase returned {len(res.data)} rows: {res.data}")
             return res.data
         except Exception as e:
             print(f"Error in get_vocabulary_by_translation: {e}")
@@ -53,6 +55,15 @@ class VocabularyCRUD:
     def batch_insert_vocabulary(self, vocab_list: list[dict]):
         res = self.supabase.table("vocabulary").upsert(vocab_list, on_conflict=["word"]).execute()
         return res.data
+    
+    def get_all_vocabulary(self, skip: int, limit: int):
+        try:
+            res = (self.supabase.table("vocabulary").select("*").range(skip, skip + limit - 1).execute())
+            print(f"Supabase returned {len(res.data)} rows: {res.data}")
+            return res.data
+        except Exception as e:
+            print(f"Error in get_vocabulary_by_translation: {e}")
+            return None
 
     # def update_vocabulary(self, vocab_id: int, updates: UserUpdate):
     #     # Convert pydantic model to dictionary excluding unset fields
