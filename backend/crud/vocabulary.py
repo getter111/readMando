@@ -36,14 +36,18 @@ class VocabularyCRUD:
         if res.data:  
             return res.data[0]  
         return None  
-    def get_vocabulary_by_word(self, word: str):
-        res = self.supabase.table("vocabulary").select("*").eq("word", word).execute()
-        if res.data:  
-            return res.data[0]  
-        return None  
+    
+    def get_vocabulary_by_word(self, word: str, limit: int):
+        res = (self.supabase.table("vocabulary").select("*").like("word", f"%{word}%").limit(limit).execute())
+        return res.data
+
     def get_vocabulary_by_translation(self, translation: str):
-        res = self.supabase.table("vocabulary").select("*").eq("translation", translation).execute()
-        return res.data[0]
+        try:
+            res = (self.supabase.table('vocabulary').select().text_search('translation', translation).execute())
+            return res.data
+        except Exception as e:
+            print(f"Error in get_vocabulary_by_translation: {e}")
+            return None
 
     #if "word" exists update row instead of inserting
     def batch_insert_vocabulary(self, vocab_list: list[dict]):

@@ -18,11 +18,11 @@ export default function StoryHubStoryPage({ user, loadingUser }) {
     const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
     const handleGetQuestions = async () => {
-        if (questions.length < 0) {
+        if (questions.length <= 0) {
             setLoadingQuestions(true);
             try {
                 const response = await axios.get(`${apiUrl}/stories/${story.story_id}/questions`);
-                console.log("Fetched questions:", response.data);
+                // console.log("Fetched questions:", response.data);
                 setQuestions(response.data);  // Update questions state here!
             } catch (error) {
                 console.error("Error fetching questions:", error);
@@ -47,6 +47,7 @@ export default function StoryHubStoryPage({ user, loadingUser }) {
                 content: segmentedBodyRes.data.segmented_words,
                 title: segmentedTitleRes.data.segmented_words,
             }));
+            // console.log(story)
         } catch (err) {
             console.error("Error segmenting story:", err);
         }
@@ -94,15 +95,15 @@ export default function StoryHubStoryPage({ user, loadingUser }) {
 
                 <div className="mb-6">
                     <p className="text-sm font-semibold text-gray-600 mt-1">
-                        by: {story.user_stories?.[0].users.username || "Unknown author"}
+                        by: {story.user_stories?.[0].users.username || "N/A"}
                     </p>
                     {story.difficulty && (
                         <p className="text-sm text-gray-600 mt-1">Difficulty: {story.difficulty}</p>
                     )}
-                    {story.topic && (
-                        <p className="text-sm text-gray-600 mt-1">Topic: {story.topic}</p>
-                    )}
-                    {story.vocabulary && (
+                    {
+                        <p className="text-sm text-gray-600 mt-1">Topic: {story.topic?.trim() || "N/A"}</p>
+                    }
+                    {story.vocabulary && story.vocabulary.length > 0 ? (
                         <div className="text-sm text-gray-600 mt-1 flex flex-wrap gap-2 items-center">
                             <span>Vocabulary used:</span>
                             {story.vocabulary.map((word, idx) => (
@@ -115,8 +116,8 @@ export default function StoryHubStoryPage({ user, loadingUser }) {
                                 </button>
                             ))}
                         </div>
-
-
+                    ) : (
+                        <div>Unknown</div>
                     )}
                 </div>
 

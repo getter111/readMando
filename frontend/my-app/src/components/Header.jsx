@@ -14,7 +14,7 @@ export default function Header({ username = 'Guest', setUser}) {
   const handleEnterKey = (e) => {
     if (e.key === "Enter") {
       if (vocab.trim()) {
-        navigate(`/search/${vocab}`)
+        navigate(`/dictionary/${vocab}`)
       }
     }
   };
@@ -34,7 +34,11 @@ export default function Header({ username = 'Guest', setUser}) {
   return (
     <header className="bg-white shadow-md py-4 px-4 sm:px-6 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
       <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 gap-2">
-        <Link to="/" className="text-xl font-bold text-blue-600 hover:text-blue-700 transition whitespace-nowrap">
+        <Link 
+          to="/" 
+          className="text-xl font-bold text-blue-600 hover:text-blue-700 transition whitespace-nowrap"
+          onClick={() => setVocab("")}
+        >
           ReadMando
         </Link>
 

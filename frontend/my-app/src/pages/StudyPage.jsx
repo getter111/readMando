@@ -6,6 +6,7 @@ import axios from "axios";
 import Flashcard from "../components/Flashcard";
 import FlashcardSummary from "../components/FlashcardSummary";
 import ToastNotification from "../components/ToastNotification";
+import VocabCard from "../components/VocabCard";
 export default function StudyPage({ user, loadingUser}) {
   const [searchBar, setSearchBar] = useState("");
   const [deckTitle, setDeckTitle] = useState("Study Deck");
@@ -75,6 +76,7 @@ const [defaultWords, setDefaultWords] = useState([
     }
   }, [tabFilteredDeckVocab, searchBar]);
 
+  //refreshing UI count 
   useEffect(() => {
     const activeCards = deckVocab.filter(item => item.is_active);
 
@@ -187,6 +189,7 @@ const [defaultWords, setDefaultWords] = useState([
           setDeckVocab(defaultWords); //single source of truth
           setSearchAndTabFilteredDeckVocab(defaultWords); //keep track of search filter
           setTabFilteredDeckVocab(defaultWords); //mainly to keep track of current tab filter
+          localStorage.setItem("defaultWords", JSON.stringify(defaultWords));
         }
     }
   }
@@ -210,7 +213,8 @@ const [defaultWords, setDefaultWords] = useState([
       setTabFilteredDeckVocab(updatedWords);
       setSearchAndTabFilteredDeckVocab(updatedWords);
 
-      localStorage.setItem("defaultWords", JSON.stringify(updatedWords));
+      //we don't want to give guest adding/removing operations
+      // localStorage.setItem("defaultWords", JSON.stringify(updatedWords));
     }
     else {
       const payload = {user_vocab_id: user_vocab_id}
@@ -372,36 +376,14 @@ const [defaultWords, setDefaultWords] = useState([
           </div>
         </div>
 
-          <div className="flex flex-wrap justify-center gap-6">
+        <div className="flex flex-wrap justify-center gap-6">
             {searchAndTabFilteredDeckVocab.map((card, idx) => (
-            <div 
-              key={idx} 
-              className="bg-white p-6 rounded-2xl shadow-md flex justify-between items-start flex-grow min-w-[250px] max-w-sm transition hover:shadow-lg"
-            >
-              <div className="mb-4 space-y-1">
-                <p className="text-2xl font-extrabold text-black break-words">{card.word}</p>
-                <p className="text-lg text-gray-700 break-words">{card.pinyin}</p>
-                <p className="text-gray-500 break-words">{card.translation} ({card.word_type})</p>
-              </div>
-
-              <div className="flex items-center gap-3 text-lg">
-                <button 
-                  className="p-2 cursor-pointer hover:bg-yellow-200 transition rounded-full" 
-                  aria-label={`Play audio for ${card.translation} button`}
-                  onClick={() => playAudio(card.word)}
-                >
-                  🔊
-                </button>
-              
-                <button 
-                  className="p-2 cursor-pointer hover:bg-pink-200 transition rounded-full" 
-                  aria-label={`Add/unadd word: ${card.translation} to study deck button`}
-                  onClick={() => handleHeartClick(card.user_vocab_id, card.word)}
-                >
-                  {card.is_active ? "❤️" : "🤍"}
-                </button>
-              </div>
-            </div>
+              <VocabCard
+                key={idx}
+                card={card}
+                onPlayAudio={playAudio}
+                onHeartClick={handleHeartClick}
+              />
           ))}
         </div>
 
@@ -439,16 +421,16 @@ const [defaultWords, setDefaultWords] = useState([
                             console.error("Failed to update vocab:", err);
                           }
                         } else { //guest user
-                          const updatedWords = [...defaultWords];
-                          const index = updatedWords.findIndex(item => item.word === dict.word);
+                            const updatedWords = [...defaultWords];
+                            const index = updatedWords.findIndex(item => item.word === dict.word);
 
-                          if (index !== -1) {
-                            updatedWords[index] = {
-                              ...updatedWords[index],
-                              status: type === "again" ? "not memorized" : "memorized"
-                            };
-                            setDefaultWords(updatedWords); //update defaultword state, to be used at end of session
-                          }
+                            if (index !== -1) {
+                              updatedWords[index] = {
+                                ...updatedWords[index],
+                                status: type === "again" ? "not memorized" : "memorized"
+                              };
+                              setDefaultWords(updatedWords); //update defaultword state, to be used at end of session
+                            }
                         }
                         console.log(studySession[currentCardIndex])
 

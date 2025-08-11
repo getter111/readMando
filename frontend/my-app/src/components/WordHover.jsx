@@ -35,25 +35,29 @@ function WordHover({ word }) {
             setState(JSON.parse(localValue));
             return;
         }
-
         //fetch word from backend
         setIsLoading(true);
         try {
             // console.log(`🔍 Fetching translation for: ${word}`);
             const response = await axios.get(`${apiUrl}/vocabulary/${word}`);
-            
-            //if there's a status code then it means its ggs, since it returns a 404 status code
-            if (!response.data.statusCode) { 
-                const definition = {
-                    word: response.data.word,
-                    translation: response.data.translation,
-                    pinyin: response.data.pinyin,
-                    wordType: response.data.word_type,
-                }
-                localStorage.setItem(localKey, JSON.stringify(definition));
-                setState(definition)
-                // console.log(response)
-            }  
+            // console.log(response.data[0])
+
+            if (!response.data || response.data.length === 0 || response.data[0]?.statusCode) {
+                // Manually trigger auto-generation if word not found
+                throw { isAxiosError: true, response: { status: 404 } };
+            }
+
+            const definition = {
+                word: response.data[0].word,
+                translation: response.data[0].translation,
+                pinyin: response.data[0].pinyin,
+                wordType: response.data[0].word_type,
+            }
+            localStorage.setItem(localKey, JSON.stringify(definition));
+            setState(definition)
+
+            // console.log(definition)
+            // console.log(response)  
         } catch (error) {
             //404 return from /vocabulary/{word}, so we auto-fetch unknown word from backend
             if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -65,7 +69,6 @@ function WordHover({ word }) {
                     const newWord = await axios.post(`${apiUrl}/vocabulary`, {
                         vocab: word
                     });
-
                     const definition = {
                         word: newWord.data.word,
                         translation: newWord.data.translation,
@@ -122,9 +125,9 @@ function WordHover({ word }) {
                 word: word, 
             }, { withCredentials: true });
 
-            //pre-cache tts audio to fix slow on first generation
-            await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
-
+            //pre-generate tts audio to fix slow on first generation
+            const tts = await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
+            // console.log(tts)
             setToastMsg(`✅ Added ${word} to study deck!`);
         } catch (error) {
             if (axios.isAxiosError(error)) {

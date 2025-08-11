@@ -70,7 +70,7 @@ export default function ReviewPage({ user, loadingUser }) {
         <div className="text-center font-bold text-gray-500">No stories yet.</div>
       )}
 
-      <div className="flex flex-wrap gap-6 justify-center">
+      <div className="flex flex-col items-center flex-wrap gap-6 justify-center">
         {stories.map((story) => (
           <div
             key={story.story_id}

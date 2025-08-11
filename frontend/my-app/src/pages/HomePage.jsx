@@ -5,6 +5,7 @@ import DictionaryIMG from '../assets/images/Dictionary.jpg';
 import PracticeIMG from '../assets/images/Practice.jpg';
 import QuizIMG from '../assets/images/Quiz.jpg';
 import TypewriterIMG from '../assets/images/Typewriter.jpg';
+import BooksIMG from '../assets/images/Books.jpg'
 
 import { useNavigate } from "react-router-dom";
 
@@ -29,16 +30,22 @@ export default function HomePage() {
             buttonText="Practice Now"
             onClick={() => navigate('/study')}
           />
-          <FeatureCard
+          {/* <FeatureCard
             image={QuizIMG}
             title="Fill in the blank"
             buttonText="Begin"
             onClick={() => navigate('/fill-in-the-blank')}
-          />
+          /> */}
           <FeatureCard
             image={DictionaryIMG}
-            title="Story Hub"
+            title="Dictionary"
             buttonText="Explore"
+            onClick={() => navigate('/dictionary')}
+          />          
+          <FeatureCard
+            image={BooksIMG}
+            title="Story Hub"
+            buttonText="Read"
             onClick={() => navigate('/review')}
           />
         </div>

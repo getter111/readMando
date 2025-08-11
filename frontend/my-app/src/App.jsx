@@ -8,6 +8,7 @@ import StoryPage from "./pages/StoryPage"
 import ReviewPage from "./pages/ReviewPage"
 import StudyPage from "./pages/StudyPage"
 import PhrasesPage from "./pages/PhrasesPage"
+import DictionaryPage from "./pages/DictionaryPage"
 import StoryHubStoryPage from "./pages/StoryHubStoryPage"
 import VerificationSuccessPage from "./pages/VerificationSuccessPage"
 import RegisterPage from "./pages/RegisterPage"
@@ -52,10 +53,12 @@ const getUser = async () => {
             <Route path="login" element= {<LoginPage setUser={setUser} />} />
             <Route path="register" element= {<RegisterPage />} />
             <Route path="verification-success" element={<VerificationSuccessPage />} />
-            <Route path="search/:vocab" element= {<SearchPage />} />
+            <Route path="dictionary/:vocab" element= {<SearchPage user={user} loadingUser={loadingUser} />} />
+            <Route path="dictionary" element= {<DictionaryPage />} />
+
             <Route path="story" element = {<StoryPage user={user} loadingUser={loadingUser} />} /> {/*if guest, user_id should be undefined*/}
             <Route path="study" element = {<StudyPage user={user} loadingUser={loadingUser}/>} /> {/* Study vocab with flashcards*/}
-            <Route path="fill-in-the-blank" element= {<PhrasesPage />} />  Fill in the blank style game
+            {/* <Route path="fill-in-the-blank" element= {<PhrasesPage />} />  Fill in the blank style game */}
             <Route path="review" element = {<ReviewPage user={user} loadingUser={loadingUser}/>} /> {/* Review past generated stories (see other user's stories)*/}
             <Route path="story/:story_id" element = {<StoryHubStoryPage user={user} loadingUser={loadingUser}/>} /> {/* Phrases game */}
 

@@ -28,7 +28,7 @@ def generateStory(
         + (f'The story should include the following vocabulary: {", ".join(vocabulary)} while following the theme of the topic. ' if vocabulary else '')
         + 'Write a short story with a clear beginning, middle, and ending, to improve the readers reading comprehension in Mandarin. '
         + 'The output should be as helpful to the reader as possible. '
-        + 'The story should be concise, around 250-300 characters long. '
+        + 'The story should be concise, around 300-400 characters long. '
         + 'Also please do not add the title of the story in the body of the text. Please adhere to it.'
     )
 

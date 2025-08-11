@@ -294,16 +294,20 @@ async def add_vocabulary_to_study_deck(request: models.UserVocabularyRequest, re
         user = user_crud.get_user(user_id)
 
         if user and user != "Guest":
-            vocab = vocabulary_crud.get_vocabulary_by_word(request.word)
+            vocab = vocabulary_crud.get_vocabulary_by_word(request.word, 1)
+
+            if vocab[0] is None:
+                raise HTTPException(status_code=404, detail="Vocabulary word not found")
+
             if vocab:
                 # Check for duplicate in user's study deck
                 existing = user_vocabulary_crud.get_user_vocabulary_by_user_and_word(user_id, request.word)
                 if existing:
                     raise HTTPException(status_code=409, detail="Word is already in study deck")
-                
+
                 study_set_word = models.UserVocabularyCreate(
                     user_id=user_id,
-                    vocab_id=vocab["vocab_id"],
+                    vocab_id=vocab[0]["vocab_id"],
                 )
 
                 res = user_vocabulary_crud.create_user_vocabulary(study_set_word)
@@ -554,6 +558,7 @@ async def verify_email(token: str):
 async def add_vocabulary(request: models.VocabRequest):
     try:
         res = auto_fetch(request.vocab)
+        print(res)
         #Response body: "{\n  \"word\": \"诸葛亮\",\n  \"pinyin\": \"Zhūgě Liàng\",\n  \"translation\": \"Zhuge Liang\",\n  \"part of speech\": \"noun\",\n  \"example sentence\": \"诸葛亮是三国时期著名的谋略家。\"\n}"
         if isinstance(res, str):
             unknown_word = json.loads(res) #convert json string -> python dict
@@ -584,13 +589,25 @@ async def add_vocabulary(request: models.VocabRequest):
         
 # endpoints to retrieve vocabulary for onhover effect
 @app.get("/vocabulary/{word}")
-async def get_vocabulary(word: str):
-    vocab = vocabulary_crud.get_vocabulary_by_word(word)
-    if vocab:
-        return vocab
-    else:
-        raise HTTPException(status_code=404, detail="Vocabulary not found.")
-    
+async def get_vocabulary(word: str, limit: int = 10):
+
+    try:
+        search_character = vocabulary_crud.get_vocabulary_by_word(word, limit)
+        if search_character is not None:
+            print(search_character)
+            return search_character
+    except Exception as e:
+        print(f"Error searching by word")
+
+    try:
+        search_translation = vocabulary_crud.get_vocabulary_by_translation(word)
+        if search_translation is not None:
+            print(search_translation)
+            return search_translation
+    except Exception as e:
+        print(f"Error searching by translation")
+
+    raise HTTPException(status_code=404, detail="Vocabulary not found.")
 
 # endpoint to save user's progress after completing reading comprehension questions
 @app.post("/save_progress")

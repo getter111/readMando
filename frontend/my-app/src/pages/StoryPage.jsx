@@ -105,7 +105,7 @@ export default function StoryPage({ user, loadingUser}) {
             }
         } else if (user.username === "Guest") {
             // load from localStorage for guest users
-            console.log("Loading data from localStorage for", user.username);
+            // console.log("Loading data from localStorage for", user.username);
             const localStory = localStorage.getItem("story");
             const localDifficulty = localStorage.getItem("difficulty");
             const localQuestions = localStorage.getItem("questions");
@@ -196,7 +196,7 @@ export default function StoryPage({ user, loadingUser}) {
     };
 
     const fetchQuestions = async () => {
-        if (questions.length < 0){
+        if (questions.length <= 0){
             setLoadingQuestions(true);
             setError("");
             try {
