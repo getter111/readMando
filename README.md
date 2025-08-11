@@ -47,6 +47,11 @@
   
 ___
 
+### Dictionary
+- Explore a Chinese -> English dictionary of over 7000 words
+- Infinite scrolling (doomscroll to your heart's content)
+- Directly add any word from the dictionary page to your personalized vocabulary deck.
+
 ### Story Hub
 - Browse a growing library of stories created by other learners.
 - Revisit your past generated stories and upvote stories you like.
