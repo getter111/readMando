@@ -15,38 +15,70 @@ import RegisterPage from "./pages/RegisterPage"
 import axios from "axios"
 import { useState, useEffect } from "react"
 
+function useIsSafari() {
+  const [isSafari, setIsSafari] = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(ua) && !ua.includes("Chrome");
+    setIsSafari(isSafariBrowser);
+    // console.log(isSafari)
+  }, []);
+
+  return isSafari;
+}
+
 function App() {
   const [user, setUser] = useState({"username": "Guest"});
   const [loadingUser, setLoadingUser] = useState(true); //flag to check if user is still loading
 
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
+  const isSafari = useIsSafari();
 
   useEffect(() => {
     getUser()
   }, [])
 
-const getUser = async () => {
-  try {
-    const res = await axios.get(`${apiUrl}/me`, {
-      withCredentials: true,
-    });
-    if (res?.data) {
-      setUser(res.data);
-      console.log(`Loading data for: ${res.data.username}`);
-    } else {
-      console.log("No user data returned.");
-      setUser({ username: "Guest" });
+  const getUser = async () => {
+    try {
+      const res = await axios.get(`${apiUrl}/me`, {
+        withCredentials: true,
+      });
+      if (res?.data) {
+        setUser(res.data);
+        console.log(`Loading data for: ${res.data.username}`);
+      } else {
+        console.log("No user data returned.");
+        setUser({ username: "Guest" });
+      }
+    } catch (err) {
+      console.log("Not authenticated", err);
+      setUser({ username: "Guest" }); 
+    } finally {
+      setLoadingUser(false);
     }
-  } catch (err) {
-    console.log("Not authenticated", err);
-    setUser({ username: "Guest" }); 
-  } finally {
-    setLoadingUser(false);
-  }
 };
 
   return (
     <>
+      {isSafari && (
+          <div
+            style={{
+              backgroundColor: "#ffecb3",
+              padding: "1rem",
+              marginBottom: "1rem",
+              borderRadius: "6px",
+              border: "1px solid #ffd54f",
+              textAlign: "center",
+              fontWeight: "bold",
+            }}
+            role="alert"
+          >
+            ⚠️ Safari users: To enable full functionality, please disable
+            &nbsp;<em>Prevent cross-site tracking</em> in Safari settings.
+          </div>
+        )}
+
         <Routes>
           <Route path="/" element= {<Layout username={user.username} setUser={setUser}/>}>
             <Route index element= {<HomePage />} />
