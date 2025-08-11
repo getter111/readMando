@@ -40,17 +40,17 @@
 
 ---
 
-### Fill-in-the-Blank
-- An interactive cloze-style activity based on your study deck.
-- Test your understanding by completing sentences using words from your active vocabulary set.
-- Great for retention and active recall.
-
----
+### Search Bar
+- Search by Mandarin or English using the search bar.
+- Supports partial matches to help you find relevant vocabulary.
+- Directly add any word to your personalized vocabulary deck.
+  
+___
 
 ### Story Hub
 - Browse a growing library of stories created by other learners.
-- Revisit your past generated stories and review comprehension questions.
-- A collaborative and evolving learning resource.
+- Revisit your past generated stories and upvote stories you like.
+- See what stories other people are reading.
 
 ---
 
