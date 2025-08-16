@@ -95,7 +95,7 @@ export default function StoryHubStoryPage({ user, loadingUser }) {
 
                 <div className="mb-6">
                     <p className="text-sm font-semibold text-gray-600 mt-1">
-                        by: {story.user_stories?.[0].users.username || "N/A"}
+                        by: {story.user_stories?.[0]?.users?.username || "Guest"}
                     </p>
                     {story.difficulty && (
                         <p className="text-sm text-gray-600 mt-1">Difficulty: {story.difficulty}</p>
@@ -110,7 +110,7 @@ export default function StoryHubStoryPage({ user, loadingUser }) {
                                 <button
                                     key={idx}
                                     className="bg-blue-100 font-semibold text-blue-700 px-2 py-1 rounded-lg hover:bg-blue-200 text-sm transition cursor-pointer"
-                                    onClick={() => window.open(`https://translate.google.com/?sl=en&tl=zh-CN&text=${encodeURIComponent(wordObj)}&op=translate`, "_blank")}
+                                    onClick={() => window.open(`https://translate.google.com/?sl=en&tl=zh-CN&text=${encodeURIComponent(word)}&op=translate`, "_blank")}
                                 >
                                     {word}
                                 </button>
