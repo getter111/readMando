@@ -64,6 +64,7 @@ function QuestionList({ questions, user_id, storyId }) {
             <h2 className="text-xl font-semibold mb-4">Comprehension Questions</h2>
 
             {storyId && <p className="text-sm text-[#666666] mb-2">Story ID: {storyId}</p> || 0 }
+            
                 <div className="space-y-6">
                     {questions.map((q, index) => (
                         <div key={index} className="p-4 border border-gray-200 rounded-lg shadow-sm">
@@ -119,8 +120,8 @@ QuestionList.propTypes = {
             correct_answer: PropTypes.string.isRequired,
         })
     ).isRequired,
-    user_id: PropTypes.number.isRequired,
-    storyId: PropTypes.number.isRequired
+    user_id: PropTypes.number,
+    storyId: PropTypes.number
 };
 
 export default QuestionList;

@@ -32,7 +32,7 @@ class StoryCRUD:
         return {"error": "Story not found"}
     
     def get_all_stories(self, skip=0, limit=20): #gets username by passing in story_id -> user_stories to get user_id then go into users to get the username for that user_id
-        res = self.supabase.table("stories").select("*, user_stories(user_id, users(username))").order("upvotes", desc=False).range(skip, skip + limit - 1).execute()
+        res = self.supabase.table("stories").select("*, user_stories(user_id, users(username))").order("upvotes", desc=True).range(skip, skip + limit - 1).execute()
         return res.data
 
     def update_story_by_id(self, story_id: int, updates: StoryUpdate):

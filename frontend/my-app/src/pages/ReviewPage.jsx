@@ -80,7 +80,7 @@ export default function ReviewPage({ user, loadingUser }) {
               <div>
                 <span className="font-bold text-xl">{story.title}</span>
                 <span className="ml-2 text-gray-500 font-semibold text-sm">
-                  by {story.user_stories?.[0]?.users?.username || "Unknown"}
+                  by {story.user_stories?.[0]?.users?.username || "Guest"}
                 </span>
               </div>
               <button

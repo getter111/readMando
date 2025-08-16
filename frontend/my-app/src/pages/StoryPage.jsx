@@ -115,7 +115,7 @@ export default function StoryPage({ user, loadingUser}) {
             const localVoiceAudio = localStorage.getItem("voiceAudio");
             const localTopic = localStorage.getItem("topic");
             const localVocabulary = localStorage.getItem("vocabulary");
-
+            
             if (localStory && localDifficulty) {
                 const parsedStory = JSON.parse(localStory);
 
@@ -210,6 +210,7 @@ export default function StoryPage({ user, loadingUser}) {
                 if (user.user_id) {
                     setQuestions(response.data)
                 } else if (user.username === "Guest") {
+                    setQuestions(response.data);
                     // cache the questions[dict] in case guest refreshes the page
                     localStorage.setItem("questions", JSON.stringify(response.data));
                 }
@@ -370,6 +371,7 @@ export default function StoryPage({ user, loadingUser}) {
                 </div>
                 {questions.length > 0 && typeof storyId === "number" && (
                     <div className="bg-white mt-6 p-6 rounded-lg shadow-md">
+                        {/* {console.log(user.user_id)} */}
                         <QuestionList questions={questions} user_id={user.user_id} storyId={storyId} />
                     </div>
                 )}
