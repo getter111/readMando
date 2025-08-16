@@ -74,6 +74,4 @@ The backend is built with **FastAPI**, containerized using **Docker**, and deplo
 
 ## Feedback & Contributions
 
-Got an idea to improve ReadMando?  
-Feel free to reach out via [email](mailto:alexlin7211@gmail.com). 
-All suggestions and contributions are welcome!
+Got an idea to improve ReadMando? Feel free to reach out via [email](mailto:alexlin7211@gmail.com).
