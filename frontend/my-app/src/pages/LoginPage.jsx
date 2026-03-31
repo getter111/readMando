@@ -45,8 +45,9 @@ export default function LoginPage({ setUser }) {
 
                 <form onSubmit={handleLogin} className="space-y-5">
                     <div>
-                        <label className="block font-semibold mb-1 cursor-text">Email</label>
+                        <label htmlFor="email" className="block font-semibold mb-1 cursor-text">Email</label>
                         <input
+                            id="email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -56,8 +57,9 @@ export default function LoginPage({ setUser }) {
                     </div>
 
                     <div>
-                        <label className="block font-semibold mb-1 cursor-text">Username</label>
+                        <label htmlFor="username" className="block font-semibold mb-1 cursor-text">Username</label>
                         <input
+                            id="username"
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
