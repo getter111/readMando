@@ -322,12 +322,20 @@ async def add_vocabulary_to_study_deck(request: models.UserVocabularyRequest, re
 
 #endpoint to update status to active/inactive (soft delete)
 @app.put("/study_deck/toggle")
-async def toggle_vocabulary(request: dict = Body(...)):
+async def toggle_vocabulary(request: dict = Body(...), readmando_session: Optional[str] = Cookie(None)):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail="Missing session cookie, please login")
+
+    payload = decode_token(readmando_session)
+    user_id = payload["user_id"]
+
     record = supabase.table("user_vocabulary").select("*").eq("user_vocab_id", request["user_vocab_id"]).execute()
     
     existing = record.data[0] if record.data else None
 
     if existing:
+        if existing.get("user_id") != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to modify this record")
         new_status = not existing["is_active"]
         updated = supabase.table("user_vocabulary").update({"is_active": new_status}).eq("user_vocab_id", request["user_vocab_id"]).execute()
         return updated.data[0]
@@ -404,6 +412,9 @@ async def flashcard_vocabulary_update(
         existing = user_vocabulary_crud.get_user_vocabulary_by_id(user_vocab_id)
         if not existing:
             raise HTTPException(status_code=404, detail="Vocabulary record not found")
+
+        if existing.get("user_id") != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to modify this record")
 
         now = datetime.now(timezone.utc)
         interval = existing.get("interval", 1)
