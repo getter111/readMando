@@ -1,0 +1,4 @@
+## 2024-05-24 - [IDOR in Vocabulary Toggle Endpoint]
+**Vulnerability:** Found an unauthenticated endpoint (`PUT /study_deck/toggle`) allowing any user to toggle the active status of any other user's vocabulary entry.
+**Learning:** Endpoints that modify specific resources by their database ID (e.g., `user_vocab_id`) must explicitly verify that the currently authenticated user owns the resource before executing the modification.
+**Prevention:** Always require authentication cookies (`readmando_session`) for endpoints modifying user-specific data and ensure backend checks match the requested resource's `user_id` against the authenticated session `user_id`.

@@ -322,15 +322,33 @@ async def add_vocabulary_to_study_deck(request: models.UserVocabularyRequest, re
 
 #endpoint to update status to active/inactive (soft delete)
 @app.put("/study_deck/toggle")
-async def toggle_vocabulary(request: dict = Body(...)):
-    record = supabase.table("user_vocabulary").select("*").eq("user_vocab_id", request["user_vocab_id"]).execute()
+async def toggle_vocabulary(request: dict = Body(...), readmando_session: Optional[str] = Cookie(None)):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail="Not logged in")
     
-    existing = record.data[0] if record.data else None
+    try:
+        payload = decode_token(readmando_session)
+        user_id = payload["user_id"]
 
-    if existing:
-        new_status = not existing["is_active"]
+        record = supabase.table("user_vocabulary").select("*").eq("user_vocab_id", request["user_vocab_id"]).execute()
+        existing = record.data[0] if record.data else None
+
+        if not existing:
+            raise HTTPException(status_code=404, detail="Vocabulary record not found")
+
+        if existing.get("user_id") != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to toggle this vocabulary")
+
+        # 🚨 SECURITY: Prevent IDOR by ensuring user owns the vocabulary record before modifying
+        new_status = not existing.get("is_active", True)
         updated = supabase.table("user_vocabulary").update({"is_active": new_status}).eq("user_vocab_id", request["user_vocab_id"]).execute()
         return updated.data[0]
+    except HTTPException:
+        # re-raise HTTP exceptions to preserve status codes
+        raise
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=400, detail="Something went wrong")
 
 @app.get("/study_deck/tts") #query param
 async def text_to_speech(word: str):
