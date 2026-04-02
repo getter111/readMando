@@ -52,6 +52,7 @@ export default function StoryPage({ user, loadingUser}) {
         if (!loadingUser && (user.user_id || user.username === "Guest")) {
             hydratePage();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, loadingUser]);
 
     //plays voice demo for selected voice

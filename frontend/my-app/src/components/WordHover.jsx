@@ -79,7 +79,7 @@ function WordHover({ word }) {
                     localStorage.setItem(localKey, JSON.stringify(definition));
                     setState(definition)
                     setHighlight("found");
-                } catch (autoFetchError) {
+                } catch {
                     // console.error(`❌ auto-fetch API ${autoFetchError}`);
                     setNotFound(true);
                 }
@@ -126,7 +126,7 @@ function WordHover({ word }) {
             }, { withCredentials: true });
 
             //pre-generate tts audio to fix slow on first generation
-            const tts = await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
+            await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
             // console.log(tts)
             setToastMsg(`✅ Added ${word} to study deck!`);
         } catch (error) {

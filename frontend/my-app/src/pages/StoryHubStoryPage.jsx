@@ -54,6 +54,7 @@ export default function StoryHubStoryPage({ user, loadingUser }) {
     }
 
     segmentStory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [story.story_id]);
 
 

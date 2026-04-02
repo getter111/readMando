@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import axios from "axios";
-import PropTypes from "prop-types";
 import ToastNotification from "../components/ToastNotification";
 
 const PAGE_SIZE = 30;
 
-export default function DictionaryPage({ user, loadingUser }) {
+export default function DictionaryPage() {
     const [vocabList, setVocabList] = useState([]);
     const [skip, setSkip] = useState(0);
     const [hasMore, setHasMore] = useState(true);
@@ -30,7 +29,7 @@ export default function DictionaryPage({ user, loadingUser }) {
             setVocabList((prev) => [...prev, ...data]);
             setHasMore(data.length === PAGE_SIZE);
             setSkip((prev) => prev + PAGE_SIZE);
-        } catch (err) {
+        } catch {
             setError("Failed to load vocabulary.");
             setHasMore(false);
         } finally {
@@ -40,6 +39,7 @@ export default function DictionaryPage({ user, loadingUser }) {
 
     useEffect(() => {
         fetchVocab();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const lastVocabRef = useCallback(
@@ -59,11 +59,11 @@ export default function DictionaryPage({ user, loadingUser }) {
 
     const handleAddToStudySet = async (word) => {
         try {
-            const res = await axios.post(`${apiUrl}/users/study_deck`,{ word: word },{ withCredentials: true });
+            await axios.post(`${apiUrl}/users/study_deck`,{ word: word },{ withCredentials: true });
             // console.log(res)
 
             // Pre-generate TTS on the server
-            const tts = await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
+            await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
             // console.log(tts)
 
             setToastMsg(`✅ Added ${word} to study deck!`);
@@ -151,12 +151,3 @@ export default function DictionaryPage({ user, loadingUser }) {
     }
 
 
-DictionaryPage.propTypes = {
-    user: PropTypes.shape({
-        user_id: PropTypes.number,
-        username: PropTypes.string,
-        email: PropTypes.string,
-        is_verified: PropTypes.bool,
-    }),
-    loadingUser: PropTypes.bool.isRequired,
-};

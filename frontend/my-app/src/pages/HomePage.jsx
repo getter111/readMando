@@ -3,7 +3,6 @@ import FeatureCard from "../components/FeatureCard";
 
 import DictionaryIMG from '../assets/images/Dictionary.jpg';
 import PracticeIMG from '../assets/images/Practice.jpg';
-import QuizIMG from '../assets/images/Quiz.jpg';
 import TypewriterIMG from '../assets/images/Typewriter.jpg';
 import BooksIMG from '../assets/images/Books.jpg'
 

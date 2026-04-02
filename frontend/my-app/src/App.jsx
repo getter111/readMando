@@ -7,7 +7,6 @@ import SearchPage from "./pages/SearchPage"
 import StoryPage from "./pages/StoryPage"
 import ReviewPage from "./pages/ReviewPage"
 import StudyPage from "./pages/StudyPage"
-import PhrasesPage from "./pages/PhrasesPage"
 import DictionaryPage from "./pages/DictionaryPage"
 import StoryHubStoryPage from "./pages/StoryHubStoryPage"
 import VerificationSuccessPage from "./pages/VerificationSuccessPage"
@@ -37,6 +36,7 @@ function App() {
 
   useEffect(() => {
     getUser()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const getUser = async () => {

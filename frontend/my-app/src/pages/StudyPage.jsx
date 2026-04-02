@@ -9,7 +9,7 @@ import ToastNotification from "../components/ToastNotification";
 import VocabCard from "../components/VocabCard";
 export default function StudyPage({ user, loadingUser}) {
   const [searchBar, setSearchBar] = useState("");
-  const [deckTitle, setDeckTitle] = useState("Study Deck");
+  const deckTitle = "Study Deck";
   
   const [deckVocab, setDeckVocab] = useState([]); // state for vocabulary of user's full deck
   const [tabFilteredDeckVocab, setTabFilteredDeckVocab] = useState([]); // vocab filtered by active tab filter (also data used for study session)
@@ -26,7 +26,6 @@ export default function StudyPage({ user, loadingUser}) {
   const [incorrectAnswers, setIncorrectAnswers] = useState([]);
 
   const [toastMsg, setToastMsg] = useState("");
-  const [mergedVocab, setMergedVocab] = useState([]); // ALL DATA
 
 const [defaultWords, setDefaultWords] = useState([
   { word: "谢谢", translation: "Thank you", pinyin: "xièxiè", word_type: "expression", status:"not memorized", is_active: true},
@@ -50,6 +49,7 @@ const [defaultWords, setDefaultWords] = useState([
     if (!loadingUser && (user.user_id || user.username === "Guest")) {
       hydratePage();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadingUser, user]);
 
   //rerender if tab is pressed
@@ -57,6 +57,7 @@ const [defaultWords, setDefaultWords] = useState([
     if (deckVocab.length) {
       applyFilter(activeFilter);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFilter]);
   
   // Reapply search filter whenever the tab or search bar changes
@@ -155,7 +156,6 @@ const [defaultWords, setDefaultWords] = useState([
         }))
 
         // console.log("merged vocab with status:", mergedVocab)
-        setMergedVocab(mergedVocab);
 
         const activeVocab = mergedVocab.filter(card => card.is_active === true);
 
@@ -220,14 +220,12 @@ const [defaultWords, setDefaultWords] = useState([
       const payload = {user_vocab_id: user_vocab_id}
 
       try {
-        const response = await axios.put(`${apiUrl}/study_deck/toggle`, payload, {
+        await axios.put(`${apiUrl}/study_deck/toggle`, payload, {
           headers: {
             'Content-Type': 'application/json',
           },
           withCredentials: true, // optional, keep if needed
         });    
-        const vocabItem = mergedVocab.find(vocab => vocab.user_vocab_id === user_vocab_id);
-        // console.log("Updated default words:", vocabItem);
 
         //update for UI feedback
         setDeckVocab(prevDeck => {

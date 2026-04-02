@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 import ToastNotification from "../components/ToastNotification";
 import WordHover from "../components/WordHover";
 
-export default function SearchPage({ user, loadingUser }) {
+export default function SearchPage({ loadingUser }) {
   const { vocab } = useParams();
 
   const [results, setResults] = useState(null);
@@ -13,7 +13,7 @@ export default function SearchPage({ user, loadingUser }) {
   const [toastMsg, setToastMsg] = useState("");
 
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
-  const punctuationRegex = /^[.,!?;:(){}\[\]'\"`\-。，！？；：“”【】()、\s\n\r]+$/;
+  const punctuationRegex = /^[.,!?;:(){}[\]'"`\-。，！？；：“”【】()、\s\n\r]+$/;
 
   const segmentText = async (content) => {
     try {
@@ -62,6 +62,7 @@ export default function SearchPage({ user, loadingUser }) {
 
     fetchVocab();
     console.log(results)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vocab]);
 
   const playAudio = async (word) => {
@@ -77,7 +78,7 @@ export default function SearchPage({ user, loadingUser }) {
 
   const handleAddToStudySet = async (word) => {
     try {
-      const res = await axios.post(
+      await axios.post(
         `${apiUrl}/users/study_deck`,
         { word: word },
         { withCredentials: true }
@@ -85,7 +86,7 @@ export default function SearchPage({ user, loadingUser }) {
       // console.log(res)
 
       // Pre-generate TTS on the server
-      const tts = await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
+      await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
       // console.log(tts)
 
       setToastMsg(`✅ Added ${word} to study deck!`);
@@ -196,11 +197,5 @@ export default function SearchPage({ user, loadingUser }) {
 }
 
 SearchPage.propTypes = {
-  user: PropTypes.shape({
-    user_id: PropTypes.number,
-    username: PropTypes.string,
-    email: PropTypes.string,
-    is_verified: PropTypes.bool,
-  }),
   loadingUser: PropTypes.bool,
 };

@@ -6,7 +6,6 @@ import SearchBar from "./SearchBar";
 
 export default function Header({ username = 'Guest', setUser}) {
   const [vocab, setVocab] = useState("");
-  const [isFocused, setIsFocused] = useState(false);
 
   const navigate  = useNavigate();
   const apiUrl = import.meta.env.VITE_API_BASE_URL;

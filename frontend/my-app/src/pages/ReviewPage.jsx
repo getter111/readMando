@@ -10,6 +10,7 @@ export default function ReviewPage({ user, loadingUser }) {
 
   useEffect(() => {
     fetchStories();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchStories = async () => {
@@ -20,7 +21,7 @@ export default function ReviewPage({ user, loadingUser }) {
       // console.log("Fetched stories:", storyData);
       
       setStories(storyData);
-      } catch (err) {
+      } catch {
         // console.error("Error fetching stories:", err);
         setError("Failed to load stories.");
     }

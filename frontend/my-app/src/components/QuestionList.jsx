@@ -24,10 +24,11 @@ function QuestionList({ questions, user_id, storyId }) {
             // Only save score if all questions answered
             saveProgress(Math.round((correct / total) * 100), `${correct}/${total}`); //use recalculated state, since setScore is actually async
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedAnswers, questions]); //calls everytime user answers, or when given a new question list
 
     const saveProgress = async (completion_stats, questions_correct) => {
-        const response = await axios.post(`${apiUrl}/save_progress`, {
+        await axios.post(`${apiUrl}/save_progress`, {
             "user_id": user_id, //if userid is not undefined
             "story_id": storyId,
             "completion_status": completion_stats,
