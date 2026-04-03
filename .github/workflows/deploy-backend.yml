@@ -1,0 +1,32 @@
+name: Deploy Backend to Fly.io
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**' # Only trigger if changes happen in the backend folder
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+    paths:
+      - 'backend/**'
+
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+jobs:
+  deploy:
+    # Only deploy on direct push to main OR when a PR is merged to main
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    name: Deploy backend app
+    runs-on: ubuntu-latest
+    concurrency: deploy-group    # ensure only one deployment action runs at a time
+    defaults:
+      run:
+        working-directory: backend # run commands inside the backend folder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only

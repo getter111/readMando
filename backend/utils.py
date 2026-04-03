@@ -9,7 +9,7 @@ import edge_tts
 load_dotenv()
 
 client = OpenAI(
-    api_key=os.environ.get("OPEN_API_KEY")
+    api_key=os.environ.get("OPENAI_API_KEY")
 )
 
 #return translation, pos, piyin, example sentence of unknown 子
