@@ -123,12 +123,11 @@ The frontend is hosted on [Netlify](https://readmando.netlify.app/).
 
 The backend is containerized using Docker and hosted on [Fly.io](https://fly.io/).
 
-- **Manual Deployment:** Currently, the backend does **not** auto-deploy. To deploy backend changes, you must have the Fly CLI installed and run the following from the `backend/` directory:
+- **Auto-deployment:** The backend is deployed automatically via GitHub Actions whenever changes are pushed or merged into the `main` branch.
+- **Manual fallback:** If you need to trigger a backend deployment manually, install the Fly CLI and run the following from the `backend/` directory:
   ```bash
   cd backend
   fly deploy
-  ```
-  This command reads the `fly.toml` and `Dockerfile`, rebuilds the image, and pushes the update to production.
 
 ---
 
