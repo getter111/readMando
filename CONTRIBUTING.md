@@ -41,8 +41,10 @@ cd backend
 python -m venv .venv
 
 # Activate the virtual environment
-# On Windows:
-source .venv\Scripts\activate
+# On Windows (CMD):
+.\.venv\Scripts\activate.bat
+# On Windows (PowerShell):
+.\.venv\Scripts\Activate.ps1
 # On Mac/Linux:
 source .venv/bin/activate
 
