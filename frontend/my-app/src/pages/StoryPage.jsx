@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
-import { useRef } from "react";
-
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import StoryDisplay from "../components/StoryDisplay"; 
 import QuestionList from "../components/QuestionList";
 import PropTypes from "prop-types";
-import AudioPlayer from "../components/AudioPlayer"
+import AudioPlayer from "../components/AudioPlayer";
 
 import xiaoXiaoAudio from "../assets/audio/zh-CN-XiaoxiaoNeural.mp3"; 
 import xiaoYiAudio from "../assets/audio/zh-CN-XiaoyiNeural.mp3"; 
@@ -16,8 +14,8 @@ import yunXiaAudio from "../assets/audio/zh-CN-YunxiaNeural.mp3";
 import yunXiAudio from "../assets/audio/zh-CN-YunxiNeural.mp3"; 
 import yunYangAudio from "../assets/audio/zh-CN-YunyangNeural.mp3"; 
 
-export default function StoryPage({ user, loadingUser}) {
-    const [story, setStory] = useState(null); // Ensure story is an object
+export default function StoryPage({ user, loadingUser }) {
+    const [story, setStory] = useState(null);
     const [difficulty, setDifficulty] = useState("Beginner");
     const [topic, setTopic] = useState("");
     const [vocabulary, setVocabulary] = useState("");
@@ -29,11 +27,11 @@ export default function StoryPage({ user, loadingUser}) {
     const [questions, setQuestions] = useState([]);
     const [titleAudio, setTitleAudio] = useState(null);
     const [storyAudio, setStoryAudio] = useState(null);
-    
-    //pass in production url from netlify
-    const apiUrl = import.meta.env.VITE_API_BASE_URL;
-
     const [voice, setVoice] = useState("zh-CN-YunxiaNeural");
+
+    const apiUrl = import.meta.env.VITE_API_BASE_URL;
+    const currentAudioRef = useRef(null);
+
     const voiceAudioMap = {
         "zh-CN-XiaoxiaoNeural": xiaoXiaoAudio,
         "zh-CN-XiaoyiNeural": xiaoYiAudio,
@@ -44,49 +42,47 @@ export default function StoryPage({ user, loadingUser}) {
         "zh-CN-liaoning-XiaobeiNeural": xiaoBeiAudio,
         "zh-CN-shaanxi-XiaoniNeural": xiaoNiAudio,
     };
-    //keep track of the current audio being played
-    const currentAudioRef = useRef(null);
 
-    //checks if there is a cached story on the first render
+    const cardStyle = `
+        bg-white dark:bg-gray-800 p-8 rounded-2xl border-4 border-gray-900 dark:border-white/10
+        shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,0.05)]
+        transition-all duration-300
+    `;
+
+    const inputStyle = `
+        w-full p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 
+        bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100
+        focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none
+        transition-all font-medium
+    `;
+
+    const labelStyle = `block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2`;
+
     useEffect(() => {
         if (!loadingUser && (user.user_id || user.username === "Guest")) {
             hydratePage();
         }
     }, [user, loadingUser]);
 
-    //plays voice demo for selected voice
     const playVoiceDemo = () => {
-
-        // make sure to pause and reset the prev playing audio
         if (currentAudioRef.current) {
             currentAudioRef.current.pause();
             currentAudioRef.current.currentTime = 0; 
         }
-
         const audio = new Audio(voiceAudioMap[voice]);
         currentAudioRef.current = audio;
-        audio.play().catch((error) => {
-            console.error("Error playing audio:", error);
-        });
+        audio.play().catch(console.error);
     };
 
-    // hydrates page with users most recent story
-        const hydratePage = async () => {
+    const hydratePage = async () => {
         if (user.user_id) {
-            // load from backend for logged in users
             try {
                 const response = await axios.get(`${apiUrl}/users/${user.user_id}/stories/latest`);
-                console.log("Loading data from backend for", user.username);
-
                 if (response.data) {
-                    //segment the body of the story
-                    const segmented_body = await axios.post(`${apiUrl}/stories/segment`, { 
-                        content: response.data.content
-                    });
-                    //segment the title of the story 
-                    const segmented_title = await axios.post(`${apiUrl}/stories/segment`, { 
-                        content: response.data.title
-                    });
+                    const [segmented_body, segmented_title] = await Promise.all([
+                        axios.post(`${apiUrl}/stories/segment`, { content: response.data.content }),
+                        axios.post(`${apiUrl}/stories/segment`, { content: response.data.title })
+                    ]);
                     setStory({
                         title: segmented_title.data.segmented_words,
                         content: segmented_body.data.segmented_words
@@ -96,42 +92,28 @@ export default function StoryPage({ user, loadingUser}) {
                     setStoryId(response.data.story_id);
                     setStoryAudio(response.data.story_audio);
                     setTitleAudio(response.data.title_audio);
-                    setVoice(response.data.voice)
+                    setVoice(response.data.voice);
                     setVocabulary(response.data.vocabulary || "");
                     setTopic(response.data.topic || "");
                 }     
-            } catch (err) {
-                console.error("Error fetching user story", err);
-            }
+            } catch (err) { console.error(err); }
         } else if (user.username === "Guest") {
-            // load from localStorage for guest users
-            // console.log("Loading data from localStorage for", user.username);
-            const localStory = localStorage.getItem("story");
-            const localDifficulty = localStorage.getItem("difficulty");
-            const localQuestions = localStorage.getItem("questions");
-            const localStoryId = localStorage.getItem("storyId");
-            const localTitleAudio = localStorage.getItem("titleAudio");
-            const localStoryAudio = localStorage.getItem("storyAudio");
-            const localVoiceAudio = localStorage.getItem("voiceAudio");
-            const localTopic = localStorage.getItem("topic");
-            const localVocabulary = localStorage.getItem("vocabulary");
+            const localData = ['story', 'difficulty', 'questions', 'storyId', 'titleAudio', 'storyAudio', 'voiceAudio', 'topic', 'vocabulary'].reduce((acc, key) => {
+                acc[key] = localStorage.getItem(key);
+                return acc;
+            }, {});
             
-            if (localStory && localDifficulty) {
-                const parsedStory = JSON.parse(localStory);
-
-                setStory(parsedStory);
-                setDifficulty(localDifficulty);
-                setStoryId(localStoryId ? Number(localStoryId) : null);
-                setStoryAudio(localTitleAudio);
-                setTitleAudio(localStoryAudio);
+            if (localData.story) {
+                setStory(JSON.parse(localData.story));
+                setDifficulty(localData.difficulty);
+                setStoryId(localData.storyId ? Number(localData.storyId) : null);
+                setStoryAudio(localData.storyAudio);
+                setTitleAudio(localData.titleAudio);
+                if (localData.questions) setQuestions(JSON.parse(localData.questions));
+                if (localData.voiceAudio) setVoice(localData.voiceAudio);
+                if (localData.topic) setTopic(localData.topic);
+                if (localData.vocabulary) setVocabulary(localData.vocabulary);
             }
-            if (localQuestions){
-                const parsedQuestions = JSON.parse(localQuestions);
-                setQuestions(parsedQuestions);
-            } 
-            if (localVoiceAudio) setVoice(localVoiceAudio);
-            if (localTopic) setTopic(localTopic);
-            if (localVocabulary) setVocabulary(localVocabulary);
         }
     };
 
@@ -139,46 +121,33 @@ export default function StoryPage({ user, loadingUser}) {
         setLoading(true);
         setError("");
         setStory(null);
-        setQuestions([]); //unmount previous questions component
+        setQuestions([]);
         try {
-            console.log("Generating story... ");
-            //first generates the story, then need to use jieba to segment the story into individual words
-            const response = await axios.post(`${apiUrl}/stories`,{
-                difficulty: difficulty,
-                vocabulary: vocabulary.split(",").map(word => word.trim()), //takes vocab string -> string[]
-                topic: topic,
-                user: { //user is pydantic model so access with dot notation
-                    user_id: user.user_id || "Guest",
-                    is_verified: user.is_verified || false
-                },
-                voice: voice
+            const response = await axios.post(`${apiUrl}/stories`, {
+                difficulty,
+                vocabulary: vocabulary.split(",").map(word => word.trim()),
+                topic,
+                user: { user_id: user.user_id || "Guest", is_verified: user.is_verified || false },
+                voice
             });
         
-            //segment the body of the story
-            const segmented_body = await axios.post(`${apiUrl}/stories/segment`, { 
-                content: response.data.content
-            });
-            //segment the title of the story 
-            const segmented_title = await axios.post(`${apiUrl}/stories/segment`, { 
-                content: response.data.title
-            });
+            const [segmented_body, segmented_title] = await Promise.all([
+                axios.post(`${apiUrl}/stories/segment`, { content: response.data.content }),
+                axios.post(`${apiUrl}/stories/segment`, { content: response.data.title })
+            ]);
 
-            setStory({
-                title: segmented_title.data.segmented_words, //title -> []
-                content: segmented_body.data.segmented_words //content -> []
-            })
-            setStoryId(response.data.story_id)
+            const newStory = {
+                title: segmented_title.data.segmented_words,
+                content: segmented_body.data.segmented_words
+            };
+            setStory(newStory);
+            setStoryId(response.data.story_id);
             setTitleAudio(response.data.title_audio);
             setStoryAudio(response.data.story_audio);
 
-            //cache the story in case guest refreshes the page
             if (!user.user_id) {
-                localStorage.setItem("story", JSON.stringify({
-                    title: segmented_title.data.segmented_words,
-                    content: segmented_body.data.segmented_words
-                }));
+                localStorage.setItem("story", JSON.stringify(newStory));
                 localStorage.setItem("difficulty", difficulty);
-                localStorage.setItem("storyId", response.data.story_id);
                 localStorage.setItem("storyId", response.data.story_id);
                 localStorage.setItem("titleAudio", response.data.title_audio);
                 localStorage.setItem("storyAudio", response.data.story_audio);
@@ -186,192 +155,173 @@ export default function StoryPage({ user, loadingUser}) {
                 localStorage.setItem("topic", topic);
                 localStorage.setItem("vocabulary", vocabulary);
             }
-
         } catch (error) {
             setError("Failed to generate story. Try again!");
-            console.error("Error generating story", error);
         } finally {
-            setLoading(false);//reset loading state
+            setLoading(false);
         }
     };
 
     const fetchQuestions = async () => {
-        if (questions.length <= 0){
+        if (questions.length <= 0) {
             setLoadingQuestions(true);
-            setError("");
             try {
-                console.log("Generating questions... ");
                 const response = await axios.post(`${apiUrl}/stories/questions`, {
-                    story: story.content.join(""), // convert content & title array into a string
+                    story: story.content.join(""),
                     title: story.title.join(""), 
-                    difficulty: difficulty,
+                    difficulty,
                     story_id: storyId
                 });
-                if (user.user_id) {
-                    setQuestions(response.data)
-                } else if (user.username === "Guest") {
-                    setQuestions(response.data);
-                    // cache the questions[dict] in case guest refreshes the page
-                    localStorage.setItem("questions", JSON.stringify(response.data));
-                }
+                setQuestions(response.data);
+                if (!user.user_id) localStorage.setItem("questions", JSON.stringify(response.data));
             } catch (error) {
                 setError("Failed to generate questions. Try again!");
-                console.error("Error generating questions", error);
             } finally {
                 setLoadingQuestions(false);
             }
-        } else{
-            console.log("questions already been generated.");
         }
-            
-    }
+    };
 
     return (
-        <div className="bg-gray-100 flex flex-col w-full">
-            <main className="container mx-auto p-6 flex-grow">
-                <h1 className="text-3xl font-bold text-center mb-6">Short Story Generator</h1>
+        <div className="flex flex-col w-full pb-20">
+            <main className="container mx-auto px-6 max-w-7xl">
+                <div className="mb-12 text-center fade-up">
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white mb-4">
+                        Story <span className="text-blue-600">Generator</span>
+                    </h1>
+                    <p className="text-gray-500 dark:text-gray-400 font-medium max-w-2xl mx-auto">
+                        Personalize your learning experience with AI-generated stories tailored to your level and vocabulary.
+                    </p>
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                    <div className="bg-white p-6 rounded-lg shadow-md flex flex-col justify-between h-full ">
-                        <div className="flex flex-col gap-2">
-                            <h2 className="text-xl font-semibold mb-4">Customize Your Story</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Controls Sidebar */}
+                    <div className="lg:col-span-5 fade-up" style={{ animationDelay: '100ms' }}>
+                        <div className={`${cardStyle} sticky top-28`}>
+                            <h2 className="text-2xl font-black mb-8 flex items-center gap-3 dark:text-white">
+                                <span className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">⚙️</span>
+                                Customize
+                            </h2>
 
-                            <div className="mb-4">
-                                <label className="block font-semibold mb-1">Skill Level:</label>
-                                <select
-                                    className="w-full p-2 border rounded cursor-pointer"
-                                    value={difficulty}
-                                    onChange={(e) => setDifficulty(e.target.value)}
-                                >
-                                    <option value="Beginner">Beginner</option>
-                                    <option value="Intermediate">Intermediate</option>
-                                    <option value="Advanced">Advanced</option>
-                                </select>
-                            </div>
+                            <div className="space-y-6">
+                                <div>
+                                    <label className={labelStyle}>Skill Level</label>
+                                    <select className={inputStyle} value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+                                        <option value="Beginner">Beginner</option>
+                                        <option value="Intermediate">Intermediate</option>
+                                        <option value="Advanced">Advanced</option>
+                                    </select>
+                                </div>
 
-                            <div className="mb-4">
-                                <label className="block font-semibold mb-1">Vocabulary (comma-separated words):</label>
-                                <input
-                                    type="text"
-                                    className="w-full p-2 border rounded"
-                                    value={vocabulary}
-                                    onChange={(e) => setVocabulary(e.target.value)}
-                                    placeholder="Example: quintessential, eloquent, job, applications"
-                                />
-                            </div>
+                                <div>
+                                    <label className={labelStyle}>Specific Vocabulary</label>
+                                    <textarea 
+                                        className={`${inputStyle} h-24 resize-none`}
+                                        value={vocabulary}
+                                        onChange={(e) => setVocabulary(e.target.value)}
+                                        placeholder="Add specific words you're studying..."
+                                    />
+                                </div>
 
-                            <div className="mb-4">
-                                <label className="block font-semibold mb-1">Topic:</label>
-                                <input
-                                    type="text"
-                                    className="w-full p-2 border rounded"
-                                    value={topic}
-                                    onChange={(e) => setTopic(e.target.value)}
-                                    placeholder="Example: exploring space and earth to find aliens, how to apply for a job?"
-                                />
-                            </div>
-                            
-                            <div className="mb-4">
-                                <label className="block font-semibold mb-1">Voice:</label>
-                                <select
-                                    className="w-full p-2 border rounded cursor-pointer"
-                                    value={voice}
-                                    onChange={(e) => setVoice(e.target.value)}
-                                >
-                                    <option value="zh-CN-YunxiaNeural">
-                                        Yunxia 云夏 (Male, Cute, Cartoon/Novel)
-                                    </option>
-                                    <option value="zh-CN-XiaoyiNeural">
-                                        Xiaoyi 小艺 (Female, Lively, Cartoon/Novel)
-                                    </option>
-                                    <option value="zh-CN-YunyangNeural">
-                                        Yunyang 云阳 (Male, Professional/Reliable, News)
-                                    </option>
-                                    <option value="zh-CN-XiaoxiaoNeural">
-                                        Xiaoxiao 小晓 (Female, Warm, News/Novel)
-                                    </option>
-                                    <option value="zh-CN-YunjianNeural">
-                                        Yunjian 云健 (Male, Passion, Sports/Novel)
-                                    </option>
-                                    <option value="zh-CN-YunxiNeural">
-                                        Yunxi 云希 (Male, Lively/Sunshine, Novel)
-                                    </option>
-                                    <option value="zh-CN-liaoning-XiaobeiNeural">
-                                        Xiaobei 小贝 (Female, Humorous, Liaoning Dialect)
-                                    </option>
-                                    <option value="zh-CN-shaanxi-XiaoniNeural">
-                                        Xiaoni 小妮 (Female, Bright, Shaanxi Dialect)
-                                    </option>
-                                </select>
+                                <div>
+                                    <label className={labelStyle}>Story Topic</label>
+                                    <input 
+                                        type="text" 
+                                        className={inputStyle}
+                                        value={topic}
+                                        onChange={(e) => setTopic(e.target.value)}
+                                        placeholder="A trip to Mars, a busy coffee shop..."
+                                    />
+                                </div>
                                 
+                                <div>
+                                    <label className={labelStyle}>Narrator Voice</label>
+                                    <div className="flex gap-2">
+                                        <select className={inputStyle} value={voice} onChange={(e) => setVoice(e.target.value)}>
+                                            <option value="zh-CN-YunxiaNeural">Yunxia 云夏 (Male, Cute)</option>
+                                            <option value="zh-CN-XiaoyiNeural">Xiaoyi 小艺 (Female, Lively)</option>
+                                            <option value="zh-CN-YunyangNeural">Yunyang 云阳 (Male, News)</option>
+                                            <option value="zh-CN-XiaoxiaoNeural">Xiaoxiao 小晓 (Female, Warm)</option>
+                                            <option value="zh-CN-YunjianNeural">Yunjian 云健 (Male, Sports)</option>
+                                            <option value="zh-CN-YunxiNeural">Yunxi 云希 (Male, Sunshine)</option>
+                                        </select>
+                                        <button 
+                                            onClick={playVoiceDemo}
+                                            className="p-3 bg-gray-900 dark:bg-gray-100 dark:text-gray-900 text-white rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg"
+                                            title="Play Voice Demo"
+                                        >
+                                            🔊
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <button
-                                    type="button"
-                                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 cursor-pointer mt-2 transition"
-                                    onClick={playVoiceDemo}
-                                    aria-label={`Play voice demo of ${voice} button`}
+                                    onClick={fetchStory}
+                                    disabled={loading}
+                                    className={`
+                                        w-full py-4 mt-4 rounded-2xl font-black text-lg transition-all
+                                        ${loading 
+                                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                                            : 'bg-blue-600 text-white border-4 border-gray-900 dark:border-white/10 shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,0.1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)] active:translate-y-[1px] active:shadow-none'
+                                        }
+                                    `}
                                 >
-                                    ▶️ Play Voice Demo
+                                    {loading ? 'Generating...' : '✨ Generate Story'}
                                 </button>
+                                {error && <p className="text-red-500 font-bold text-center text-sm">{error}</p>}
                             </div>
                         </div>
-                        <div className="space-y-2 mt-4">
-                            <button
-                                onClick={fetchStory}
-                                disabled={loading}
-                                className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-gray-400 cursor-pointer"
-                                aria-label={`Generate story button`}
-                            >
-                                Generate Story
-                            </button>
-                            {/* <button
-                                // onClick={fetchStory}
-                                disabled={loading}
-                                className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600 transition disabled:bg-gray-400 cursor-pointer"
-                            >
-                                Clear Story
-                            </button> */}
-                        </div>
-
-                        {error && <p className="text-red-500 mt-2">{error}</p>}
                     </div>
 
-                    <div className="bg-white p-6 rounded-lg shadow-md flex flex-col justify-between h-full">
-                        <h2 className="text-xl font-semibold mb-4">Generated Story:</h2>
-
-                        {loading ? (
-                            <div className="text-gray-500 flex-auto">Generating story...</div>
-                        ) : story ? (
-                            <>
-                                {titleAudio && storyAudio && (
-                                    <div className="bg-gray-50 border p-4 rounded-md shadow-sm mb-4">
-                                        <div className="flex flex-col sm:flex-row sm:space-x-6 space-y-4 sm:space-y-0">
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold mb-1">Title Audio:</p>
-                                                <AudioPlayer audioUrl={titleAudio} />
-                                            </div>
-
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold mb-1">Story Audio:</p>
-                                                <AudioPlayer audioUrl={storyAudio} />
-                                            </div>
+                    {/* Result Content */}
+                    <div className="lg:col-span-7 fade-up" style={{ animationDelay: '200ms' }}>
+                        <div className={`${cardStyle} min-h-[600px] flex flex-col`}>
+                            {loading ? (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                    <div className="w-16 h-16 border-8 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                                    <h3 className="text-xl font-black dark:text-white">Crafting your story...</h3>
+                                    <p className="text-gray-500">Choosing the best vocabulary and plot twists.</p>
+                                </div>
+                            ) : story ? (
+                                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                    {(titleAudio || storyAudio) && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-2 border-gray-900 dark:border-white/10">
+                                            {titleAudio && (
+                                                <div>
+                                                    <label className={labelStyle}>Title Audio</label>
+                                                    <AudioPlayer audioUrl={titleAudio} />
+                                                </div>
+                                            )}
+                                            {storyAudio && (
+                                                <div>
+                                                    <label className={labelStyle}>Full Story Audio</label>
+                                                    <AudioPlayer audioUrl={storyAudio} />
+                                                </div>
+                                            )}
                                         </div>
+                                    )}
+                                    
+                                    <div className="prose dark:prose-invert max-w-none">
+                                        <StoryDisplay 
+                                            story={story} 
+                                            fetchQuestions={fetchQuestions} 
+                                            loadingQuestions={loadingQuestions} 
+                                        />
                                     </div>
-                                )}
-                                
-                                <StoryDisplay 
-                                    story={story} 
-                                    fetchQuestions={fetchQuestions} 
-                                    loadingQuestions={loadingQuestions} 
-                                />
-                            </>
-                        ) : (
-                            <div className="text-gray-500 flex-auto">No story generated yet.</div>
-                        )}
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center py-20">
+                                    <div className="text-6xl mb-6 grayscale opacity-20">📚</div>
+                                    <h3 className="text-xl font-black text-gray-300 dark:text-gray-600">No story generated yet.</h3>
+                                    <p className="text-gray-400 dark:text-gray-700 max-w-xs mx-auto">Fill in the details on the left to start your reading adventure!</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
+
                 {questions.length > 0 && typeof storyId === "number" && (
-                    <div className="bg-white mt-6 p-6 rounded-lg shadow-md">
-                        {/* {console.log(user.user_id)} */}
+                    <div className={`${cardStyle} mt-8 fade-up`}>
                         <QuestionList questions={questions} user_id={user.user_id} storyId={storyId} />
                     </div>
                 )}
@@ -387,5 +337,5 @@ StoryPage.propTypes = {
     email: PropTypes.string,
     is_verified: PropTypes.bool,
   }),
-    loadingUser: PropTypes.bool.isRequired,
+  loadingUser: PropTypes.bool.isRequired,
 };

@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Cookie, Response, Body, Query
+from fastapi import FastAPI, HTTPException, Cookie, Response, Body, Query, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
 from datetime import datetime, timedelta, timezone
@@ -11,7 +11,11 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 import base64
 
 import models
-from supaDB import supabase, user_crud, vocabulary_crud, story_crud, question_crud, user_vocabulary_crud, user_stories_crud, progress_crud
+from supaDB import (
+    supabase, user_crud, vocabulary_crud, story_crud, question_crud,
+    user_vocabulary_crud, user_stories_crud, progress_crud, pdf_crud,
+    PDF_BUCKET_NAME
+)
 from storyGenerator import generateStory
 from email_utils import send_verification_email
 from utils import text_to_audio, add_vocabulary_to_db, auto_fetch, generateQuestions
@@ -20,6 +24,10 @@ from fastapi.responses import RedirectResponse, StreamingResponse
 from io import BytesIO
 from gtts import gTTS
 from auth import create_token, decode_token
+from pdf_parser import extract_pdf_content
+import logging
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -651,3 +659,137 @@ async def get_story_questions(story_id: int):
     except Exception as e:
         print(str(e))
         raise HTTPException(status_code=500, detail="Failed to fetch questions")
+
+import fitz # PyMuPDF
+import re
+
+@app.post("/pdfs/upload")
+async def upload_pdf(
+    file: UploadFile = File(...),
+    readmando_session: Optional[str] = Cookie(None)
+):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail="Missing session cookie")
+    
+    try:
+        payload = decode_token(readmando_session)
+        user_id = payload["user_id"]
+        user = user_crud.get_user(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Generate unique filename
+        filename = f"{uuid4()}_{file.filename}"
+        file_content = await file.read()
+        
+        # Upload to Supabase Storage
+        from supaDB import PDF_BUCKET_NAME, pdf_crud
+        supabase.storage.from_(PDF_BUCKET_NAME).upload(
+            filename,
+            file_content,
+            {"content-type": "application/pdf"}
+        )
+        
+        # Save to DB
+        pdf_data = models.PdfCreate(
+            original_file_name=file.filename,
+            storage_path=filename,
+            mime_type=file.content_type or "application/pdf",
+            uploaded_by=user_id,
+            is_global=False # default to false for normal users
+        )
+        
+        created_pdf = pdf_crud.create_pdf(pdf_data)
+        return created_pdf
+
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=f"Failed to upload PDF: {str(e)}")
+
+@app.get("/pdfs")
+async def list_pdfs(readmando_session: Optional[str] = Cookie(None)):
+    from supaDB import pdf_crud
+    try:
+        if not readmando_session:
+            # Unauthenticated users only get global PDFs
+            return pdf_crud.get_global_pdfs()
+            
+        payload = decode_token(readmando_session)
+        user_id = payload["user_id"]
+        pdfs = pdf_crud.get_pdfs_by_user(user_id)
+        return pdfs
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Failed to fetch PDFs")
+
+@app.delete("/pdfs/{pdf_id}")
+async def delete_pdf(pdf_id: str, readmando_session: Optional[str] = Cookie(None)):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail="Missing session cookie")
+    
+    try:
+        payload = decode_token(readmando_session)
+        user_id = payload["user_id"]
+        from supaDB import pdf_crud, PDF_BUCKET_NAME
+        
+        pdf = pdf_crud.get_pdf_by_id(pdf_id)
+        if not pdf:
+            raise HTTPException(status_code=404, detail="PDF not found")
+            
+        if pdf["uploaded_by"] != user_id:
+            raise HTTPException(status_code=403, detail="You do not have permission to delete this PDF")
+
+        # Delete from storage
+        supabase.storage.from_(PDF_BUCKET_NAME).remove([pdf["storage_path"]])
+        
+        # Delete from DB
+        pdf_crud.delete_pdf(pdf_id)
+        
+        return {"message": "PDF deleted successfully"}
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Failed to delete PDF")
+
+@app.post("/pdfs/{pdf_id}/parse")
+async def parse_pdf(
+    pdf_id: str,
+    chapter_number: Optional[int] = Body(None),
+    readmando_session: Optional[str] = Cookie(None)
+):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail="Missing session cookie")
+        
+    try:
+        from supaDB import pdf_crud, PDF_BUCKET_NAME
+        pdf = pdf_crud.get_pdf_by_id(pdf_id)
+        if not pdf:
+            raise HTTPException(status_code=404, detail="PDF not found")
+            
+        # Download PDF from storage
+        # Need to read as bytes for PyMuPDF
+        res = supabase.storage.from_(PDF_BUCKET_NAME).download(pdf["storage_path"])
+        
+        # Parse PDF
+        doc = fitz.open(stream=res, filetype="pdf")
+        full_text = ""
+        for page in doc:
+            full_text += page.get_text()
+            
+        # Basic parsing (like the summarize chapter skill)
+        # We can extract a specific chapter if requested, otherwise return all text
+        # For simplicity, returning the first 5000 characters if no chapter is found
+        parsed_content = full_text
+        if chapter_number is not None:
+            # simple regex to find chapter
+            pattern = re.compile(f"Chapter\\s+{chapter_number}.*?(?=Chapter\\s+{chapter_number + 1}|$)", re.DOTALL | re.IGNORECASE)
+            match = pattern.search(full_text)
+            if match:
+                parsed_content = match.group(0)
+            else:
+                parsed_content = "Chapter not found. Returning partial text: \n\n" + full_text[:5000]
+                
+        return {"content": parsed_content[:5000]} # Limit to avoid massive payload
+        
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=f"Failed to parse PDF: {str(e)}")
