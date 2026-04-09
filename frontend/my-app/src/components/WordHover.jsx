@@ -9,7 +9,7 @@ const apiUrl = import.meta.env.VITE_API_BASE_URL;
 function WordHover({ word }) {
     const [translation, setTranslation] = useState("");
     const [pinyin, setPinyin] = useState("");
-    const [partOfSpeech, setPartOfSpeech] = useState("")
+    const [partOfSpeech, setPartOfSpeech] = useState("");
 
     const [isLoading, setIsLoading] = useState(false);
     const [notFound, setNotFound] = useState(false);
@@ -31,22 +31,15 @@ function WordHover({ word }) {
     async function fetchTranslation() {
         const localValue = localStorage.getItem(localKey);
         if (localValue) {
-            // console.log(`💾 Used localStorage for ${word}`);
             setState(JSON.parse(localValue));
             return;
         }
-        //fetch word from backend
         setIsLoading(true);
         try {
-            // console.log(`🔍 Fetching translation for: ${word}`);
             const response = await axios.get(`${apiUrl}/vocabulary/${word}`);
-            // console.log(response.data[0])
-
             if (!response.data || response.data.length === 0 || response.data[0]?.statusCode) {
-                // Manually trigger auto-generation if word not found
                 throw { isAxiosError: true, response: { status: 404 } };
             }
-
             const definition = {
                 word: response.data[0].word,
                 translation: response.data[0].translation,
@@ -54,41 +47,30 @@ function WordHover({ word }) {
                 wordType: response.data[0].word_type,
             }
             localStorage.setItem(localKey, JSON.stringify(definition));
-            setState(definition)
-
-            // console.log(definition)
-            // console.log(response)  
+            setState(definition);
         } catch (error) {
-            //404 return from /vocabulary/{word}, so we auto-fetch unknown word from backend
             if (axios.isAxiosError(error) && error.response?.status === 404) {
-                // console.log(`${error}, ${word} not found. auto generating...`);
                 setNotFound(true);
                 setHighlight("not-found");
-
                 try {
-                    const newWord = await axios.post(`${apiUrl}/vocabulary`, {
-                        vocab: word
-                    });
+                    const newWord = await axios.post(`${apiUrl}/vocabulary`, { vocab: word });
                     const definition = {
                         word: newWord.data.word,
                         translation: newWord.data.translation,
                         pinyin: newWord.data.pinyin,
                         wordType: newWord.data.word_type,
                     }
-
                     localStorage.setItem(localKey, JSON.stringify(definition));
-                    setState(definition)
+                    setState(definition);
                     setHighlight("found");
                 } catch (autoFetchError) {
-                    // console.error(`❌ auto-fetch API ${autoFetchError}`);
                     setNotFound(true);
                 }
             } else {
-                // console.error(`Error in fetchTranslation()? ${error}`);
                 setNotFound(true);
             }
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
     }   
 
@@ -96,14 +78,10 @@ function WordHover({ word }) {
         const nextState = !showTooltip;
         setShowTooltip(nextState);
         setHighlight(nextState ? "found" : "");
-
-        if (nextState) {
-            fetchTranslation();
-        }
+        if (nextState) fetchTranslation();
     };
 
     const handleClickOutside = (e) => {
-        //if user clicks an element outside this toolkit
         if (tooltipRef.current && !tooltipRef.current.contains(e.target)) {
             setShowTooltip(false);
             setHighlight("");
@@ -121,96 +99,79 @@ function WordHover({ word }) {
 
     const handleAddToStudySet = async () => {
         try {
-            await axios.post(`${apiUrl}/users/study_deck`, {
-                word: word, 
-            }, { withCredentials: true });
-
-            //pre-generate tts audio to fix slow on first generation
-            const tts = await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
-            // console.log(tts)
+            await axios.post(`${apiUrl}/users/study_deck`, { word }, { withCredentials: true });
+            await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
             setToastMsg(`✅ Added ${word} to study deck!`);
         } catch (error) {
-            if (axios.isAxiosError(error)) {
-                if (error.response?.status === 409) {
-                    setToastMsg(`⚠️ ${word} already in study deck`);               
-                } else {
-                    setToastMsg("❌ Failed to add word. Please Login.");
-                }
+            if (axios.isAxiosError(error) && error.response?.status === 409) {
+                setToastMsg(`⚠️ ${word} already in study deck`);               
             } else {
-                setToastMsg("❌ An unexpected error occurred.");
+                setToastMsg("❌ Please Login to save words.");
             }
         }
     };
 
-return (
-    <>
-        {toastMsg && (
-            <ToastNotification message={toastMsg} onClose={() => setToastMsg("")} duration={3000} />
-        )}
-        <div
-            className="relative inline-block"
-        >
-            <span
-                onClick={toggleTooltip}
-                className={`  border-b border-dotted cursor-pointer transition ${
-                    highlight === "found"
-                        ? "bg-green-600 text-white"
-                        : highlight === "not-found"
-                        ? "bg-yellow-200 text-black"
-                        : "hover:bg-yellow-200 transition"
-                } rounded`}
-            >
-                {word}
-            </span>
-            {showTooltip && (
-                <div
-                    ref={tooltipRef}
-                    className="fixed sm:absolute bottom-0 sm:bottom-full left-0 sm:left-1/2 sm:-translate-x-1/2 w-full sm:w-max max-w-xs bg-white text-base text-black p-4 sm:rounded-xl rounded-t-xl shadow-lg z-50 whitespace-normal pointer-events-auto max-h-60 sm:max-h-60 overflow-y-auto"
+    return (
+        <>
+            {toastMsg && <ToastNotification message={toastMsg} onClose={() => setToastMsg("")} duration={3000} />}
+            <div className="relative inline-block">
+                <span
+                    onClick={toggleTooltip}
+                    className={`cursor-pointer transition-all duration-200 border-b-2 border-dashed border-gray-400 dark:border-gray-600 px-0.5 rounded-sm ${
+                        highlight === "found"
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-500"
+                            : highlight === "not-found"
+                            ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-500"
+                            : "hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                    }`}
                 >
-                    {isLoading ? (
-                        <p className="text-gray-600 dark:text-gray-300">⏳ Loading...</p>
-                    ) : notFound ? (
-                        <p className="font-medium">❌ Word not found. Hang tight — generating it now...</p>
-                    ) : (
-                        <>
-                            <p className="font-bold text-lg text-gray-900">
-                                <span>Word: </span>
-                                <span className="font-semibold text-xl">{word}</span>
-                            </p>
-                            {pinyin && (
-                                <p className="font-semibold text-base text-gray-800">
-                                    <span>Pinyin: </span>
-                                    <span>{pinyin}</span>
-                                </p>
-                            )}
-                            {translation && (
-                                <p className="font-semibold text-base text-gray-800">
-                                    <span>Translation: </span>
-                                    <span>{translation}</span>
-
-                                </p>
-                            )}
-                            {partOfSpeech && (
-                                <p className="font-semibold text-base text-gray-800">
-                                    <span>Part of Speech: </span>
-                                    <span>{partOfSpeech}</span>
-                                </p>
-                            )}
-                            <button
-                                onClick={handleAddToStudySet}
-                                className="mt-2 bg-blue-600 focus:outline-none focus:ring-2 font-semibold focus:ring-blue-400 focus:ring-offset-2 hover:bg-blue-700 text-white px-3 py-1 rounded-xl text-base cursor-pointer w-full sm:w-auto transition"
-                                aria-label={`Add ${translation} to study deck button`}
-                            >
-                                Add to Study Set
-                            </button>
-                        </>
-                    )}
-                </div>
-            )}
-        </div>
-    </>
-);
-
+                    {word}
+                </span>
+                {showTooltip && (
+                    <div
+                        ref={tooltipRef}
+                        className="fixed sm:absolute bottom-4 sm:bottom-full left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-max max-w-xs bg-white dark:bg-gray-800 p-6 rounded-2xl border-4 border-gray-900 dark:border-white/10 shadow-[8px_8px_0_0_rgba(0,0,0,1)] dark:shadow-[8px_8px_0_0_rgba(255,255,255,0.05)] z-50 animate-in fade-in zoom-in-95 duration-200"
+                    >
+                        {isLoading ? (
+                            <div className="flex items-center gap-3">
+                                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                <p className="text-sm font-black dark:text-white uppercase tracking-widest">Translating...</p>
+                            </div>
+                        ) : notFound ? (
+                            <p className="text-sm font-bold text-red-500">❌ Character not found. We'll add it soon!</p>
+                        ) : (
+                            <div className="space-y-4">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">Character</p>
+                                    <p className="text-4xl font-black text-gray-900 dark:text-white">{word}</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Pinyin</p>
+                                        <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{pinyin}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Type</p>
+                                        <p className="text-sm font-bold dark:text-gray-200">{partOfSpeech}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Definition</p>
+                                    <p className="font-bold text-gray-700 dark:text-gray-300 italic">{translation}</p>
+                                </div>
+                                <button
+                                    onClick={handleAddToStudySet}
+                                    className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-black py-2.5 rounded-xl border-2 border-transparent hover:bg-blue-600 dark:hover:bg-blue-400 transition-all text-sm uppercase tracking-wider"
+                                >
+                                    + Add to Deck
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </>
+    );
 }
 
 WordHover.propTypes = {

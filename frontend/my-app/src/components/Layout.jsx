@@ -5,11 +5,11 @@ import PropTypes from "prop-types";
 
 export default function Layout({ username, setUser }) {
     return (
-        <div className="bg-gray-100 min-h-screen flex flex-col">
-            <nav>
-                <Header username={username} setUser={setUser}/>
-            </nav>
-            <Outlet />
+        <div className="bg-transparent min-h-screen flex flex-col transition-colors duration-300">
+            <Header username={username} setUser={setUser}/>
+            <div className="pt-24 sm:pt-28 flex-grow">
+                <Outlet />
+            </div>
         </div>
     );
 }

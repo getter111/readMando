@@ -1,10 +1,39 @@
 @import "tailwindcss";
 
-html, body, #root {
-  height: 100%;
+@theme {
+  --color-primary: #3b82f6;
+  --color-secondary: #10b981;
+}
+
+/* Explicitly enable class-based dark mode for Tailwind v4 */
+@variant dark (&:where(.dark, .dark *));
+
+/* Standard CSS Variables for Theme */
+:root {
+  --app-bg: #faf9f6;
+  --app-text: #111827;
+}
+
+.dark {
+  --app-bg: #0a0a0a;
+  --app-text: #f3f4f6;
+}
+
+html {
+  transition: background-color 0.3s ease;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* Force global background and text colors using variables */
+body {
+  background-color: var(--app-bg);
+  color: var(--app-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
   margin: 0;
-  padding: 0;
-  /* overflow: hidden */
+  min-height: 100vh;
 }
 
 .fade-up {
@@ -18,4 +47,23 @@ html, body, #root {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@layer utilities {
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+}
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
 }

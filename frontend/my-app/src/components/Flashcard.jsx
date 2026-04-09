@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import axios from "axios";
+
 export default function Flashcard({ dictionary, onFeedback, flipped, setFlipped}) {
     const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -21,74 +22,68 @@ export default function Flashcard({ dictionary, onFeedback, flipped, setFlipped}
         onFeedback && onFeedback(type, dictionary);
     }
 
+    const sideStyle = `
+        bg-white dark:bg-gray-800 border-4 border-gray-900 dark:border-white/10 rounded-3xl
+        shadow-[8px_8px_0_0_rgba(0,0,0,1)] dark:shadow-[8px_8px_0_0_rgba(255,255,255,0.05)]
+        p-8 flex flex-col justify-between items-center w-full h-full
+        transition-all duration-300 transform
+    `;
+
     return (
         <div
-            className="w-72 h-44 sm:w-80 sm:h-52 md:w-[350px] md:h-[220px] lg:w-[400px] lg:h-[250px] cursor-pointer"
-            onClick={() => handleFlip()}
+            className="w-full max-w-sm aspect-[3/2] cursor-pointer perspective-1000"
+            onClick={handleFlip}
         >
-
-        {!flipped ? ( 
-            <>
-                {/* Front */}
-                <div className="bg-white border rounded-xl shadow p-6 flex flex-col justify-around w-full h-full hover:shadow-lg transition items-center">
-                    <div className="flex flex-col items-center text-center">
-                        <p className="text-3xl font-extrabold text-gray-900 ">{dictionary.word}</p>
-                        <p className="text-xl text-gray-700 mt-1">{dictionary.pinyin}</p>
+            {!flipped ? ( 
+                <div className={`${sideStyle} hover:translate-y-[-4px]`}>
+                    <div className="flex flex-col items-center text-center mt-4">
+                        <p className="text-5xl font-black text-gray-900 dark:text-white mb-2">{dictionary.word}</p>
+                        <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{dictionary.pinyin}</p>
                         
                         <button
-                            onClick={(e) => handleAudio(e)}
-                            className="mt-3 text-xl hover:bg-yellow-200 p-2 transition cursor-pointer rounded-full"
-                            aria-label={`Play audio of ${dictionary.translation}`}
+                            onClick={handleAudio}
+                            className="mt-6 p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-2xl hover:scale-110 active:scale-95 transition-all"
                         >
                             🔊
                         </button>
                     </div>
-                    <p className="text-sm text-gray-400 mt-3 select-none">Tap to see translation</p>
+                    <p className="text-xs font-black uppercase tracking-widest text-gray-400 animate-pulse">Tap to reveal</p>
                 </div> 
-            </>
-        ) :
-        (
-            <>
-                {/* Back */}
-                <div className="bg-gray-50 border rounded-xl shadow p-6 flex flex-col justify-around items-center content-start hover:shadow-lg transition w-full h-full">
+            ) : (
+                <div className={`${sideStyle} bg-gray-50 dark:bg-gray-900`}>
                     <div className="flex flex-col items-center text-center">
-                        <p className="text-2xl font-extrabold text-gray-900">{dictionary.translation}</p>
-                        <p className="text-xl text-gray-700 mt-1">[{dictionary.word_type}]</p>
+                        <p className="text-3xl font-black text-gray-900 dark:text-white mb-1">{dictionary.translation}</p>
+                        <span className="px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                            {dictionary.word_type}
+                        </span>
                     </div>
 
-                    <div className="flex justify-between gap-2 mt-4 ">
+                    <div className="grid grid-cols-3 gap-3 w-full mt-8">
                         <button
                             onClick={(e) => handleFeedback(e, "again")}
-                            className="bg-red-200 text-red-800 text-lg font-bold px-4 py-2 rounded-md hover:bg-red-300 transition cursor-pointer"
-                            aria-label={`${dictionary.word} was difficult study again`}
-
+                            className="bg-red-500 text-white font-black py-3 rounded-xl border-2 border-gray-900 shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-none transition-all text-xs uppercase"
                         >
                             Again
                         </button>
 
                         <button
                             onClick={(e) => handleFeedback(e, "good")}
-                            className="bg-yellow-200 text-yellow-800 text-lg font-bold px-4 py-2 rounded hover:bg-yellow-300 transition cursor-pointer"
-                            aria-label={`I knew ${dictionary.word} it was good`}
-
+                            className="bg-yellow-400 text-gray-900 font-black py-3 rounded-xl border-2 border-gray-900 shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-none transition-all text-xs uppercase"
                         >
                             Good
                         </button>
 
                         <button
                             onClick={(e) => handleFeedback(e, "easy")}
-                            className="bg-green-200 text-green-800 text-lg font-bold px-4 py-2 rounded hover:bg-green-300 transition cursor-pointer"
-                            aria-label={`I knew ${dictionary.word} it was easy`}
-
+                            className="bg-green-500 text-white font-black py-3 rounded-xl border-2 border-gray-900 shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-none transition-all text-xs uppercase"
                         >
                             Easy
                         </button>
                     </div>
                 </div>
-            </>
-        )}
-    </div>
-  );
+            )}
+        </div>
+    );
 }
 
 Flashcard.propTypes = {

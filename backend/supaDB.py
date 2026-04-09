@@ -14,6 +14,7 @@ from crud.questions import QuestionCRUD
 from crud.user_vocabulary import UserVocabularyCRUD
 from crud.user_stories import UserStoryCRUD
 from crud.progress import ProgressCRUD 
+from crud.pdfs import PdfCRUD
 
 load_dotenv()
 
@@ -33,9 +34,11 @@ question_crud = QuestionCRUD(supabase)
 progress_crud = ProgressCRUD(supabase)
 user_vocabulary_crud = UserVocabularyCRUD(supabase)
 user_stories_crud = UserStoryCRUD(supabase)
+pdf_crud = PdfCRUD(supabase)
 
 #supabase storage bucket name
 BUCKET_NAME = "audio"
+PDF_BUCKET_NAME = "pdf-documents"
 
 async def upload_audio_to_storage(audio_file_path: str) -> str:
     try: 

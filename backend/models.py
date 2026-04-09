@@ -172,3 +172,22 @@ class StoryPageHydration(BaseModel):
     vocabulary: Optional[List[str]] = None
     topic: Optional[str] = None
     upvotes: Optional[int] = 0
+
+# PDF Models
+class PdfBase(BaseModel):
+    """Base model for PDF records."""
+    original_file_name: str
+    storage_path: str
+    mime_type: Optional[str] = "application/pdf"
+    uploaded_by: Optional[int] = None
+    is_global: Optional[bool] = False
+
+class PdfCreate(PdfBase):
+    """Model used when creating a new PDF record."""
+    pass
+
+class PdfResponse(PdfBase):
+    """Model returned when fetching PDF records."""
+    id: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None

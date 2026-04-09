@@ -11,14 +11,11 @@ export default function DictionaryPage({ user, loadingUser }) {
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-
-    const [toastMsg, setToastMsg] = useState("")
+    const [toastMsg, setToastMsg] = useState("");
 
     const apiUrl = import.meta.env.VITE_API_BASE_URL;
     const observer = useRef();
 
-
-    //prevent making new function instance with a new identity every render
     const fetchVocab = useCallback(async () => {
         if (loading || !hasMore) return;
         setLoading(true);
@@ -56,23 +53,17 @@ export default function DictionaryPage({ user, loadingUser }) {
         [loading, hasMore, fetchVocab]
     );
 
-
     const handleAddToStudySet = async (word) => {
         try {
-            const res = await axios.post(`${apiUrl}/users/study_deck`,{ word: word },{ withCredentials: true });
-            // console.log(res)
-
-            // Pre-generate TTS on the server
-            const tts = await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
-            // console.log(tts)
-
+            await axios.post(`${apiUrl}/users/study_deck`, { word }, { withCredentials: true });
+            await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
             setToastMsg(`✅ Added ${word} to study deck!`);
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 409) {
                     setToastMsg(`⚠️ ${word} already in study deck`);
                 } else {
-                    setToastMsg("❌ Failed to add word. Please Login.");
+                    setToastMsg("❌ Please Login to save words.");
                 }
             } else {
                 setToastMsg("❌ An unexpected error occurred.");
@@ -80,9 +71,15 @@ export default function DictionaryPage({ user, loadingUser }) {
         }
     };
 
-    return (
-        <div className="p-6 max-w-4xl mx-auto">
+    const cardStyle = `
+        bg-white dark:bg-gray-800 p-6 rounded-2xl border-4 border-gray-900 dark:border-white/10
+        shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,0.05)]
+        hover:translate-y-[-4px] hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] dark:hover:shadow-[8px_8px_0_0_rgba(255,255,255,0.1)]
+        transition-all duration-300 flex flex-col justify-between group
+    `;
 
+    return (
+        <div className="p-6 max-w-7xl mx-auto pb-20">
             {toastMsg && (
                 <ToastNotification
                     message={toastMsg}
@@ -91,65 +88,73 @@ export default function DictionaryPage({ user, loadingUser }) {
                 />
             )}
 
-            <h2 className="text-3xl font-bold mb-6">Dictionary</h2>
+            <div className="mb-12 text-center fade-up">
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white mb-4">
+                    Mandarin <span className="text-blue-600">Dictionary</span>
+                </h1>
+                <p className="text-gray-500 dark:text-gray-400 font-medium max-w-2xl mx-auto">
+                    Explore thousands of words, see examples, and build your personalized study deck.
+                </p>
+            </div>
 
-            {error && <p className="text-red-500">{error}</p>}
+            {error && <p className="text-red-500 font-bold text-center mb-8">{error}</p>}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {vocabList.map((item, idx) => {
                     const isLast = idx === vocabList.length - 1;
                     return (
-
-                    <div
-                        key={item.vocab_id || idx}
-                        ref={isLast ? lastVocabRef : null}
-                        className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition flex flex-col justify-between"
-                    >
-                        {/* Word info */}
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{item.word}</p>
-                            <p className="text-lg font-semibold text-gray-700">{item.pinyin}</p>
-                            <p className="text-gray-700 font-semibold italic">
-                                {item.translation}{" "}
-                                <span className="text-sm font-semibold text-gray-400">
-                                    ({item.word_type})
-                                </span>
-                            </p>
-                            {item.example_sentence && (
-                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-2">
-                                    <span className="font-semibold">Example: </span>
-                                    <span>
-                                        {typeof item.example_sentence === "string" ? item.example_sentence : "N/A"}
+                        <div
+                            key={item.vocab_id || idx}
+                            ref={isLast ? lastVocabRef : null}
+                            className={`${cardStyle} fade-up`}
+                            style={{ animationDelay: `${(idx % 8) * 50}ms` }}
+                        >
+                            <div>
+                                <div className="flex justify-between items-start mb-4">
+                                    <p className="text-4xl font-black text-gray-900 dark:text-white group-hover:scale-110 transition-transform origin-left duration-300">
+                                        {item.word}
+                                    </p>
+                                    <span className="px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                                        {item.word_type}
                                     </span>
                                 </div>
-                            )}
-                        </div>
+                                <p className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-1">{item.pinyin}</p>
+                                <p className="text-gray-700 dark:text-gray-300 font-bold italic mb-4">
+                                    {item.translation}
+                                </p>
+                                {item.example_sentence && (
+                                    <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                                        <span className="font-black text-gray-400 dark:text-gray-500 block mb-1 uppercase text-[10px] tracking-widest">Example</span>
+                                        {item.example_sentence}
+                                    </div>
+                                )}
+                            </div>
 
-                        <button
-                            onClick={() => handleAddToStudySet(item.word)}
-                            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition cursor-pointer"
-                        >
-                            Add to study deck
-                        </button>
-                    </div>
+                            <button
+                                onClick={() => handleAddToStudySet(item.word)}
+                                className="mt-8 bg-gray-900 dark:bg-white dark:text-gray-900 text-white font-black py-3 rounded-xl hover:translate-y-[-2px] active:translate-y-[1px] transition-all cursor-pointer text-sm shadow-[2px_2px_0_0_rgba(0,0,0,0.2)] dark:shadow-none"
+                            >
+                                + Add to deck
+                            </button>
+                        </div>
                     );
                 })}
-
-
-                {loading && (
-                    <div className="text-center text-gray-500 py-4">Loading...</div>
-                )}
-
-                {!hasMore && vocabList.length > 0 && (
-                    <div className="text-center text-gray-400 py-4">
-                        End of dictionary.
-                    </div>
-                )}
             </div>
-        </div>
-        );
-    }
 
+            {loading && (
+                <div className="flex justify-center py-12">
+                    <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+                </div>
+            )}
+
+            {!hasMore && vocabList.length > 0 && (
+                <div className="text-center text-gray-400 dark:text-gray-600 font-black py-12 uppercase tracking-widest text-sm">
+                    ✨ End of dictionary ✨
+                </div>
+            )}
+        </div>
+    );
+}
 
 DictionaryPage.propTypes = {
     user: PropTypes.shape({
