@@ -2,11 +2,23 @@ import { useEffect, useState, useCallback } from "react";
 import SearchBar from "../components/SearchBar";
 import PropTypes from "prop-types";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 import Flashcard from "../components/Flashcard";
 import FlashcardSummary from "../components/FlashcardSummary";
-import ToastNotification from "../components/ToastNotification";
 import VocabCard from "../components/VocabCard";
+
+const INITIAL_DEFAULT_WORDS = [
+  { word: "谢谢", translation: "Thank you", pinyin: "xièxiè", word_type: "expression", status: "not memorized", is_active: true },
+  { word: "你", translation: "You", pinyin: "nǐ", word_type: "pronoun", status: "not memorized", is_active: true },
+  { word: "访问", translation: "Visit", pinyin: "fǎngwèn", word_type: "verb", status: "not memorized", is_active: true },
+  { word: "我的", translation: "My", pinyin: "wǒde", word_type: "pronoun", status: "not memorized", is_active: true },
+  { word: "网站", translation: "Website", pinyin: "wǎngzhàn", word_type: "noun", status: "not memorized", is_active: true },
+  { word: "很", translation: "Very", pinyin: "hěn", word_type: "adverb", status: "not memorized", is_active: true },
+  { word: "高兴", translation: "Happy", pinyin: "gāoxìng", word_type: "adjective", status: "not memorized", is_active: true },
+  { word: "认识", translation: "Know/Meet", pinyin: "rènshí", word_type: "verb", status: "not memorized", is_active: true },
+  { word: "你们", translation: "You (plural)", pinyin: "nǐmen", word_type: "pronoun", status: "not memorized", is_active: true }
+];
 
 export default function StudyPage({ user, loadingUser }) {
   const [searchBar, setSearchBar] = useState("");
@@ -20,22 +32,11 @@ export default function StudyPage({ user, loadingUser }) {
   const [flipped, setFlipped] = useState(false);
   const [correctAnswers, setCorrectAnswers] = useState([]);
   const [incorrectAnswers, setIncorrectAnswers] = useState([]);
-  const [toastMsg, setToastMsg] = useState("");
   const [mergedVocab, setMergedVocab] = useState([]);
   const [memorizedCount, setMemorziedCount] = useState(0);
   const [notMemorziedCount, setNotMemorziedCount] = useState(0);
 
-  const [defaultWords, setDefaultWords] = useState([
-    { word: "谢谢", translation: "Thank you", pinyin: "xièxiè", word_type: "expression", status: "not memorized", is_active: true },
-    { word: "你", translation: "You", pinyin: "nǐ", word_type: "pronoun", status: "not memorized", is_active: true },
-    { word: "访问", translation: "Visit", pinyin: "fǎngwèn", word_type: "verb", status: "not memorized", is_active: true },
-    { word: "我的", translation: "My", pinyin: "wǒde", word_type: "pronoun", status: "not memorized", is_active: true },
-    { word: "网站", translation: "Website", pinyin: "wǎngzhàn", word_type: "noun", status: "not memorized", is_active: true },
-    { word: "很", translation: "Very", pinyin: "hěn", word_type: "adverb", status: "not memorized", is_active: true },
-    { word: "高兴", translation: "Happy", pinyin: "gāoxìng", word_type: "adjective", status: "not memorized", is_active: true },
-    { word: "认识", translation: "Know/Meet", pinyin: "rènshí", word_type: "verb", status: "not memorized", is_active: true },
-    { word: "你们", translation: "You (plural)", pinyin: "nǐmen", word_type: "pronoun", status: "not memorized", is_active: true }
-  ]);
+  const [defaultWords, setDefaultWords] = useState(INITIAL_DEFAULT_WORDS);
 
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -58,14 +59,15 @@ export default function StudyPage({ user, loadingUser }) {
       if (localDeck) {
         const parsed = JSON.parse(localDeck);
         const active = parsed.filter(card => card.is_active);
-        setDefaultWords(active);
-        setDeckVocab(active);
+        setDefaultWords(prev => JSON.stringify(prev) !== localDeck ? parsed : prev);
+        setDeckVocab(prev => JSON.stringify(prev) !== JSON.stringify(active) ? active : prev);
       } else {
-        setDeckVocab(defaultWords);
-        localStorage.setItem("defaultWords", JSON.stringify(defaultWords));
+        setDeckVocab(INITIAL_DEFAULT_WORDS.filter(c => c.is_active));
+        localStorage.setItem("defaultWords", JSON.stringify(INITIAL_DEFAULT_WORDS));
+        setDefaultWords(INITIAL_DEFAULT_WORDS);
       }
     }
-  }, [user, apiUrl, defaultWords]);
+  }, [user, apiUrl]);
 
   useEffect(() => {
     if (!loadingUser && (user.user_id || user.username === "Guest")) hydratePage();
@@ -81,11 +83,12 @@ export default function StudyPage({ user, loadingUser }) {
 
   useEffect(() => {
     const lower = searchBar.toLowerCase();
-    const filtered = tabFilteredDeckVocab.filter((item) => 
-      item.word.includes(lower) ||
-      item.translation.toLowerCase().includes(lower) || 
-      item.pinyin.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(lower)
-    );
+    const filtered = tabFilteredDeckVocab.filter((item) => {
+      const pinyinStr = item.pinyin || "";
+      return item.word.includes(lower) ||
+      (item.translation && item.translation.toLowerCase().includes(lower)) || 
+      pinyinStr.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(lower);
+    });
     setSearchAndTabFilteredDeckVocab(filtered);
   }, [tabFilteredDeckVocab, searchBar]);
 
@@ -94,20 +97,29 @@ export default function StudyPage({ user, loadingUser }) {
         const res = await axios(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
         const audio = new Audio(res.data.url);
         await audio.play();
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+        console.error(err); 
+        toast.error("Audio play failed");
+    }
   };
 
   const handleHeartClick = async (user_vocab_id, word) => {
     if (!user.user_id) {
       const updated = defaultWords.map(c => c.word === word ? { ...c, is_active: !c.is_active } : c);
-      setToastMsg(updated.find(c => c.word === word).is_active ? `✅ Added ${word}!` : `❌ Removed ${word}`);
+      const isActive = updated.find(c => c.word === word).is_active;
+      if (isActive) toast.success(`Added ${word}!`);
+      else toast.error(`Removed ${word}`);
       setDefaultWords(updated);
       setDeckVocab(updated.filter(c => c.is_active));
+      localStorage.setItem("defaultWords", JSON.stringify(updated));
     } else {
       try {
         await axios.put(`${apiUrl}/study_deck/toggle`, { user_vocab_id }, { withCredentials: true });
+        const card = deckVocab.find(c => c.user_vocab_id === user_vocab_id);
+        const newStatus = !card.is_active;
+        if (newStatus) toast.success(`Added ${word}!`);
+        else toast.error(`Removed ${word}`);
         setDeckVocab(prev => prev.map(c => c.user_vocab_id === user_vocab_id ? { ...c, is_active: !c.is_active } : c).filter(c => c.is_active));
-        setToastMsg(`Toggled ${word}`);
       } catch (err) { console.error(err); }
     }
   };
@@ -116,8 +128,6 @@ export default function StudyPage({ user, loadingUser }) {
 
   return (
     <div className="min-h-screen pb-20 px-6 max-w-7xl mx-auto">
-      {toastMsg && <ToastNotification message={toastMsg} onClose={() => setToastMsg("")} />}
-      
       <div className="mb-12 text-center fade-up">
         <h1 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white mb-4">
           Study <span className="text-blue-600">Deck</span>
@@ -138,7 +148,7 @@ export default function StudyPage({ user, loadingUser }) {
                 <span className="font-bold text-green-700 dark:text-green-400">Memorized</span>
                 <span className="font-black text-xl text-green-800 dark:text-green-300">{memorizedCount}</span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-900/30">
+              <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-200/20">
                 <span className="font-bold text-blue-700 dark:text-blue-400">Learning</span>
                 <span className="font-black text-xl text-blue-800 dark:text-blue-300">{notMemorziedCount}</span>
               </div>
@@ -147,6 +157,10 @@ export default function StudyPage({ user, loadingUser }) {
             <button 
               className="w-full mt-8 bg-blue-600 text-white font-black py-4 rounded-2xl border-4 border-gray-900 dark:border-white/10 shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,0.1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
               onClick={() => {
+                if (tabFilteredDeckVocab.length === 0) {
+                    toast.error("No words in current filter to study!");
+                    return;
+                }
                 setStudySession(tabFilteredDeckVocab);
                 setShowFlashcards(true);
               }}
@@ -164,7 +178,7 @@ export default function StudyPage({ user, loadingUser }) {
                 <button
                   key={f}
                   onClick={() => setActiveFilter(f)}
-                  className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
+                  className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer ${
                     activeFilter === f 
                     ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-lg' 
                     : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
@@ -186,7 +200,7 @@ export default function StudyPage({ user, loadingUser }) {
             {searchAndTabFilteredDeckVocab.length === 0 && (
               <div className="col-span-full py-20 text-center opacity-20">
                 <div className="text-6xl mb-4">🔍</div>
-                <p className="text-xl font-black">No words found matching that filter.</p>
+                <p className="text-xl font-black dark:text-white">No words found matching that filter.</p>
               </div>
             )}
           </div>

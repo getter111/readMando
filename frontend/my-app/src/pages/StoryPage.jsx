@@ -215,14 +215,13 @@ export default function StoryPage({ user, loadingUser }) {
 
                                 <div>
                                     <label className={labelStyle}>Specific Vocabulary</label>
-                                    <textarea 
+                                    <textarea
                                         className={`${inputStyle} h-24 resize-none`}
                                         value={vocabulary}
                                         onChange={(e) => setVocabulary(e.target.value)}
-                                        placeholder="Add specific words you're studying..."
+                                        placeholder="Add specific words separated by commas (e.g. Apple, Time Machine, Lebron James)..."
                                     />
                                 </div>
-
                                 <div>
                                     <label className={labelStyle}>Story Topic</label>
                                     <input 
@@ -247,7 +246,7 @@ export default function StoryPage({ user, loadingUser }) {
                                         </select>
                                         <button 
                                             onClick={playVoiceDemo}
-                                            className="p-3 bg-gray-900 dark:bg-gray-100 dark:text-gray-900 text-white rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg"
+                                            className="p-3 bg-gray-900 dark:bg-gray-100 dark:text-gray-900 text-white rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg cursor-pointer"
                                             title="Play Voice Demo"
                                         >
                                             🔊
@@ -259,7 +258,7 @@ export default function StoryPage({ user, loadingUser }) {
                                     onClick={fetchStory}
                                     disabled={loading}
                                     className={`
-                                        w-full py-4 mt-4 rounded-2xl font-black text-lg transition-all
+                                        w-full py-4 mt-4 rounded-2xl font-black text-lg transition-all cursor-pointer
                                         ${loading 
                                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
                                             : 'bg-blue-600 text-white border-4 border-gray-900 dark:border-white/10 shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,0.1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)] active:translate-y-[1px] active:shadow-none'

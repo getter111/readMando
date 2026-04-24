@@ -42,7 +42,7 @@ export default function Flashcard({ dictionary, onFeedback, flipped, setFlipped}
                         
                         <button
                             onClick={handleAudio}
-                            className="mt-6 p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-2xl hover:scale-110 active:scale-95 transition-all"
+                            className="mt-6 p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer"
                         >
                             🔊
                         </button>
@@ -61,21 +61,21 @@ export default function Flashcard({ dictionary, onFeedback, flipped, setFlipped}
                     <div className="grid grid-cols-3 gap-3 w-full mt-8">
                         <button
                             onClick={(e) => handleFeedback(e, "again")}
-                            className="bg-red-500 text-white font-black py-3 rounded-xl border-2 border-gray-900 shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-none transition-all text-xs uppercase"
+                            className="bg-red-500 text-white font-black py-3 rounded-xl border-2 border-gray-900 shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-none transition-all text-xs uppercase cursor-pointer"
                         >
                             Again
                         </button>
 
                         <button
                             onClick={(e) => handleFeedback(e, "good")}
-                            className="bg-yellow-400 text-gray-900 font-black py-3 rounded-xl border-2 border-gray-900 shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-none transition-all text-xs uppercase"
+                            className="bg-yellow-400 text-gray-900 font-black py-3 rounded-xl border-2 border-gray-900 shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-none transition-all text-xs uppercase cursor-pointer"
                         >
                             Good
                         </button>
 
                         <button
                             onClick={(e) => handleFeedback(e, "easy")}
-                            className="bg-green-500 text-white font-black py-3 rounded-xl border-2 border-gray-900 shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-none transition-all text-xs uppercase"
+                            className="bg-green-500 text-white font-black py-3 rounded-xl border-2 border-gray-900 shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-none transition-all text-xs uppercase cursor-pointer"
                         >
                             Easy
                         </button>
