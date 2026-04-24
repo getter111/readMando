@@ -86,6 +86,7 @@ cp .env.example .env
 ```
 Open `backend/.env` and fill in the missing values:
 - **Supabase:** You will need to create a free project on [Supabase](https://supabase.com/) and paste your Project URL and API Key.
+- **Stripe:** Get your test secret key (`sk_test_...`) from the Stripe dashboard. Create a recurring product and add its Price ID (`price_...`).
 - **OpenAI:** Provide your API key from [OpenAI](https://platform.openai.com/).
 - **Emails:** The `MAIL_` variables are required to test email features (like password reset/verification). If testing emails, provide valid SMTP credentials.
 - **Security:** Generate a random `SECRET_KEY` for local development.
@@ -97,7 +98,17 @@ cp .env.example .env
 ```
 By default, `VITE_API_BASE_URL` is already set to `https://127.0.0.1:8000`, which matches the local backend.
 
-### 5. Supabase Database & Storage Setup
+### 5. Stripe Webhooks
+
+To test Stripe checkout and user upgrades locally, you must run the Stripe CLI to forward webhooks to your local server:
+
+1. Download the [Stripe CLI](https://docs.stripe.com/stripe-cli) or use the executable in the backend folder (if installed).
+2. Authenticate the CLI: `stripe login`
+3. Start forwarding: `stripe listen --forward-to https://localhost:8000/stripe-webhook --skip-verify`
+4. The CLI will output a webhook signing secret (`whsec_...`). Copy this and add it to your `backend/.env` file as `STRIPE_WEBHOOK_SECRET`.
+5. You can now use test cards like `4242 4242 4242 4242` to verify the checkout flow locally.
+
+### 6. Supabase Database & Storage Setup
 
 To ensure the backend functions correctly with your local Supabase project, you must configure the database tables and storage bucket:
 
