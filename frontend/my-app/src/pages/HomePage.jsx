@@ -24,7 +24,7 @@ export default function HomePage() {
   const buttonStyle = `
     w-full font-black py-2.5 rounded-xl border-4 border-gray-900 dark:border-white 
     transition-all text-sm shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)]
-    hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-none
+    hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-none cursor-pointer
   `;
 
   return (
@@ -37,9 +37,6 @@ export default function HomePage() {
         <div className="absolute -bottom-8 left-1/2 w-28 h-28 bg-pink-300 dark:bg-pink-600/30 rounded-full mix-blend-multiply dark:mix-blend-overlay filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
 
         <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
-          <div className="inline-block mb-4 px-3 py-1 bg-gray-900 dark:bg-blue-600 text-white font-bold tracking-widest uppercase text-[10px] rounded-full shadow-[2px_2px_0_0_#4ade80]">
-            System Update Live
-          </div>
           <h1 className="text-5xl md:text-7xl font-black tracking-tight text-gray-900 dark:text-white mb-6 leading-tight">
             Turn Stories into <br className="hidden md:block"/>
             <span className="relative inline-block mt-2 md:mt-0">

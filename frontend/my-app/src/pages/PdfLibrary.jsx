@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -32,6 +33,7 @@ const PdfLibrary = ({ user, loadingUser }) => {
     e.preventDefault();
     if (!file) return;
     setUploading(true);
+    const uploadToast = toast.loading("Uploading PDF...");
     const formData = new FormData();
     formData.append('file', file);
     try {
@@ -41,8 +43,9 @@ const PdfLibrary = ({ user, loadingUser }) => {
       });
       setFile(null);
       fetchPdfs();
+      toast.success("PDF uploaded successfully", { id: uploadToast });
     } catch (error) {
-      alert("Failed to upload PDF");
+      toast.error("Failed to upload PDF", { id: uploadToast });
     } finally {
       setUploading(false);
     }
@@ -50,17 +53,20 @@ const PdfLibrary = ({ user, loadingUser }) => {
 
   const handleDelete = async (pdfId) => {
     if (!window.confirm("Are you sure you want to delete this PDF?")) return;
+    const deleteToast = toast.loading("Deleting...");
     try {
       await axios.delete(`${apiUrl}/pdfs/${pdfId}`, { withCredentials: true });
       fetchPdfs();
+      toast.success("PDF deleted", { id: deleteToast });
     } catch (error) {
-      alert("Failed to delete PDF.");
+      toast.error("Failed to delete PDF.", { id: deleteToast });
     }
   };
 
   const handleParse = async (pdfId) => {
     setParsing(true);
     setParsedText("");
+    const parseToast = toast.loading("Parsing chapter...");
     const chapterNumber = chapterNumbers[pdfId];
     try {
       const response = await axios.post(`${apiUrl}/pdfs/${pdfId}/parse`, 
@@ -68,8 +74,9 @@ const PdfLibrary = ({ user, loadingUser }) => {
         { withCredentials: true }
       );
       setParsedText(response.data.content);
+      toast.success("Chapter extracted", { id: parseToast });
     } catch (error) {
-      alert("Failed to parse PDF");
+      toast.error("Failed to parse PDF", { id: parseToast });
     } finally {
       setParsing(false);
     }
@@ -141,7 +148,7 @@ const PdfLibrary = ({ user, loadingUser }) => {
                         </span>
                       </div>
                       {user && user.username !== "Guest" && !pdf.is_global && (
-                        <button onClick={() => handleDelete(pdf.id)} className="text-red-400 hover:text-red-600 transition-colors p-1">🗑️</button>
+                        <button onClick={() => handleDelete(pdf.id)} className="text-red-400 hover:text-red-600 transition-colors p-1 cursor-pointer">🗑️</button>
                       )}
                     </div>
                     
@@ -156,7 +163,7 @@ const PdfLibrary = ({ user, loadingUser }) => {
                       <button 
                         onClick={() => handleParse(pdf.id)}
                         disabled={parsing}
-                        className="flex-1 bg-blue-600 text-white font-black py-2 rounded-lg hover:bg-blue-700 transition-all text-sm disabled:opacity-50"
+                        className="flex-1 bg-blue-600 text-white font-black py-2 rounded-lg hover:bg-blue-700 transition-all text-sm disabled:opacity-50 cursor-pointer"
                       >
                         {parsing ? 'Parsing...' : 'Extract Chapter'}
                       </button>
