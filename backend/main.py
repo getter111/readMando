@@ -1,5 +1,7 @@
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Cookie, Response, Body, Query, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Cookie, Response, Body, Query, UploadFile, File, Form, Header, Request
+from services import stripe_service, llm_service
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
 from datetime import datetime, timedelta, timezone
@@ -9,6 +11,7 @@ import json
 from typing import List
 from jwt import ExpiredSignatureError, InvalidTokenError
 import base64
+import os
 
 import models
 from supaDB import (
@@ -38,6 +41,42 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+async def get_llm_config(
+    user_id: str,
+    x_custom_api_key: Optional[str] = None,
+    x_custom_model: Optional[str] = None,
+    x_local_url: Optional[str] = None,
+    is_tooltip: bool = False
+):
+    if is_tooltip:
+        # Tooltip should ALWAYS use the global app configuration for reliability
+        # It requires strict JSON formatting that custom/local models might fail at
+        return os.environ.get("OPENAI_API_KEY"), "gpt-4o-mini", None
+
+    api_key = x_custom_api_key
+    model = x_custom_model
+    base_url = x_local_url
+    
+    # Support local models that don't require an API key
+    if base_url and not api_key:
+        api_key = "local"
+    
+    if not api_key:
+        if user_id == "Guest":
+             raise HTTPException(status_code=402, detail="API Key required or login/upgrade")
+        user = user_crud.get_user(user_id)
+        if user and user.get("subscription_tier") == "pro":
+             api_key = os.environ.get("OPENAI_API_KEY")
+             # If using the global OpenAI key, force the model to an OpenAI model 
+             # so it doesn't crash trying to use Google/Claude with an OpenAI key
+             if model and not model.startswith("gpt"):
+                 model = "gpt-4o-mini"
+        else:
+             raise HTTPException(status_code=402, detail="API Key required for free tier or Upgrade to Pro")
+             
+    return api_key, model, base_url
+
 @app.get("/")
 def read_root():
     return {"message": "Hello from FastAPI on Fly.io!"}
@@ -45,12 +84,22 @@ def read_root():
 @app.post("/stories")
 async def generate_story(
     request: models.StoryGenerationRequest,
+    x_custom_api_key: Optional[str] = Header(None),
+    x_custom_model: Optional[str] = Header(None),
+    x_local_url: Optional[str] = Header(None),
 ):
     try:
+        api_key, model, base_url = await get_llm_config(
+            request.user.user_id, x_custom_api_key, x_custom_model, x_local_url
+        )
+
         story = generateStory(
             difficulty=request.difficulty,
             vocabulary=request.vocabulary,
-            topic=request.topic
+            topic=request.topic,
+            api_key=api_key,
+            model=model,
+            base_url=base_url
         )
 
         # Save story to stories table
@@ -151,7 +200,13 @@ async def segment_story(request: models.StorySegmentationRequest):
 
 # Generates a list of comprehention questions
 @app.post("/stories/questions", response_model=List[models.QuestionCreate])
-async def generate_questions(request: models.QuestionGenerationRequest):
+async def generate_questions(
+    request: models.QuestionGenerationRequest,
+    x_custom_api_key: Optional[str] = Header(None),
+    x_custom_model: Optional[str] = Header(None),
+    x_local_url: Optional[str] = Header(None),
+    readmando_session: Optional[str] = Cookie(None)
+):
     try:
         existing_questions = question_crud.get_questions_by_story_id(request.story_id)
 
@@ -159,10 +214,26 @@ async def generate_questions(request: models.QuestionGenerationRequest):
         if existing_questions:
             return existing_questions
 
+        # Get user_id from session for tier check
+        user_id = "Guest"
+        if readmando_session:
+            try:
+                payload = decode_token(readmando_session)
+                user_id = payload["user_id"]
+            except:
+                pass
+
+        api_key, model, base_url = await get_llm_config(
+            user_id, x_custom_api_key, x_custom_model, x_local_url
+        )
+
         saved_questions = []
 
         #generate reading comprehension questions
-        response = generateQuestions(request.story, request.difficulty, request.title)
+        response = generateQuestions(
+            request.story, request.difficulty, request.title,
+            api_key=api_key, model=model, base_url=base_url
+        )
         questions = json.loads(response) #parse json string 
 
         #insert generated questions to questions table
@@ -259,8 +330,6 @@ async def get_current_user(response: Response, readmando_session: Optional[str] 
                 max_age=604800,
                 path="/"
             )
-            print(f"[get_current_user] Decoded token payload: {payload}")
-            print(f"[get_current_user] Refreshed token exp: {decode_token(new_token)['exp']}")
         return user
     except ExpiredSignatureError as e:
         print(e)
@@ -488,7 +557,6 @@ async def login_user(user: models.UserCreate, response: Response): #response ref
             )
             
             print(f"[login_user] Attempting login for username: {user.username}")
-            print(f"[login_user] User found: {existing_user}")
             print(f"[login_user] Generated cookie for user_id {existing_user['user_id']}")
 
             #save the session token and last login time
@@ -563,11 +631,34 @@ async def verify_email(token: str):
     
 #autofetch unknown words and add to db, should only be used on chinese characters
 @app.post("/vocabulary")
-async def add_vocabulary(request: models.VocabRequest):
+async def add_vocabulary(
+    request: models.VocabRequest,
+    x_custom_api_key: Optional[str] = Header(None),
+    x_custom_model: Optional[str] = Header(None),
+    x_local_url: Optional[str] = Header(None),
+    readmando_session: Optional[str] = Cookie(None)
+):
     try:
-        res = auto_fetch(request.vocab)
-        print(res)
-        #Response body: "{\n  \"word\": \"诸葛亮\",\n  \"pinyin\": \"Zhūgě Liàng\",\n  \"translation\": \"Zhuge Liang\",\n  \"part of speech\": \"noun\",\n  \"example sentence\": \"诸葛亮是三国时期著名的谋略家。\"\n}"
+        # Get user_id from session for tier check
+        user_id = "Guest"
+        if readmando_session:
+            try:
+                payload = decode_token(readmando_session)
+                user_id = payload["user_id"]
+            except:
+                pass
+
+        api_key, model, base_url = await get_llm_config(
+            user_id, x_custom_api_key, x_custom_model, x_local_url, is_tooltip=True
+        )
+
+        res = auto_fetch(
+            request.vocab, 
+            api_key=api_key, 
+            model=model, 
+            base_url=base_url
+        )
+        
         if isinstance(res, str):
             unknown_word = json.loads(res) #convert json string -> python dict
         elif isinstance(res, dict):
@@ -584,15 +675,14 @@ async def add_vocabulary(request: models.VocabRequest):
             example_sentence=unknown_word["example sentence"]
         )
 
-        print(f"[add_vocabulary] Incoming vocab: {request.vocab}")
-        print(f"[add_vocabulary] Auto fetch result: {unknown_word}")
+        print(f"[ADD_VOCABULARY] Fetched and added new word: '{unknown_word['word']}' ({unknown_word['translation']})")
 
         #upserts the unknown word
         add_vocabulary_to_db([new_vocab.model_dump()])
         return new_vocab
     
     except Exception as e:
-        print(e)
+        print(f"[ADD_VOCABULARY_ERROR] Failed for {request.vocab}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Auto-fetch failed for {request.vocab}: {str(e)}")
     
 @app.get("/vocabulary/all")
@@ -793,3 +883,99 @@ async def parse_pdf(
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=f"Failed to parse PDF: {str(e)}")
+@app.post('/create-checkout-session')
+async def create_checkout_session(request: Request, readmando_session: Optional[str] = Cookie(None)):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail='Missing session cookie')
+    try:
+        origin = request.headers.get('origin', 'https://readmando.netlify.app')
+        payload = decode_token(readmando_session)
+        user_id = payload['user_id']
+        url = stripe_service.create_checkout_session(
+            user_id, 
+            success_url=f'{origin}/payment-success',
+            cancel_url=f'{origin}/payment-cancelled'
+        )
+        return {'url': url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post('/cancel-subscription')
+async def cancel_subscription(readmando_session: Optional[str] = Cookie(None)):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail='Missing session cookie')
+    try:
+        payload = decode_token(readmando_session)
+        user_id = payload['user_id']
+        user = user_crud.get_user(user_id)
+        if not user or user.get('subscription_tier') != 'pro':
+            raise HTTPException(status_code=400, detail='User is not subscribed to Pro')
+        
+        sub_id = user.get('stripe_subscription_id')
+        if sub_id:
+            import stripe
+            stripe.Subscription.delete(sub_id)
+            
+        user_crud.update_user(user_id, models.UserUpdate(
+            subscription_tier='free',
+            stripe_subscription_id=None
+        ))
+        return {'status': 'success'}
+    except Exception as e:
+        print(f"Cancel subscription error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get('/subscription-status')
+async def get_subscription_status(readmando_session: Optional[str] = Cookie(None)):
+    if not readmando_session:
+        raise HTTPException(status_code=401, detail='Missing session cookie')
+    try:
+        payload = decode_token(readmando_session)
+        user_id = payload['user_id']
+        user = user_crud.get_user(user_id)
+        if not user or user.get('subscription_tier') != 'pro':
+            return {'is_pro': False}
+        
+        sub_id = user.get('stripe_subscription_id')
+        if sub_id:
+            sub = stripe_service.get_subscription(sub_id)
+            current_period_end = sub.get('current_period_end')
+            return {
+                'is_pro': True, 
+                'current_period_end': current_period_end
+            }
+        return {'is_pro': True, 'current_period_end': None}
+    except Exception as e:
+        print(f"Get subscription status error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post('/stripe-webhook')
+async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
+    payload = await request.body()
+    try:
+        event = stripe_service.verify_webhook(payload, stripe_signature)
+        if event['type'] == 'checkout.session.completed':
+            session = event['data']['object']
+            user_id = int(session['client_reference_id'])
+            sub_id = session.get('subscription')
+            cust_id = session.get('customer')
+            user_crud.update_user(user_id, models.UserUpdate(
+                subscription_tier='pro',
+                stripe_subscription_id=sub_id,
+                stripe_customer_id=cust_id
+            ))
+            print(f'User {user_id} upgraded to Pro')
+        elif event['type'] == 'customer.subscription.deleted':
+            subscription = event['data']['object']
+            sub_id = subscription.get('id')
+            if sub_id:
+                # Downgrade user directly using supabase client
+                supabase.table("users").update({
+                    "subscription_tier": "free",
+                    "stripe_subscription_id": None
+                }).eq("stripe_subscription_id", sub_id).execute()
+                print(f'Subscription {sub_id} deleted. Downgraded user to free.')
+        return JSONResponse(content={'status': 'success'})
+    except Exception as e:
+        print(f"Stripe webhook error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
