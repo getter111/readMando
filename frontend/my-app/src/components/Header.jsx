@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import axios from "axios";
 import SearchBar from "./SearchBar";
 import { useTheme } from "../context/ThemeContext";
+import toast from "react-hot-toast";
 
 export default function Header({ username = 'Guest', setUser }) {
   const [vocab, setVocab] = useState("");
@@ -32,10 +33,25 @@ export default function Header({ username = 'Guest', setUser }) {
   const handleLogout = async () => {
     try {
       const response = await axios.post(`${apiUrl}/logout`, {}, { withCredentials: true });
+      
+      // Clear custom AI config on logout for security and fresh guest state
+      localStorage.removeItem('custom_api_key');
+      localStorage.removeItem('custom_model');
+      localStorage.removeItem('custom_base_url');
+      localStorage.removeItem('ai_provider');
+      localStorage.removeItem('ai_override_enabled');
+      
+      // Reset axios headers
+      axios.defaults.headers.common['X-Custom-API-Key'] = '';
+      axios.defaults.headers.common['X-Custom-Model'] = '';
+      axios.defaults.headers.common['X-Local-URL'] = '';
+
       setUser(response.data);
+      toast.success("Logged out successfully");
       navigate("/");
     } catch (err) {
       console.error("Logout failed", err);
+      toast.error("Logout failed");
     }
   };
 
@@ -86,6 +102,14 @@ export default function Header({ username = 'Guest', setUser }) {
               >
                 {theme === 'light' ? '🌙' : '☀️'}
               </button>
+
+              <Link
+                to="/settings"
+                className="p-2.5 rounded-xl bg-white dark:bg-gray-800 text-lg shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-none hover:translate-y-[-1px] active:translate-y-[1px] transition-all cursor-pointer border-2 border-transparent dark:border-white/10"
+                aria-label="Settings"
+              >
+                ⚙️
+              </Link>
               
               <div className="flex flex-col pr-4 pl-2 min-w-0">
                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 leading-none mb-1">Authenticated</span>

@@ -1,83 +1,73 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function RegisterPage() {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
 
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState(false);
 
     const apiUrl = import.meta.env.VITE_API_BASE_URL;
     const navigate = useNavigate();
 
     const handleRegister = async (e) => {
         e.preventDefault();
-        setError("");
-        setSuccess(false);
         setLoading(true);
         
+        const registerToast = toast.loading("Creating account...");
         try {
-            const response = await axios.post(`${apiUrl}/register`, {
+            await axios.post(`${apiUrl}/register`, {
                 username,
                 email,
             });
-            console.log(response.data);
-            setSuccess(true);
+            toast.success("Registration successful! Check your email to verify.", { id: registerToast });
+            setUsername("");
+            setEmail("");
         } catch (err) {
             console.error("Registration failed", err);
-            setError("Could not register. Email or username may already be in use.");
+            toast.error("Registration failed. Email or username may already be in use.", { id: registerToast });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="h-screen w-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-xl">
-                <h1 className="text-3xl font-bold text-center mb-6">Register</h1>
-                <p className="text-center text-gray-600 font-semibold mb-6 text-sm">
+        <div className="min-h-screen w-full flex items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-lg border dark:border-white/10">
+                <h1 className="text-3xl font-bold text-center mb-2 text-gray-900 dark:text-white">Register</h1>
+                <p className="text-center text-gray-600 dark:text-gray-400 font-semibold mb-6 text-sm">
                     Create a ReadMando account to start tracking your progress!
                 </p>
                 
                 <form onSubmit={handleRegister} className="space-y-5">
 
                     <div>
-                        <label className="block font-semibold mb-1 cursor-text">Email</label>
+                        <label className="block font-semibold mb-1 cursor-text text-gray-700 dark:text-gray-300">Email</label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full p-3 border rounded-lg"
+                            className="w-full p-3 border dark:border-white/10 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             required
                         />
                     </div>
                     
                     <div>
-                        <label className="block font-semibold mb-1 cursor-text">Username</label>
+                        <label className="block font-semibold mb-1 cursor-text text-gray-700 dark:text-gray-300">Username</label>
                         <input
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full p-3 border rounded-lg"
+                            className="w-full p-3 border dark:border-white/10 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             required
                         />
                     </div>
 
-                    {error && <p className="text-red-500 text-sm">{error}</p>}
-                    {success && (
-                        <p className="text-green-600 font-semibold text-sm">
-                            Registration successful! Please check your email to verify your account.
-                        </p>
-                    )}
-
                     <button
                         type="submit"
-                        className={`w-full font-semibold bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition ${
-                            loading ? "bg-gray-400 cursor-default" : "hover:bg-blue-600 cursor-pointer"
-                        }`}
+                        className={`w-full bg-blue-600 dark:bg-blue-500 text-white p-3 font-semibold rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition disabled:bg-gray-400 dark:disabled:bg-gray-600 ${loading ? "cursor-default" : "cursor-pointer"}`}
                         disabled={loading}
                     >
                         {loading ? "Registering..." : "Register"}
@@ -85,10 +75,10 @@ export default function RegisterPage() {
                 </form>
 
                 <div className="mt-6 text-center">
-                    <p className="text-sm font-semibold text-gray-600">Already have an account?</p>
+                    <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">Already have an account?</p>
                     <button
                         onClick={() => navigate("/login")}
-                        className="mt-2 text-blue-600 hover:underline font-semibold cursor-pointer select-text"
+                        className="mt-2 font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer select-text"
                     >
                         Login
                     </button>
