@@ -1,24 +1,26 @@
 from dotenv import load_dotenv
-from openai import OpenAI
+from services.llm_service import generate_completion
 import os
 
 load_dotenv()
-
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY")
-)
 
 # Returns a short story
 def generateStory(
     difficulty="beginner",
     vocabulary=None, 
-    topic=None      
+    topic=None,
+    api_key=None,
+    model=None,
+    base_url=None
 ):
     audience = f"{difficulty.lower()} Chinese language students"
 
     title = generate_title(
         topic=topic,
-        target_audience=audience
+        target_audience=audience,
+        api_key=api_key,
+        model=model,
+        base_url=base_url
     )
     
     outline_prompt = (
@@ -29,24 +31,19 @@ def generateStory(
         + 'Write a short story with a clear beginning, middle, and ending, to improve the readers reading comprehension in Mandarin. '
         + 'The output should be as helpful to the reader as possible. '
         + 'The story should be concise, around 300-400 characters long. '
-        + 'Also please do not add the title of the story in the body of the text. Please adhere to it.'
+        + 'Also please do not add the title of the story in the body of the text. '
+        + 'CRITICAL REQUIREMENT: The story MUST be written ENTIRELY in Simplified Chinese characters (Hanzi). DO NOT output any English words, English translations, or Pinyin in the story text under any circumstances.'
     )
 
-    #https://platform.openai.com/docs/api-reference/chat/create  
-    request = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[ 
-            {"role": "user", "content": outline_prompt}],
-        #max_completion_token=
+    messages = [{"role": "user", "content": outline_prompt}]
+    generatedText = generate_completion(
+        messages=messages,
+        api_key=api_key,
+        model=model,
+        base_url=base_url,
         temperature=1
     )
-    generatedText = request.choices[0].message.content.strip()
 
-    # print("\nCHATGPT RESPONSE\n")
-    # print(outline_prompt)
-    # print(f"Title: {title}")
-    # print(generatedText)
-    # return generatedText
     return {
         "title": title,
         "story": generatedText
@@ -57,24 +54,30 @@ def generateStory(
 def generate_title(
     topic=None,
     target_audience="beginner Chinese language students",
+    api_key=None,
+    model=None,
+    base_url=None
 ):
     title_prompt = (
-        f'We are writing a short story in Mandarin. '
+        f'We are writing a short story in Mandarin Chinese. '
         + (f'It is about "{topic}". ' if topic else '')
-        + f'Our readers are: "{target_audience}". Write a short, catchy ' 
-        + "title clearly directed at our reader that is less than "
-        + "9 words and grabs the reader's attention. "
-        + "Also please do not add anything about the difficulty level in the title"
+        + f'Our readers are: "{target_audience}". '
+        + "Write a short, catchy story title in SIMPLIFIED CHINESE. "
+        + "Rules: 1. Output ONLY the Chinese characters. 2. NO English. 3. NO conversational filler (e.g. 'Here are options'). 4. NO quotes. 5. Less than 10 characters."
     )
 
-    request = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "user", "content": title_prompt}
-        ],
-        max_completion_tokens=14,
-        temperature=1
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant that only outputs raw text in Simplified Chinese. Never provide options or explanations."},
+        {"role": "user", "content": title_prompt}
+    ]
+    title = generate_completion(
+        messages=messages,
+        api_key=api_key,
+        model=model,
+        base_url=base_url,
+        temperature=0.3, # Lower temperature for more consistent title output
+        max_tokens=200
     )
-    title = request.choices[0].message.content.strip()
-    title = title.replace('"', "")
+    # Clean up any leftover punctuation or surrounding text
+    title = title.split('\n')[0].strip().replace('"', '').replace('《', '').replace('》', '')
     return title    

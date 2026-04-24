@@ -41,7 +41,7 @@ BUCKET_NAME = "audio"
 PDF_BUCKET_NAME = "pdf-documents"
 
 async def upload_audio_to_storage(audio_file_path: str) -> str:
-    try: 
+    try:
         if not os.path.exists(audio_file_path):
             raise FileNotFoundError(f"Audio file {audio_file_path} not found.")
 
@@ -50,41 +50,39 @@ async def upload_audio_to_storage(audio_file_path: str) -> str:
 
         try:
             file_upload = supabase.storage.from_(BUCKET_NAME).upload(audio_file_path, file_content)
-            print("[upload_audio_to_storage]: ", file_upload) #error was because i was trying to print file_upload + str
+            print(f"[STORAGE_UPLOAD] Success: {audio_file_path}")
         except Exception as e:
             raise Exception(f"Error uploading file: {str(e)}")
-        
+
         try:
             public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(audio_file_path)
         except Exception as e:
             raise Exception(f"Error generating public URL: {str(e)}")
-        
+
         #delete local audio file after upload and getting public url from supabase
         try:
             os.remove(audio_file_path)
-            print(f"\ndeleted local file: {audio_file_path}\n")
         except Exception as e:
-            print(f"failed to delete local file {audio_file_path}: {str(e)}")
+            print(f"[STORAGE_CLEANUP_ERROR] Failed to delete local file {audio_file_path}: {str(e)}")
 
-        return public_url   
-    
+        return public_url
+
     except Exception as e:
-        print(f"upload_audio_to_storage failed: {str(e)}")
+        print(f"[STORAGE_UPLOAD_ERROR] {str(e)}")
         return ""
 
 async def save_audio_url_to_db(id: int, type: str, url: str):
-    try: 
+    try:
         column_name = "story_audio" if type == "story" else "title_audio"
         response = supabase.table("stories").update({column_name: url}).eq("story_id", id).execute()
 
         if "error" in response:
             raise Exception(f"Error saving audio URL: {response['error']['message']}")
-        print(f"{url} saved to supabase stories table successfully\n")
-        return response 
+        print(f"[DB_UPDATE_AUDIO] Saved {type} audio URL for story_id={id}")
+        return response
     except Exception as e:
-        print(f"save_audio_url_to_db failed: {str(e)}")
-        return None
-    
+        print(f"[DB_UPDATE_AUDIO_ERROR] {str(e)}")
+        return None    
 # user_vocab = models.UserVocabularyCreate(
 #     user_vocab_id=1,
 #     user_id=1,

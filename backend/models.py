@@ -33,6 +33,9 @@ class UserBase(BaseModel):
     is_active: Optional[bool] = True
     session_token: Optional[str] = None
     last_login: Optional[datetime] = None
+    subscription_tier: Optional[str] = "free"
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
 
 #used when creating a user
 class UserCreate(UserBase):
@@ -52,6 +55,9 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     session_token: Optional[str] = None
     last_login: Optional[datetime] = None
+    subscription_tier: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
 
 # Vocabulary Table
 class VocabularyBase(BaseModel):
