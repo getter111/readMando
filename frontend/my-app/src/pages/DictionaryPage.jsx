@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
-import ToastNotification from "../components/ToastNotification";
+import toast from "react-hot-toast";
 
 const PAGE_SIZE = 30;
 
@@ -11,7 +11,6 @@ export default function DictionaryPage({ user, loadingUser }) {
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [toastMsg, setToastMsg] = useState("");
 
     const apiUrl = import.meta.env.VITE_API_BASE_URL;
     const observer = useRef();
@@ -54,19 +53,20 @@ export default function DictionaryPage({ user, loadingUser }) {
     );
 
     const handleAddToStudySet = async (word) => {
+        const addToast = toast.loading(`Adding ${word}...`);
         try {
             await axios.post(`${apiUrl}/users/study_deck`, { word }, { withCredentials: true });
             await axios.get(`${apiUrl}/study_deck/tts?word=${encodeURIComponent(word)}`);
-            setToastMsg(`✅ Added ${word} to study deck!`);
+            toast.success(`Added ${word} to study deck!`, { id: addToast });
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 409) {
-                    setToastMsg(`⚠️ ${word} already in study deck`);
+                    toast.error(`${word} already in study deck`, { id: addToast });
                 } else {
-                    setToastMsg("❌ Please Login to save words.");
+                    toast.error("Please login to save words.", { id: addToast });
                 }
             } else {
-                setToastMsg("❌ An unexpected error occurred.");
+                toast.error("An unexpected error occurred.", { id: addToast });
             }
         }
     };
@@ -80,14 +80,6 @@ export default function DictionaryPage({ user, loadingUser }) {
 
     return (
         <div className="p-6 max-w-7xl mx-auto pb-20">
-            {toastMsg && (
-                <ToastNotification
-                    message={toastMsg}
-                    onClose={() => setToastMsg("")}
-                    duration={3000}
-                />
-            )}
-
             <div className="mb-12 text-center fade-up">
                 <h1 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white mb-4">
                     Mandarin <span className="text-blue-600">Dictionary</span>

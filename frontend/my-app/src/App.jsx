@@ -14,6 +14,16 @@ import StoryHubStoryPage from "./pages/StoryHubStoryPage";
 import VerificationSuccessPage from "./pages/VerificationSuccessPage";
 import RegisterPage from "./pages/RegisterPage";
 import PdfLibrary from "./pages/PdfLibrary";
+import { Toaster } from 'react-hot-toast';
+import SettingsPage from "./pages/SettingsPage";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import PaymentCancelledPage from "./pages/PaymentCancelledPage";
+
+// Set global axios headers from localStorage if enabled
+const aiEnabled = localStorage.getItem('ai_override_enabled') === 'true';
+axios.defaults.headers.common['X-Custom-API-Key'] = aiEnabled ? (localStorage.getItem('custom_api_key') || '') : '';
+axios.defaults.headers.common['X-Custom-Model'] = aiEnabled ? (localStorage.getItem('custom_model') || '') : '';
+axios.defaults.headers.common['X-Local-URL'] = aiEnabled ? (localStorage.getItem('custom_base_url') || '') : '';
 
 function useIsSafari() {
   const [isSafari, setIsSafari] = useState(false);
@@ -77,6 +87,7 @@ function App() {
         </div>
       )}
 
+      <Toaster position="bottom-right" reverseOrder={false} />
       <Routes>
         <Route path="/" element={<Layout username={user.username} setUser={setUser} />}>
           <Route index element={<HomePage />} />
@@ -91,6 +102,9 @@ function App() {
           <Route path="review" element={<ReviewPage user={user} loadingUser={loadingUser} />} />
           <Route path="story/:story_id" element={<StoryHubStoryPage user={user} loadingUser={loadingUser} />} />
           <Route path="pdf-library" element={<PdfLibrary user={user} loadingUser={loadingUser} />} />
+          <Route path="settings" element={<SettingsPage user={user} />} />
+          <Route path="payment-success" element={<PaymentSuccessPage setUser={setUser} />} />
+          <Route path="payment-cancelled" element={<PaymentCancelledPage />} />
         </Route>
       </Routes>
     </>

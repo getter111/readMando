@@ -3,6 +3,7 @@ import axios from "axios";
 import PropTypes from "prop-types";
 import AudioPlayer from "../components/AudioPlayer";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function ReviewPage({ user, loadingUser }) {
   const [stories, setStories] = useState([]);
@@ -25,11 +26,12 @@ export default function ReviewPage({ user, loadingUser }) {
 
   const handleUpvote = async (story_id) => {
     if (!user.user_id) {
-      alert("Please log in to upvote stories!");
+      toast.error("Please log in to upvote stories!");
     } else {
       try {
         const res = await axios.put(`${apiUrl}/stories/${story_id}/toggle-upvote`, {}, { withCredentials: true });
         setStories(prev => prev.map(s => s.story_id === story_id ? { ...s, upvotes: res.data.upvotes } : s));
+        toast.success(res.data.upvoted ? "Upvoted story!" : "Removed upvote");
       } catch (err) { console.error(err); }
     }
   };
